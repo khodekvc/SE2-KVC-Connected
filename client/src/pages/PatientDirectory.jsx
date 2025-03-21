@@ -152,7 +152,7 @@ export default function PatientDirectory() {
                   <td>{patient.species}</td>
                   <td className="actions">
                     <Archive size={16} onClick={() => handleArchive(patient.pet_id)} style={{ cursor: "pointer" }} />
-                    <ArrowRight size={16} className="view-profile" onClick={() => handleViewProfile(patient.id)} />
+                    <ArrowRight size={16} className="view-profile" onClick={() => handleViewProfile(patient.pet_id)} />
                   </td>
                 </tr>
               ))}
