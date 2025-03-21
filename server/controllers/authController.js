@@ -95,6 +95,9 @@ exports.signupPetOwnerStep2 = async (req, res) => {
         return res.status(400).json({ error: "❌ Personal info missing or Step 1 not completed. Restart signup process." });
     }
 
+    if (!petname || !gender || !speciesDescription || !altPerson1 || !altContact1) {
+        return res.status(400).json({ error: "❌ All fields are required except breed and birthdate!" });
+    }
     const { fname, lname, email, contact, address, password } = req.session.petOwnerData;
 
     try {
@@ -113,7 +116,6 @@ exports.signupPetOwnerStep2 = async (req, res) => {
         const petId = await PetModel.createPet({ petname, gender, speciesId, breed, birthdate, userId });
         console.log("Pet created with ID:", petId);
 
-        await PetModel.createPet({ petname, gender, species, breed, birthdate: birthdate, userId });
         const token = generateToken(userId, "owner");
         console.log('Generated Token:', token);
         res.cookie("token", token, {
