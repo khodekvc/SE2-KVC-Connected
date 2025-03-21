@@ -45,11 +45,32 @@ export default function PatientDirectory() {
     fetchActivePets();
   }, []);
 
-  const handleArchive = () => {
-    showConfirmDialog("Are you sure you want to archive this record?", () => {
-      // Archive logic here
-    })
-  }
+  const handleArchive = (petId) => {
+  showConfirmDialog("Are you sure you want to archive this record?", async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/pets/archive/${petId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to archive pet.");
+      }
+
+      const data = await response.json();
+      console.log(data.message);
+
+      // Update the patients list to remove the archived pet
+      setPatients((prevPatients) => prevPatients.filter((patient) => patient.pet_id !== petId));
+      setOriginalPatients((prevPatients) => prevPatients.filter((patient) => patient.pet_id !== petId));
+    } catch (error) {
+      console.error("Error archiving pet:", error);
+    }
+  });
+};
 
   const handleViewProfile = (patientId) => {
     navigate(`/PetProfile/${patientId}`)
