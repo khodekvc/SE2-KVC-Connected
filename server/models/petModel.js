@@ -48,7 +48,23 @@ class PetModel {
     }
 
     static async getAllActivePets() {
-        const [result] = await db.execute("SELECT * FROM pet_info WHERE pet_status = 1");
+        const [result] = await db.execute(`
+            SELECT 
+                pet_info.pet_id, 
+                pet_info.pet_name, 
+                CONCAT(users.user_firstname, ' ', users.user_lastname) AS owner_name, 
+                pet_species.spec_description AS species
+            FROM 
+                pet_info
+            JOIN 
+                users ON pet_info.user_id = users.user_id
+            JOIN 
+                match_pet_species ON pet_info.pet_id = match_pet_species.pet_id
+            JOIN 
+                pet_species ON match_pet_species.spec_id = pet_species.spec_id
+            WHERE 
+                pet_info.pet_status = 1
+        `);
         return result;
     }
 

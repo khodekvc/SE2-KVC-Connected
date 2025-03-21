@@ -2,7 +2,7 @@
 
 import { Search, Archive, ArrowRight, Filter } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import "../css/PatientDirectory.css"
 import { useConfirmDialog } from "../contexts/ConfirmDialogContext"
 import FilterModal from "../components/FilterPopup"
@@ -12,21 +12,38 @@ export default function PatientDirectory() {
   const navigate = useNavigate()
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState(null)
-  const [originalPatients] = useState([
-    { id: "012345", name: "Oreo", owner: "Princess Tan", species: "Dog" },
-    { id: "012346", name: "Pimpy", owner: "Princess Tan", species: "Snake" },
-    { id: "012347", name: "Snow", owner: "Sabrina Mae", species: "Dog" },
-    { id: "012348", name: "Daisy", owner: "Chris Parker", species: "Dog" },
-    ...Array(15)
-      .fill()
-      .map((_, i) => ({
-        id: `0123${54 + i}`,
-        name: `Pet ${i + 1}`,
-        owner: `Owner ${i + 1}`,
-        species: ["Dog", "Cat", "Bird", "Rabbit", "Snake"][Math.floor(Math.random() * 5)],
-      })),
-  ])
-  const [patients, setPatients] = useState(originalPatients)
+  const [originalPatients, setOriginalPatients] = useState([]);
+  const [patients, setPatients] = useState([]);
+
+  // Fetch active pets from the backend
+  useEffect(() => {
+    const fetchActivePets = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/pets/active", {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch active pets");
+        }
+
+        const data = await response.json();
+        console.log("Fetched active pets:", data);
+
+        // Update state with fetched data
+        setOriginalPatients(data);
+        setPatients(data);
+      } catch (error) {
+        console.error("Error fetching active pets:", error);
+      }
+    };
+
+    fetchActivePets();
+  }, []);
 
   const handleArchive = () => {
     showConfirmDialog("Are you sure you want to archive this record?", () => {
@@ -52,12 +69,12 @@ export default function PatientDirectory() {
       })
     }
 
-    // dpecies filter
+    // species filter
     if (filters.species) {
       filteredPatients = filteredPatients.filter((patient) => patient.species === filters.species)
     }
 
-    // sort nm
+    // sort by name or owner
     if (filters.sortBy) {
       const key = filters.sortBy === "petName" ? "name" : "owner"
       filteredPatients.sort((a, b) => {
@@ -107,13 +124,13 @@ export default function PatientDirectory() {
             </thead>
             <tbody>
               {patients.map((patient, index) => (
-                <tr key={patient.id} className={index % 2 === 0 ? "row-even" : "row-odd"}>
-                  <td>{patient.id}</td>
-                  <td>{patient.name}</td>
-                  <td>{patient.owner}</td>
+                <tr key={patient.pet_id} className={index % 2 === 0 ? "row-even" : "row-odd"}>
+                  <td>{patient.pet_id}</td>
+                  <td>{patient.pet_name}</td>
+                  <td>{patient.owner_name}</td>
                   <td>{patient.species}</td>
                   <td className="actions">
-                    <Archive size={16} onClick={() => handleArchive(patient.id)} style={{ cursor: "pointer" }} />
+                    <Archive size={16} onClick={() => handleArchive(patient.pet_id)} style={{ cursor: "pointer" }} />
                     <ArrowRight size={16} className="view-profile" onClick={() => handleViewProfile(patient.id)} />
                   </td>
                 </tr>
