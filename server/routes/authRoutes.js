@@ -1,6 +1,7 @@
 const express = require("express");
 const { generateCaptcha, generateCaptchaImage } = require("../utils/captchaUtility");
 const authController = require("../controllers/authController");
+const { requestPasswordReset, verifyResetCode, resetPassword } = require("../controllers/forgotPasswordController");
 const { authenticate } = require("../middleware/authMiddleware");
 const db = require("../config/db");
 const bcrypt = require('bcrypt');
@@ -43,5 +44,10 @@ router.post("/signup/petowner-step2", authController.signupPetOwnerStep2);
 router.post("/signup/employee", authController.signupEmployeeRequest);
 router.post("/signup/employee-verify", authController.signupEmployeeComplete);
 router.post("/logout", authenticate, authController.logoutUser);
+
+// Routes for password reset
+ router.post("/forgot-password", requestPasswordReset);
+ router.post("/verify-reset-code", verifyResetCode);
+ router.post("/reset-password", resetPassword);
 
 module.exports = router;
