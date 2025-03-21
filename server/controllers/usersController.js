@@ -3,6 +3,36 @@ const bcrypt = require("bcrypt");
 const { authenticate } = require("../middleware/authMiddleware");
 const { hashPassword, comparePassword } = require("../utils/passwordUtility");
 
+exports.getEmployeeProfile = [
+    authenticate, // Ensure the user is authenticated
+    async (req, res) => {
+        const userId = req.user.userId; // Extract userId from the JWT token
+
+        console.log("Fetching profile for User ID:", userId);
+
+        try {
+            // Fetch the employee's profile data from the database
+            const employeeProfile = await UserModel.getUserById(userId);
+
+            if (!employeeProfile) {
+                return res.status(404).json({ error: "❌ Employee profile not found." });
+            }
+
+            // Send the employee profile as a response
+            res.json({
+                firstname: employeeProfile.user_firstname,
+                lastname: employeeProfile.user_lastname,
+                email: employeeProfile.user_email,
+                contact: employeeProfile.user_contact,
+                role: employeeProfile.user_role, // Include role if available
+            });
+        } catch (error) {
+            console.error("Error fetching employee profile:", error);
+            res.status(500).json({ error: "❌ Server error while fetching employee profile." });
+        }
+    }
+];
+
 // Update employee profile
 exports.updateEmployeeProfile = [
     authenticate,
@@ -74,18 +104,18 @@ exports.updateOwnerProfile = [
 exports.changePassword = [
     authenticate,
     async (req, res) => {
-        const { currentPassword, newPassword, confirmNewPassword } = req.body;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
         const userId = req.user.userId;
 
         if (!userId) {
             return res.status(401).json({ error: "❌ Unauthorized. Please log in." });
         }
 
-        if (!currentPassword || !newPassword || !confirmNewPassword) {
+        if (!currentPassword || !newPassword || !confirmPassword) {
             return res.status(400).json({ error: "❌ All fields are required!" });
         }
 
-        if (newPassword !== confirmNewPassword) {
+        if (newPassword !== confirmPassword) {
             return res.status(400).json({ error: "❌ New passwords do not match!" });
         }
 
