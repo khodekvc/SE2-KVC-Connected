@@ -73,6 +73,7 @@ export default function PatientDirectory() {
 };
 
   const handleViewProfile = (patientId) => {
+    console.log("Navigating to PetProfile with patientId:", patientId);
     navigate(`/PetProfile/${patientId}`)
   }
 

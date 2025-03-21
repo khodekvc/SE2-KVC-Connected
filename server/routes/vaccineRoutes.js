@@ -9,5 +9,10 @@ router.post(
     authorize({ roles: ["doctor", "clinician"] }), // Only doctors & clinicians can add
     vaccineController.addPetVaccinationRecord
 );
+router.get(
+    "/pets/:pet_id/vaccines", // pet_id is now in the URL
+    authenticate, // Ensure the user is authenticated
+    vaccineController.getPetVaccinationRecords // Controller to fetch vaccination records
+);
 
 module.exports = router;

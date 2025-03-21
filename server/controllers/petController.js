@@ -154,3 +154,20 @@ exports.getAllArchivedPets = async (req, res) => {
         res.status(500).json({ error: "❌ Error fetching archived pets." });
     }
 };
+
+exports.getPetById = async (req, res) => {
+    const { pet_id } = req.params;
+
+    try {
+        // Fetch the pet details from the database
+        const pet = await PetModel.findById(pet_id);
+        if (!pet) {
+            return res.status(404).json({ error: "❌ Pet not found!" });
+        }
+
+        res.status(200).json(pet); // Send the pet details as a response
+    } catch (error) {
+        console.error("Error fetching pet details:", error);
+        res.status(500).json({ error: "❌ Server error while fetching pet details." });
+    }
+};

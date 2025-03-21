@@ -1,6 +1,27 @@
 const db = require("../config/db");
 
 class VaccineModel {
+    static async getVaccinationRecordsByPetId(pet_id) {
+    const [results] = await db.execute(
+        `
+        SELECT 
+            v.vax_type AS type,
+            ir.imm_rec_quantity AS doses,
+            DATE_FORMAT(ir.imm_rec_date, '%m/%d/%Y') AS date
+        FROM 
+            immunization_record ir
+        JOIN 
+            vax_info v ON ir.vax_id = v.vax_id
+        WHERE 
+            ir.pet_id = ?
+        ORDER BY 
+            ir.imm_rec_date DESC
+        `,
+        [pet_id]
+    );
+
+    return results; // Return the vaccination records
+}
     static async getAllVaccines() {
         const [rows] = await db.execute("SELECT * FROM vax_info");
         return rows;

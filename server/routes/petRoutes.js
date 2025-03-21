@@ -12,4 +12,7 @@ router.put("/restore/:pet_id", authenticate, authorize({ roles: ["clinician", "d
 router.get("/active", authenticate, petController.getAllActivePets);
 router.get("/archived", authenticate, petController.getAllArchivedPets);
 
+// Route to fetch pet details by pet_id
+router.get("/:pet_id", authenticate, petController.getPetById);
+
 module.exports = router;

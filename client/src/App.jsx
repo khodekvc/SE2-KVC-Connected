@@ -51,7 +51,7 @@ function ProtectedRoutes() {
           )}
           <Routes>
             <Route path="/patients" element={<PatientDirectory />} />
-            <Route path="/PetProfile/:id" element={<PetProfile />} />
+            <Route path="/PetProfile/:pet_id" element={<PetProfile />} />
             {/* render diff account pages based on role */}
             <Route path="/account" element={isPetOwner ? <OwnerMyAccount /> : <MyAccount />} />
             {/* only pet owners can access add pet */}
