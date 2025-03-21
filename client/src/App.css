@@ -1,0 +1,55 @@
+:root {
+  /* can add more para organize */
+  --orange-color: #FF7F11; /*main orange from figma */
+  --lorange-color: #ff8c00; /* navlinks */
+  --llorange-color: #FEC164; /*clicked tab */
+  --lyellow-color: #FFFEF1; /*background color */
+  --blue-color: #82B1DA; /* save/plus button */
+  --lblue-color:#F6F6F6; /*light blue sa table */
+  --input-color: #f8f8f8; /* for all inputs? */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+  font-family: century-gothic, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background-color: var(--lyellow-color);
+  font-family: century-gothic, sans-serif;
+  overflow-x: hidden;
+}
+
+.container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  flex-direction: column;
+}
+
+.app-container {
+  min-height: 100vh;
+  background-color: var(--lyellow-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  padding-top: 75px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+  }
+}

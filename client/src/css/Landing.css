@@ -1,0 +1,734 @@
+.hero-section-wrapper,
+.about-section-wrapper,
+.contact-section-wrapper {
+    display: flex;
+    flex-direction: column; 
+    width: 100%; 
+}
+
+.hero {
+    width: 100vw;
+    min-height: 100vh;
+    padding-top: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url('/landingbg.png'); /* Path to your image */
+    background-size: cover; /* Cover the entire section */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent repeating */
+    position: relative;
+}
+
+  .hero-content {
+    position: relative;
+    text-align: center;
+    justify-content: center;
+}
+
+  .hero h1 {
+    font-family: 'Chelsea Market';
+    font-size: 80px;
+    margin: 0;
+    padding: 0;
+    color: #FFFEF1; 
+    font-weight: 100;
+    -webkit-text-stroke: #ff8c00 1px;
+  }
+
+  .hero p {
+    font-family: 'Chelsea Market';
+    font-size: 30px;
+    margin: 1rem;
+    padding: 1rem;
+    color: #FFFEF1;
+    text-shadow: 2px 2px 5px gray;
+  }
+
+  .hero a {
+    padding: 0.8rem 5.5rem;
+    font-size: 15px;
+    font-weight: bold;
+  }
+
+  .cat2 {
+    padding-left: 200px;
+    position: relative;
+    z-index: 1;
+    bottom: 35px;
+  }
+
+  .cat2 img {
+    width: 350px;
+    height: 250px;
+  }
+
+  .about {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-right: 2rem;
+    margin-left: 2rem;
+    margin-top: -9rem;
+  }
+
+  .about-text-images {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .about-images {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    width: 500px;
+  }
+
+  .about-images-cat-dog {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; 
+  }
+
+  .about-images-bird {
+    display: flex;
+  }
+
+  .about-images-cat-dog img {
+    width: 150px;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    margin-left: 20px;
+  }
+
+  .about-images-bird img {
+    width: 150px;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  
+  }
+
+  .about-text {
+    flex: 2;
+    padding: 0 1rem;
+    text-align: justify;
+  }
+  
+  .about-text h2 {
+    color: #ff8c00;
+    font-size: 3rem;
+    text-align: left;
+    margin-bottom: 1rem;
+  }
+  
+  .about-text p {
+    font-size: 1.3rem;
+    color: #333;
+    line-height: 1.5;
+    margin-top: -25px;
+    margin-left: -90px;
+  }
+
+  .dog2 {
+    padding-right: 40px;
+  }
+
+  .dog2 img {
+    width: 255px;
+    height: auto;
+  }
+
+  .dog-text {
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .about-services {
+    flex: 1;
+    text-align: right; 
+  }
+  
+  .about-services h2 {
+    color: #ff8c00;
+    font-size: 3rem;
+    line-height: 1.2;
+    font-weight: bold;
+  }
+
+  .contact {
+    text-align: center;
+    background-color: #FFFEF1; 
+  }
+  
+  .contact h2 {
+    font-size: 2.5rem;
+    color:#FF8C00;
+    margin-bottom: 1.5rem;
+  }
+  
+  .map-place {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 3rem;
+    margin-left:0;
+    margin-right:0;
+  }
+  
+  .google-map iframe {
+    border: 2px solid #FF8C00;
+  }
+  
+  .clinicplace img {
+    width: 540px;
+    height: auto;
+  }
+  
+  .contact-details {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+  
+  .contact-detail-item {
+    background-color: #FFF;
+    border: 3px solid #FF8C00;
+    border-radius: 25px;
+    padding: 1rem;
+    text-align: center;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .contact-detail-item p {
+    margin: 0.5rem 0;
+    color: #FF8C00;
+  }
+  
+  .contact-detail-item strong {
+    color: #FF8C00;
+    font-size: 1.1rem;
+  }
+
+  .contact-icon {
+    font-size: 3rem;
+    color: #FF8C00;
+    margin-bottom: 1rem;
+  }
+
+  @media screen and (max-width: 1180px) {
+
+    .cat2 {
+      padding-left: 205px;
+      z-index: 1;
+    }
+  
+    .cat2 img {
+      width: 350px;
+      height: 250px;
+    }
+    
+    .about-text h2 {
+      color: #ff8c00;
+      font-size: 2.3rem;
+      margin-bottom: 1rem;
+    }
+    
+    .about-text p {
+      font-size: 1.2rem;
+      color: #333;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    .about-services h2 {
+      color: #ff8c00;
+      font-size: 2.3rem;
+      line-height: 1.2;
+      font-weight: bold;
+    }
+
+    .contact h2 {
+      font-size: 2.3rem;
+      margin-top: 1rem;
+    }
+
+    .google-map iframe {
+      width: 800px;
+      height: 350px;
+    }
+
+    .dog-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dog2 img {
+      width: 200px;
+      height: auto;
+      margin-left: 100px;
+    }
+
+    .contact-details {
+      gap: 1.5rem;
+    }
+    
+  }
+
+  @media screen and (max-width: 1000px) {
+
+    .cat2 {
+      padding-left: 180px;
+      z-index: 1;
+    }
+  
+    .cat2 img {
+      width: 350px;
+      height: 250px;
+    }
+
+    .about-images-cat-dog img {
+      width: 150px;
+    }
+
+    .about-images-bird img {
+      width: 150px;
+    }
+    
+    .about-text h2 {
+      color: #ff8c00;
+      font-size: 2.3rem;
+      margin-bottom: 1rem;
+    }
+    
+    .about-text p {
+      font-size: 1rem;
+      color: #333;
+      line-height: 1.5;
+      margin-top: 1rem;
+    }
+
+    .about-services h2 {
+      color: #ff8c00;
+      font-size: 2.3rem;
+      line-height: 1.2;
+      font-weight: bold;
+    }
+
+    .about-text-images {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem; 
+    }
+  
+    .about-images {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem; 
+    }
+
+    .about-images-cat-dog {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem; 
+    }
+
+    .dog-text {
+      display: flex;
+      flex-direction: column;
+    } 
+
+    .dog2 img {
+      width: 210px;
+      height: auto;
+      margin-left: -150px;
+    }
+
+    .contact-details {
+      gap: 1.5rem;
+    }
+    
+  }
+
+
+  @media screen and (max-width: 960px) {
+    .hero h1 {
+      margin-top: 70px;
+      font-size: 65px;
+    }
+
+    .hero p {
+      font-size: 25px;
+    }
+
+    .hero-content .btn--primary {
+      padding: 0.5rem 3rem;
+      font-size: 18px;
+    }
+
+    .cat2 {
+      padding-left: 205px;
+      z-index: 1;
+    }
+  
+    .cat2 img {
+      width: 350px;
+      height: 250px;
+    }
+    
+    .about-text h2 {
+      font-size: 2.3rem;
+    }
+
+    .about-text p {
+      font-size: 1rem;
+    }
+
+    .about-services h2 {
+      font-size: 2rem;
+    }
+
+    .about-text-images {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem; 
+    }
+  
+    .about-images {
+      flex-direction: row;
+      gap: 1rem; 
+    }
+    
+    .dog2 img {
+      width: 200px;
+      height: auto;
+    }
+
+    .google-map iframe {
+      width: 600px;
+      height: 345px;
+    }
+
+    .contact-details {
+      gap: 1.5rem;
+    }
+  }
+
+  
+@media screen and (max-width: 760px) {
+  .hero h1 {
+    font-size: 60px;
+  }
+
+  .hero p {
+    font-size: 20px;
+  }
+
+  .hero a {
+    padding: 0.4rem 2.5rem; 
+    font-size: 12px; 
+  }
+
+  .about {
+    flex-direction: column;
+  }
+
+  .about-text-images {
+    margin-left: 80px;
+  }
+
+  .about-images-bird img {
+    width: 160px;
+  }
+
+  .about-images-cat-dog img {
+    width: 160px;
+  }
+  .cat2 {
+    padding-left: 340px;
+    z-index: 1;
+  }
+
+  .cat2 img {
+    width: 350px;
+    height: 250px;
+  }
+
+  .about-text p {
+    margin-left: 10px;
+  }
+
+  .about-services h2 {
+    margin-top: 50px;
+  }
+
+  .dog2 img {
+    width: 200px;
+    height: auto;
+    margin-left: 200px;
+  }
+
+  .google-map iframe {
+    width: 500px;
+    height: 290px;
+  }
+  .contact-details {
+    gap: 1.5rem;
+  }
+
+}
+
+@media screen and (max-width: 600px) {
+  .hero h1 {
+    font-size: 50px;
+  }
+
+  .hero p {
+    font-size: 18px;
+  }
+
+  .hero a {
+    padding: 0.3rem 2rem; 
+    font-size: 10px; 
+  }
+  
+  .cat2 {
+    padding-left: 300px;
+  }
+
+  .cat2 img {
+    width: 300px;
+    height: auto;
+  }
+
+  .about {
+    flex-direction: column;
+  }
+
+  .about-text-images {
+    margin-left: 30px;
+  }
+
+  .about-images-bird img {
+    width: 160px;
+  }
+
+  .about-images-cat-dog img {
+    width: 160px;
+  }
+  
+  .dog2 img {
+    width: 160px;
+    height: auto;
+    margin-left: 160px;
+  }
+
+  .map-place {
+    flex-direction: column;
+  }
+
+  .google-map iframe {
+    width: 400px;
+    height: 300px;
+  }
+  
+  .clinicplace img {
+    width: 400px;
+    height: auto;
+  }
+  
+  .contact-details {
+    gap: 1.5rem;
+  }
+
+}
+
+@media screen and (max-width: 480px) {
+  .hero h1 {
+    font-size: 50px;
+  }
+
+  .hero p {
+    font-size: 18px;
+  }
+
+  .hero a {
+    padding: 0.3rem 2rem; 
+    font-size: 10px; 
+  }
+
+  .hero-section-wrapper {
+    margin-top: -50px;
+  }
+
+  .cat2 {
+    padding-left: 200px;
+    z-index: 1;
+  }
+
+  .cat2 img {
+    width: 250px;
+    height: auto;
+  }
+
+  .about {
+    flex-direction: column;
+  }
+
+  .about-text-images {
+    margin-top: 20px;
+    margin-left: 20px;
+  }
+
+  .about-images-bird img {
+    width: 125px;
+  }
+
+  .about-images-cat-dog img {
+    width: 122px;
+  }
+
+  .about-text h2 {
+    font-size: 2rem;
+  }
+
+  .about-text p {
+    font-size: 1rem;
+  }
+
+  .about-services {
+   padding-top: 5px;
+   padding-bottom: 10px;
+  }
+
+  .about-services h2 {
+    font-size: 2rem;
+  }
+  
+  .dog2 img {
+    width: 150px;
+    height: auto;
+    margin-left: 60px;
+  }
+
+  .map-place {
+    flex-direction: column;
+  }
+
+  .google-map iframe {
+    width: 300px;
+    height: 200px;
+  }
+  
+  .clinicplace img {
+    width: 300px;
+    height: auto;
+  }
+  
+  .contact-details {
+    gap: 1.5rem;
+  }
+
+  .contact h2 {
+    font-size: 2rem;
+  }
+  
+
+}
+
+@media screen and (max-width: 320px) {
+  .hero h1 {
+    font-size: 45px;
+  }
+
+  .hero p {
+    font-size: 18px;
+  }
+
+  .hero a {
+    padding: 0.3rem 2rem; 
+    font-size: 10px; 
+  }
+  
+  .cat2 {
+    top: 3px;
+    padding-left: 130px;
+  }
+
+  .cat2 img {
+    width: 200px;
+    height: auto;
+  }
+
+  .about {
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+  }
+
+  .about-text-images {
+    margin-top: -85px;
+    margin-left: 10px;
+  }
+
+  .about-images-bird img {
+    width: 95px;
+  }
+
+  .about-images-cat-dog img {
+    width: 95px;
+    margin-left: 25px;
+  }
+
+  .about-text h2 {
+    font-size: 2rem;
+  }
+
+  .about-text p {
+    font-size: 1rem;
+  }
+
+  .about-services {
+   padding-top: 5px;
+   padding-bottom: 10px;
+   text-align: center;
+  }
+
+  .about-services h2 {
+    font-size: 1.5rem;
+  }
+
+  .dog2 img {
+    width: 150px;
+    height: auto;
+    margin-left: 60px;
+  }
+
+  .map-place {
+    flex-direction: column;
+  }
+
+  .contact h2 {
+    font-size: 2rem;
+  }
+
+  .google-map iframe {
+    width: 250px;
+    height: 150px;
+  }
+  
+  .clinicplace img {
+    width: 250px;
+    height: auto;
+  }
+  
+  .contact-details {
+    gap: 1.5rem;
+  }
+
+}
+
