@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLocationDot, faPhone, faEnvelope, faClock } from '@fortawesome/free-solid-svg-icons';
 
 function Landing() {
+  const button = true;
   return (
     <>
      <Navbar />
@@ -17,13 +18,9 @@ function Landing() {
               KHO <br /> VETERINARY <br /> CLINIC
             </h1>
             <p>Four Paws, Two Feet, One Heart</p>
-            <Button
-              buttonStyle='btn--primary'
-              buttonSize='btn--large'
-              to='/signup-petowner'
-            >
-              SIGN UP
-            </Button>
+            <Link to="/signup-petowner">
+              <Button buttonStyle="btn--primary" to="/signup-petowner">SIGN UP</Button>
+            </Link>
           </div>
         </section>
       </div>

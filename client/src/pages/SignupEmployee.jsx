@@ -1,6 +1,7 @@
 import React from 'react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from '../components/Navbar';
+import { Link } from 'react-router-dom';
 import { Button } from '../components/Button';
 import FormGroup from '../components/FormGroup';
 import "../css/Forms.css";
@@ -14,16 +15,59 @@ const SignupEmployee = () => {
     role: "",
     password: "",
     confirmPassword: "",
-    captcha: "",
+    captchaInput: "",
   });
+  const [captcha, setCaptcha] = useState({ image: "", captchaKey: "" });
+  const [message, setMessage] = useState("");
 
+  useEffect(() => {
+        fetchCaptcha();
+      }, []);
+    
+      const fetchCaptcha = async () => {
+        try {
+          const response = await fetch("http://localhost:5000/auth/captcha", {
+            credentials: "include", // Ensure session persistence
+          });
+          const data = await response.json();
+          console.log("CAPTCHA loaded:", data);  
+          setCaptcha({ image: data.image, captchaKey: data.captchaKey });
+        } catch (error) {
+          console.error("Failed to load CAPTCHA:", error);
+        }
+    };
+    
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Signing up employee:", formData);
+    try {
+      const response = await fetch("http://localhost:5000/auth/signup/employee", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Login failed");
+
+      const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
+      if (token) {
+        localStorage.setItem("jwt", token);
+      }
+
+      setMessage(data.message);
+      window.location.replace(data.redirectUrl)
+    } catch (error) {
+      setMessage(error.message);
+    }
   };
 
   return (
@@ -33,8 +77,10 @@ const SignupEmployee = () => {
       <div className="left-section">
         <h1>KHO<br /> VETERINARY<br /> CLINIC</h1>
         <div className="alternate-links">
-          <Button buttonStyle='btn--primary' to='/signup-petowner' className="form-btn-2">Sign up as Pet Owner</Button>
-          <p>Not an Employee?</p>
+          <Link to="/signup-petowner">
+            <Button buttonStyle="btn--primary" className="form-btn-2">Sign up as Pet Owner</Button>
+          </Link>
+            <p>Not an Employee?</p>
         </div>
       </div>
       <div className="right-section">
@@ -68,7 +114,7 @@ const SignupEmployee = () => {
             onChange={handleChange} 
             required 
           />
-           <FormGroup 
+          <FormGroup 
             label="Contact Number" 
             type="text" 
             name="contact" 
@@ -118,18 +164,18 @@ const SignupEmployee = () => {
           <div className="forms-group captcha">
             <label htmlFor="captcha">Enter Captcha</label>
             <div className="captcha-container">
-              <img className="generated" src="LoginServlet" alt="CAPTCHA" id="captchaImage" />
+              <img src={`${captcha.image}`} className="generated" alt="CAPTCHA" />
               <input 
                 type="text" 
                 id="captcha" 
-                name="captcha" 
-                value={formData.captcha} 
+                name="captchaInput" 
+                value={formData.captchaInput} 
                 onChange={handleChange} 
                 required 
               />
             </div>
           </div>
-          <Button buttonStyle='btn--primary' to='/signup-employee-accesscode' className="form-btn-1">SIGN UP</Button>
+          <Button buttonStyle='btn--primary' type='submit' className="form-btn-1">SIGN UP</Button>
         </form>
       </div>
     </div>

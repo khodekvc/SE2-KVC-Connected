@@ -113,7 +113,7 @@ exports.signupPetOwnerStep2 = async (req, res) => {
         const petId = await PetModel.createPet({ petname, gender, speciesId, breed, birthdate, userId });
         console.log("Pet created with ID:", petId);
 
-        await PetModel.createPet({ petname, gender, species, breed, birthdate: petBirthday, userId });
+        await PetModel.createPet({ petname, gender, species, breed, birthdate: birthdate, userId });
         const token = generateToken(userId, "owner");
         console.log('Generated Token:', token);
         res.cookie("token", token, {
