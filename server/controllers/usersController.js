@@ -55,9 +55,15 @@ exports.updateEmployeeProfile = [
                 contact: contact || currentProfile.user_contact
             };
 
-            await UserModel.updateEmployeeProfile(userId, updatedProfile.firstname, updatedProfile.lastname, updatedProfile.email, updatedProfile.contact);
+            const updatedUser = await UserModel.updateEmployeeProfile(userId, updatedProfile.firstname, updatedProfile.lastname, updatedProfile.email, updatedProfile.contact);
 
-            res.json({ message: "✅ Employee profile updated successfully!" });
+            res.json({
+                firstname: updatedUser.user_firstname,
+                lastname: updatedUser.user_lastname,
+                email: updatedUser.user_email,
+                contact: updatedUser.user_contact,
+                role: updatedUser.user_role, // Include role if available
+            });
         } catch (error) {
             console.error("Profile Update Error:", error);
             res.status(500).json({ error: "❌ Server error while updating profile." });

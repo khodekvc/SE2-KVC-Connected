@@ -44,19 +44,23 @@ class UserModel {
         return userId;
     }
 
-    static async createEmployee({ fname, lname, email, role, hashedPassword }) {
+    static async createEmployee({ fname, lname, contact, email, role, hashedPassword }) {
         const [result] = await db.execute(
-            "INSERT INTO users (user_email, user_password, user_firstname, user_lastname, user_role) VALUES (?, ?, ?, ?, ?)",
-            [email, hashedPassword, fname, lname, role]
+            "INSERT INTO users (user_email, user_contact, user_password, user_firstname, user_lastname, user_role) VALUES (?, ?, ?, ?, ?, ?)",
+            [email, contact, hashedPassword, fname, lname, role]
         );
         return result.insertId;
     }
 
     static async updateEmployeeProfile(userId, firstname, lastname, email, contact) {
-        return db.execute(
+        // Perform the update
+        await db.execute(
             "UPDATE users SET user_firstname = ?, user_lastname = ?, user_email = ?, user_contact = ? WHERE user_id = ?",
             [firstname, lastname, email, contact, userId]
         );
+
+        // Fetch and return the updated user data
+        return this.getUserById(userId);
     }
 
     static async updateOwnerProfile(userId, firstname, lastname, email, contact, address, altperson, altcontact) {

@@ -1,88 +1,48 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Pencil, Save, Eye, EyeOff } from "lucide-react"
-import "../css/AccountPage.css"
+import { useState, useEffect } from "react";
+import { Pencil, Save, Eye, EyeOff } from "lucide-react";
+import "../css/AccountPage.css";
 
-const AccountPage = ({ title, displayData, initialUserData, onSave, children }) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [userData, setUserData] = useState(initialUserData)
+const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEditing, onSave, children }) => {
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [userData, setUserData] = useState(initialUserData);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-  })
+  });
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false,
-  })
+  });
 
+  // Log displayData whenever it changes
   useEffect(() => {
-  const fetchUserData = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/user/me", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    console.log("AccountPage - displayData updated:", displayData);
+  }, [displayData]);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-
-      const data = await response.json();
-      console.log("Fetched user data:", data);
-      setUserData(data); // Set the fetched user data
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
-
-  fetchUserData();
-}, []);
+  // Log initialUserData whenever it changes
+  useEffect(() => {
+    console.log("AccountPage - initialUserData updated:", initialUserData);
+    setUserData(initialUserData); // Sync userData with initialUserData
+  }, [initialUserData]);
 
   const handleEdit = () => {
-    setIsEditing(true)
-    setUserData(initialUserData)
-  }
-
-  const handleSave = async (updatedData) => {
-    try {
-      const response = await fetch("http://localhost:5000/user/update-employee-profile", {
-        method: "PUT", // Matches the backend `updateEmployeeProfile` method
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save user data");
-      }
-
-      const data = await response.json();
-      console.log("Updated user data:", data);
-
-      setIsEditing(false); // Exit edit mode
-      onSave(data); // Call the onSave function to update the parent component
-    } catch (error) {
-      console.error("Error saving user data:", error);
-      alert("Failed to save user data. Please try again.");
-    }
+    console.log("AccountPage - Entering edit mode");
+    setIsEditing(true);
+    setUserData(initialUserData);
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
+    console.log(`AccountPage - Input changed: ${name} = ${value}`);
     setUserData((prevData) => ({
       ...prevData,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target
@@ -100,41 +60,41 @@ const AccountPage = ({ title, displayData, initialUserData, onSave, children }) 
   }
 
   const handleSavePassword = async () => {
-  try {
-    console.log("Password Data:", passwordData); // Debug the password data being sent
+    try {
+      console.log("Password Data:", passwordData); // Debug the password data being sent
 
-    const response = await fetch("http://localhost:5000/user/change-password", {
-      method: "POST",
-      credentials: "include", // Include cookies for authentication
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(passwordData), // Send currentPassword, newPassword, and confirmPassword
-    });
+      const response = await fetch("http://localhost:5000/user/change-password", {
+        method: "POST",
+        credentials: "include", // Include cookies for authentication
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(passwordData), // Send currentPassword, newPassword, and confirmPassword
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json(); // Log the backend error response
-      console.error("Backend Error:", errorData);
-      throw new Error(errorData.error || "Failed to change password");
+      if (!response.ok) {
+        const errorData = await response.json(); // Log the backend error response
+        console.error("Backend Error:", errorData);
+        throw new Error(errorData.error || "Failed to change password");
+      }
+
+      const data = await response.json();
+      console.log("Password changed successfully:", data);
+
+      // Reset password fields and exit password change mode
+      setIsChangingPassword(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      alert("Password changed successfully!");
+    } catch (error) {
+      console.error("Error changing password:", error);
+      alert(error.message || "Failed to change password. Please try again.");
     }
-
-    const data = await response.json();
-    console.log("Password changed successfully:", data);
-
-    // Reset password fields and exit password change mode
-    setIsChangingPassword(false);
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-
-    alert("Password changed successfully!");
-  } catch (error) {
-    console.error("Error changing password:", error);
-    alert(error.message || "Failed to change password. Please try again.");
-  }
-};
+  };
 
   return (
     <div className="account-page">
@@ -145,8 +105,8 @@ const AccountPage = ({ title, displayData, initialUserData, onSave, children }) 
           <div className="profile-section">
             <div className="avatar-container">
               <div className="avatar-placeholder"></div>
-              <h2>{`${displayData.firstname} ${displayData.lastname}`}</h2>
-              <p className="role">{displayData.role}</p>
+              <h2>{`${displayData?.firstname || ""} ${displayData?.lastname || ""}`}</h2>
+              <p className="role">{displayData?.role || ""}</p>
             </div>
 
             <div className="info-section">
@@ -156,7 +116,7 @@ const AccountPage = ({ title, displayData, initialUserData, onSave, children }) 
                     <div className="card-header">
                       <h3>Personal Information</h3>
                       {isEditing ? (
-                        <button className="save-profile-btn" onClick={() => handleSave(userData)}>
+                        <button className="save-profile-btn" onClick={() => onSave(userData)}>
                           <Save size={16} />
                           Save
                         </button>
@@ -269,8 +229,7 @@ const AccountPage = ({ title, displayData, initialUserData, onSave, children }) 
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AccountPage
-
+export default AccountPage;

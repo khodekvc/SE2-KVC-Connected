@@ -136,7 +136,7 @@ exports.signupPetOwnerStep2 = async (req, res) => {
 
 // employee signup
 exports.signupEmployeeRequest = async (req, res) => {
-    const { fname, lname, email, role, password, confirmPassword, captchaInput } = req.body;
+    const { fname, lname, contact, email, role, password, confirmPassword, captchaInput } = req.body;
 
     if (!req.session.captcha || captchaInput !== req.session.captcha) {
         return res.status(400).json({ error: "❌ Incorrect CAPTCHA!" });
@@ -161,12 +161,12 @@ exports.signupEmployeeRequest = async (req, res) => {
         const accessCode = crypto.randomBytes(4).toString("hex").toUpperCase();
 
         // Store employee signup data in session
-        req.session.employeeData = { fname, lname, email, role, password, accessCode };
+        req.session.employeeData = { fname, lname, contact, email, role, password, accessCode };
 
         // Send email to clinic owner
         const clinicOwnerEmail = process.env.CLINIC_OWNER_EMAIL;
         const subject = "New Employee Signup Request - PAWtient Tracker";
-        const body = `Hello Clinic Owner,\n\nA new employee has requested to sign up:\n\nName: ${fname} ${lname}\nEmail: ${email}\nPosition: ${role}\n\nTo approve, provide them with the following access code:\n\nAccess Code: ${accessCode}\n\nIf this request is unauthorized, please ignore this email.`;
+        const body = `Hello Clinic Owner,\n\nA new employee has requested to sign up:\n\nName: ${fname} ${lname}\n Contact Number: ${contact}\nEmail: ${email}\nPosition: ${role}\n\nTo approve, provide them with the following access code:\n\nAccess Code: ${accessCode}\n\nIf this request is unauthorized, please ignore this email.`;
 
         await sendEmail(clinicOwnerEmail, subject, body);
 
@@ -193,14 +193,14 @@ exports.signupEmployeeComplete = async (req, res) => {
             return res.status(400).json({ error: "❌ No signup request found. Please start again." });
         }
 
-        const { fname, lname, role, password, accessCode: storedCode, email } = req.session.employeeData;
+        const { fname, lname, contact, role, password, accessCode: storedCode, email } = req.session.employeeData;
 
         if (accessCode !== storedCode) {
             return res.status(400).json({ error: "❌ Invalid access code." });
         }
 
         const hashedPassword = await hashPassword(password);
-        const userId = await UserModel.createEmployee({ fname, lname, email, role, hashedPassword });
+        const userId = await UserModel.createEmployee({ fname, lname, contact, email, role, hashedPassword });
 
         const token = generateToken(userId, role);
         console.log('Generated Token:', token);

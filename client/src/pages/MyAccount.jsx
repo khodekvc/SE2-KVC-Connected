@@ -6,6 +6,7 @@ import AccountPage from "./AccountPage"
 const MyAccount = () => {
   const [displayData, setDisplayData] = useState(null);
   const [editData, setEditData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -69,10 +70,12 @@ const MyAccount = () => {
       }
 
       const data = await response.json();
-      console.log("Updated user data:", data);
+      console.log("Backend user data:", data);
 
-      setIsEditing(false); // Exit edit mode
-      onSave(data); // Call the onSave function to update the parent component
+      setDisplayData(data); // Update displayData with the new data
+      setEditData(data); // Update editData with the new data
+      setIsEditing(false);
+      console.log("Edit mode exited");
     } catch (error) {
       console.error("Error saving user data:", error);
       alert("Failed to save user data. Please try again.");
@@ -92,6 +95,8 @@ const MyAccount = () => {
       title="My Account"
       displayData={displayData}
       initialUserData={editData}
+      isEditing={isEditing}
+      setIsEditing={setIsEditing}
       onSave={handleSave}>
       {({ isEditing, userData, displayData, handleInputChange }) => (
         <div className="info-grid clinician-grid">
@@ -163,4 +168,3 @@ const MyAccount = () => {
 }
 
 export default MyAccount
-
