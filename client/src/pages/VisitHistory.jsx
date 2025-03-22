@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Download, ArrowRight, Plus, Filter } from "lucide-react"
 import AddRecord from "./AddRecord"
 import ViewRecord from "./ViewRecord"
@@ -14,17 +14,33 @@ const VisitHistory = () => {
   const [showAddRecord, setShowAddRecord] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
-  const [originalRecords] = useState([
-    { id: 1, date: "October 29, 2024", purposeOfVisit: "Treatment Plan" },
-    { id: 2, date: "April 5, 2024", purposeOfVisit: "Vaccination" },
-    { id: 3, date: "February 16, 2024", purposeOfVisit: "Check-up" },
-    { id: 4, date: "December 30, 2023", purposeOfVisit: "Diagnosis" },
-    { id: 5, date: "November 18, 2023", purposeOfVisit: "Deworming" },
-    { id: 6, date: "October 2, 2023", purposeOfVisit: "Check-up" },
-    { id: 7, date: "September 15, 2022", purposeOfVisit: "Check-up" },
-    { id: 8, date: "March 15, 2022", purposeOfVisit: "Treatment Plan" },
-  ])
-  const [visitRecords, setVisitRecords] = useState(originalRecords)
+  const [visitRecords, setVisitRecords] = useState([])
+
+  useEffect(() => {
+    const fetchVisitRecords = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/recs/visit-records", {
+          method: "GET",
+          credentials: "include", // Include cookies for authentication
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch visit records");
+        }
+
+        const data = await response.json();
+        console.log("Fetched visit records:", data);
+        setVisitRecords(data); // Update the state with the fetched records
+      } catch (error) {
+        console.error("Error fetching visit records:", error);
+      }
+    };
+
+    fetchVisitRecords();
+  }, []);
 
   const handleUpdateRecord = (updatedRecord) => {
     setVisitRecords((prevRecords) =>

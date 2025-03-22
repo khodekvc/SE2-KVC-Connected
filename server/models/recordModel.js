@@ -1,5 +1,22 @@
 const db = require("../config/db");
 
+const getAllVisitRecords = async () => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        record_id AS id, 
+        record_date AS date, 
+        record_purpose AS purposeOfVisit, 
+        pet_id 
+      FROM record_info
+    `);
+    return rows; // Return the fetched records
+  } catch (error) {
+    console.error("Error fetching visit records:", error);
+    throw error; // Re-throw the error to be handled by the controller
+  }
+};
+
 const insertLabInfo = async (lab_description) => {
     const [labResult] = await db.query("INSERT INTO lab_info (lab_description) VALUES (?)", [lab_description]);
     return labResult.insertId;
@@ -105,4 +122,4 @@ const updateDiagnosisText = async (diagnosisId, newDiagnosisText) => {
 };
 
 
-module.exports = { insertLabInfo, getLabIdByDescription, insertDiagnosis, insertSurgeryInfo, insertRecord, updateRecordInDB, getRecordById, insertMatchRecLab, updateMatchRecLab, updateDiagnosisText };
+module.exports = { getAllVisitRecords, insertLabInfo, getLabIdByDescription, insertDiagnosis, insertSurgeryInfo, insertRecord, updateRecordInDB, getRecordById, insertMatchRecLab, updateMatchRecLab, updateDiagnosisText };

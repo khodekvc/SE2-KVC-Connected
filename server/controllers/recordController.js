@@ -1,10 +1,20 @@
 const { 
-    insertDiagnosis, insertSurgeryInfo, insertRecord, insertMatchRecLab, 
+    getAllVisitRecords, insertDiagnosis, insertSurgeryInfo, insertRecord, insertMatchRecLab, 
     getLabIdByDescription, updateRecordInDB, updateMatchRecLab, getRecordById, updateDiagnosisText 
 } = require("../models/recordModel");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 const { sendEmail } = require("../utils/emailUtility");
 const crypto = require("crypto");
+
+const getVisitRecords = async (req, res) => {
+  try {
+    const records = await getAllVisitRecords(); // Fetch records from the database
+    res.json(records); // Send the records as a JSON response
+  } catch (error) {
+    console.error("Error fetching visit records:", error);
+    res.status(500).json({ error: "Failed to fetch visit records" });
+  }
+};
 
 // Ensure clinicians request an access code before adding a diagnosis
 const addRecord = async (req, res) => {
@@ -140,7 +150,7 @@ const updateRecord = async (req, res) => {
         
         // ✅ Ensure diagnosis_id is preserved if not updated
         if (!("diagnosis_id" in updatedRecordData)) {
-             updatedRecordData.diagnosis_id = currentRecord.diagnosis_id;
+            updatedRecordData.diagnosis_id = currentRecord.diagnosis_id;
         }
         
         // ✅ Now update the record correctly
@@ -196,4 +206,4 @@ const requestDiagnosisAccessCode = async (req, res) => {
     }
 };
 
-module.exports = { addRecord, updateRecord, requestDiagnosisAccessCode };
+module.exports = { getVisitRecords, addRecord, updateRecord, requestDiagnosisAccessCode };
