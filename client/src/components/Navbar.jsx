@@ -7,7 +7,7 @@ import { Button } from './Button';
 function NavBar() {
   const [click, setClick] = useState(false); 
   const [button, setButton] = useState(true); 
-  const location = useLocation(); // Use location to detect the current path
+  const location = useLocation();
   const handleClick = () => setClick(!click); 
   const closeMobileMenu = () => setClick(false); 
 

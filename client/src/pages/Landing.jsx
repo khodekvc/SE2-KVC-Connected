@@ -127,7 +127,7 @@ function Landing() {
                 <p>
                   Monday to Sunday 
                   <br />
-                   8:00 AM to 8:00 PM
+                  8:00 AM to 8:00 PM
                 </p>
               </div>
             </div>

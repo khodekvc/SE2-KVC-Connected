@@ -21,7 +21,7 @@ const VisitHistory = () => {
       try {
         const response = await fetch("http://localhost:5000/recs/visit-records", {
           method: "GET",
-          credentials: "include", // Include cookies for authentication
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -33,7 +33,7 @@ const VisitHistory = () => {
 
         const data = await response.json();
         console.log("Fetched visit records:", data);
-        setVisitRecords(data); // Update the state with the fetched records
+        setVisitRecords(data);
       } catch (error) {
         console.error("Error fetching visit records:", error);
       }

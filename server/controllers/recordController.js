@@ -7,13 +7,13 @@ const { sendEmail } = require("../utils/emailUtility");
 const crypto = require("crypto");
 
 const getVisitRecords = async (req, res) => {
-  try {
-    const records = await getAllVisitRecords(); // Fetch records from the database
-    res.json(records); // Send the records as a JSON response
-  } catch (error) {
-    console.error("Error fetching visit records:", error);
-    res.status(500).json({ error: "Failed to fetch visit records" });
-  }
+    try {
+        const records = await getAllVisitRecords();
+        res.json(records);
+    } catch (error) {
+        console.error("Error fetching visit records:", error);
+        res.status(500).json({ error: "Failed to fetch visit records" });
+    }
 };
 
 // Ensure clinicians request an access code before adding a diagnosis

@@ -33,7 +33,7 @@ class PetModel {
             [pet_id]
         );
 
-        return result.length ? result[0] : null; // Return the first result or null if not found
+        return result.length ? result[0] : null;
     }
 
     static async findSpeciesByDescription(description) {
@@ -53,13 +53,13 @@ class PetModel {
 
     static async updatePet(pet_id, updatedData) {
         const updateFields = Object.keys(updatedData);
-        if (updateFields.length === 0) return { affectedRows: 0 }; // No fields to update
+        if (updateFields.length === 0) return { affectedRows: 0 };
     
         const setClause = updateFields.map(field => `${field} = ?`).join(", ");
         const values = updateFields.map(field => updatedData[field]);
     
         const sql = `UPDATE pet_info SET ${setClause} WHERE pet_id = ?`;
-        values.push(pet_id); // Append pet_id for WHERE clause
+        values.push(pet_id);
     
         const [result] = await db.execute(sql, values);
         return result;

@@ -101,7 +101,6 @@ exports.signupPetOwnerStep2 = async (req, res) => {
     const { fname, lname, email, contact, address, password } = req.session.petOwnerData;
 
     try {
-        // Fetch the species ID based on the species description
         const species = await PetModel.findSpeciesByDescription(speciesDescription);
         if (!species) {
             return res.status(400).json({ error: "❌ Invalid species selected." });
@@ -157,13 +156,10 @@ exports.signupEmployeeRequest = async (req, res) => {
             return res.status(400).json({ error: "❌ Email already in use." });
         }
 
-        // Generate access code
         const accessCode = crypto.randomBytes(4).toString("hex").toUpperCase();
 
-        // Store employee signup data in session
         req.session.employeeData = { fname, lname, contact, email, role, password, accessCode };
 
-        // Send email to clinic owner
         const clinicOwnerEmail = process.env.CLINIC_OWNER_EMAIL;
         const subject = "New Employee Signup Request - PAWtient Tracker";
         const body = `Hello Clinic Owner,\n\nA new employee has requested to sign up:\n\nName: ${fname} ${lname}\n Contact Number: ${contact}\nEmail: ${email}\nPosition: ${role}\n\nTo approve, provide them with the following access code:\n\nAccess Code: ${accessCode}\n\nIf this request is unauthorized, please ignore this email.`;
@@ -231,7 +227,6 @@ exports.logoutUser = (req, res) => {
                 return res.status(500).json({ message: "Logout failed" });
             }
 
-            // Clear session and authentication cookies
             res.clearCookie("connect.sid", { path: "/" });
             res.clearCookie("token", { path: "/" });
 

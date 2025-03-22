@@ -25,7 +25,7 @@ function LoginForm() {
   const fetchCaptcha = async () => {
     try {
       const response = await fetch("http://localhost:5000/auth/captcha", {
-        credentials: "include", // Ensure session persistence
+        credentials: "include",
       });
       const data = await response.json();
       console.log("CAPTCHA loaded:", data);  

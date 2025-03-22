@@ -3,7 +3,7 @@ const usersController = require("../controllers/usersController");
 const { authenticate } = require("../middleware/authMiddleware");
 const router = express.Router();
 
-router.get("/me", authenticate, usersController.getEmployeeProfile);
+router.get("/myAccount", authenticate, usersController.getEmployeeProfile);
 
 // update profile (Protected route)
 router.put("/update-employee-profile", authenticate, usersController.updateEmployeeProfile);

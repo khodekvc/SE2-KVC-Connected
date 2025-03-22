@@ -37,7 +37,6 @@ const SignupPetOwner = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Login failed");
 
-      // ✅ Get token from headers or body
       const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
       if (token) {
         localStorage.setItem("jwt", token);

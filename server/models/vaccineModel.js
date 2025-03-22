@@ -20,7 +20,7 @@ class VaccineModel {
         [pet_id]
     );
 
-    return results; // Return the vaccination records
+    return results;
 }
     static async getAllVaccines() {
         const [rows] = await db.execute("SELECT * FROM vax_info");

@@ -4,27 +4,25 @@ const { authenticate } = require("../middleware/authMiddleware");
 const { hashPassword, comparePassword } = require("../utils/passwordUtility");
 
 exports.getEmployeeProfile = [
-    authenticate, // Ensure the user is authenticated
+    authenticate,
     async (req, res) => {
-        const userId = req.user.userId; // Extract userId from the JWT token
+        const userId = req.user.userId;
 
         console.log("Fetching profile for User ID:", userId);
 
         try {
-            // Fetch the employee's profile data from the database
             const employeeProfile = await UserModel.getUserById(userId);
 
             if (!employeeProfile) {
                 return res.status(404).json({ error: "❌ Employee profile not found." });
             }
 
-            // Send the employee profile as a response
             res.json({
                 firstname: employeeProfile.user_firstname,
                 lastname: employeeProfile.user_lastname,
                 email: employeeProfile.user_email,
                 contact: employeeProfile.user_contact,
-                role: employeeProfile.user_role, // Include role if available
+                role: employeeProfile.user_role,
             });
         } catch (error) {
             console.error("Error fetching employee profile:", error);
@@ -44,10 +42,8 @@ exports.updateEmployeeProfile = [
         console.log("User ID from JWT:", userId);
 
         try {
-            // Fetch current profile data
             const currentProfile = await UserModel.getUserById(userId);
 
-            // Update only the fields that are provided
             const updatedProfile = {
                 firstname: firstname || currentProfile.user_firstname,
                 lastname: lastname || currentProfile.user_lastname,
@@ -62,7 +58,7 @@ exports.updateEmployeeProfile = [
                 lastname: updatedUser.user_lastname,
                 email: updatedUser.user_email,
                 contact: updatedUser.user_contact,
-                role: updatedUser.user_role, // Include role if available
+                role: updatedUser.user_role,
             });
         } catch (error) {
             console.error("Profile Update Error:", error);
@@ -82,11 +78,9 @@ exports.updateOwnerProfile = [
         console.log("User ID from JWT:", userId);
 
         try {
-            // Fetch current profile data
             const currentProfile = await UserModel.getUserById(userId);
             const currentOwnerProfile = await UserModel.getOwnerByUserId(userId);
 
-            // Update only the fields that are provided
             const updatedProfile = {
                 firstname: firstname || currentProfile.user_firstname,
                 lastname: lastname || currentProfile.user_lastname,
@@ -126,24 +120,20 @@ exports.changePassword = [
         }
 
         try {
-            // Fetch the user's current hashed password
             const storedPassword = await UserModel.getPasswordById(userId);
 
             if (!storedPassword) {
                 return res.status(404).json({ error: "❌ User not found." });
             }
 
-            // Compare the current password with the stored password
             const isMatch = await comparePassword(currentPassword, storedPassword);
 
             if (!isMatch) {
                 return res.status(401).json({ error: "❌ Incorrect current password." });
             }
 
-            // Hash the new password
             const hashedPassword = await hashPassword(newPassword);
 
-            // Update the password in the database
             await UserModel.updatePassword(userId, hashedPassword);
 
             res.json({ message: "✅ Password changed successfully!" });

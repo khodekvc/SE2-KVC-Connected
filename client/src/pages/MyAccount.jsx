@@ -13,9 +13,9 @@ const MyAccount = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/user/me", {
+        const response = await fetch("http://localhost:5000/user/myAccount", {
           method: "GET",
-          credentials: "include", // Include cookies for authentication
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -28,7 +28,6 @@ const MyAccount = () => {
         const data = await response.json();
         console.log("Fetched user data:", data);
 
-        // Set the fetched data to state
         setDisplayData({
           firstname: data.firstname,
           lastname: data.lastname,
@@ -47,7 +46,7 @@ const MyAccount = () => {
         console.error("Error fetching user data:", error);
         setError(error.message);
       } finally {
-        setIsLoading(false); // Stop loading once the data is fetched
+        setIsLoading(false);
       }
     };
 
@@ -57,7 +56,7 @@ const MyAccount = () => {
   const handleSave = async (updatedData) => {
     try {
       const response = await fetch("http://localhost:5000/user/update-employee-profile", {
-        method: "PUT", // Matches the backend `updateEmployeeProfile` method
+        method: "PUT",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -72,8 +71,8 @@ const MyAccount = () => {
       const data = await response.json();
       console.log("Backend user data:", data);
 
-      setDisplayData(data); // Update displayData with the new data
-      setEditData(data); // Update editData with the new data
+      setDisplayData(data);
+      setEditData(data);
       setIsEditing(false);
       console.log("Edit mode exited");
     } catch (error) {
@@ -83,11 +82,11 @@ const MyAccount = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; // Show a loading message while fetching data
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>; // Show an error message if fetching fails
+    return <div>Error: {error}</div>;
   }
 
   return (

@@ -15,7 +15,6 @@ export default function PatientDirectory() {
   const [originalPatients, setOriginalPatients] = useState([]);
   const [patients, setPatients] = useState([]);
 
-  // Fetch active pets from the backend
   useEffect(() => {
     const fetchActivePets = async () => {
       try {

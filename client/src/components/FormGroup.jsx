@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
- import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Import FontAwesomeIcon
+ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 const FormGroup = ({ label, type, name, value, onChange, required, selectOptions }) => {
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -28,7 +28,7 @@ const FormGroup = ({ label, type, name, value, onChange, required, selectOptions
       ) : (
         <div className={`input-wrapper ${type === 'password' ? 'password-wrapper' : ''}`}>
           <input 
-            type={type === 'password' && showPassword ? 'text' : type} // Toggle input type for password
+            type={type === 'password' && showPassword ? 'text' : type}
             id={name} 
             name={name} 
             value={value} 
@@ -37,7 +37,7 @@ const FormGroup = ({ label, type, name, value, onChange, required, selectOptions
           />
           {type === 'password' && (
             <FontAwesomeIcon
-              icon={showPassword ? faEyeSlash : faEye} // Toggle between eye and eye-slash icons
+              icon={showPassword ? faEyeSlash : faEye}
               className="password-toggle-icon"
               onClick={togglePasswordVisibility}
             />

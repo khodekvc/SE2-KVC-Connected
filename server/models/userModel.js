@@ -53,13 +53,11 @@ class UserModel {
     }
 
     static async updateEmployeeProfile(userId, firstname, lastname, email, contact) {
-        // Perform the update
         await db.execute(
             "UPDATE users SET user_firstname = ?, user_lastname = ?, user_email = ?, user_contact = ? WHERE user_id = ?",
             [firstname, lastname, email, contact, userId]
         );
 
-        // Fetch and return the updated user data
         return this.getUserById(userId);
     }
 

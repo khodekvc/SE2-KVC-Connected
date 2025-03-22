@@ -10,10 +10,10 @@ const getAllVisitRecords = async () => {
         pet_id 
       FROM record_info
     `);
-    return rows; // Return the fetched records
+    return rows;
   } catch (error) {
     console.error("Error fetching visit records:", error);
-    throw error; // Re-throw the error to be handled by the controller
+    throw error;
   }
 };
 

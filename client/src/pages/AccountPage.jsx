@@ -18,15 +18,13 @@ const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEdit
     confirm: false,
   });
 
-  // Log displayData whenever it changes
   useEffect(() => {
     console.log("AccountPage - displayData updated:", displayData);
   }, [displayData]);
 
-  // Log initialUserData whenever it changes
   useEffect(() => {
     console.log("AccountPage - initialUserData updated:", initialUserData);
-    setUserData(initialUserData); // Sync userData with initialUserData
+    setUserData(initialUserData);
   }, [initialUserData]);
 
   const handleEdit = () => {
@@ -61,19 +59,19 @@ const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEdit
 
   const handleSavePassword = async () => {
     try {
-      console.log("Password Data:", passwordData); // Debug the password data being sent
+      console.log("Password Data:", passwordData);
 
       const response = await fetch("http://localhost:5000/user/change-password", {
         method: "POST",
-        credentials: "include", // Include cookies for authentication
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(passwordData), // Send currentPassword, newPassword, and confirmPassword
+        body: JSON.stringify(passwordData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json(); // Log the backend error response
+        const errorData = await response.json();
         console.error("Backend Error:", errorData);
         throw new Error(errorData.error || "Failed to change password");
       }
@@ -81,7 +79,6 @@ const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEdit
       const data = await response.json();
       console.log("Password changed successfully:", data);
 
-      // Reset password fields and exit password change mode
       setIsChangingPassword(false);
       setPasswordData({
         currentPassword: "",
