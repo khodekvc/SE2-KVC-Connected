@@ -4,11 +4,24 @@ const getAllVisitRecords = async () => {
   try {
     const [rows] = await db.query(`
       SELECT 
-        record_id AS id, 
-        record_date AS date, 
-        record_purpose AS purposeOfVisit, 
-        pet_id 
-      FROM record_info
+        r.record_id AS id,
+        r.record_date AS date,
+        r.record_purpose AS purposeOfVisit,
+        r.record_weight AS weight,
+        r.record_temp AS temperature,
+        r.record_condition AS conditions,
+        r.record_symptom AS symptoms,
+        r.record_recent_visit AS recentVisit,
+        r.record_purchase AS recentPurchase,
+        r.record_lab_file AS file,
+        l.lab_description AS laboratories,
+        s.surgery_type AS pastSurgeries,
+        d.diagnosis_text AS latestDiagnoses,
+        r.pet_id AS petId
+      FROM record_info r
+      LEFT JOIN lab_info l ON r.lab_id = l.lab_id
+      LEFT JOIN surgery_info s ON r.surgery_id = s.surgery_id
+      LEFT JOIN diagnosis d ON r.diagnosis_id = d.diagnosis_id
     `);
     return rows;
   } catch (error) {
