@@ -53,6 +53,7 @@ export default function PetProfile() {
       console.error("Error fetching vaccination records:", error);
     }
   }, []);
+
   useEffect(() => {
   const fetchPetData = async () => {
     try {
@@ -160,14 +161,43 @@ export default function PetProfile() {
     setEditedPetData({ ...petData })
   }
 
-  const handleSave = () => {
-    showConfirmDialog("Do you want to save your changes?", () => {
-      const newAge = calculateAge(editedPetData.birthday)
-      const updatedPetData = { ...editedPetData, age: newAge }
-      setPetData(updatedPetData)
-      setIsEditing(false)
-    })
-  }
+  const handleSave = async () => {
+    showConfirmDialog("Do you want to save your changes?", async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/pets/edit/${pet_id}`, {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            pet_name: editedPetData.name,
+            species: editedPetData.species,
+            breed: editedPetData.breed,
+            gender: editedPetData.gender,
+            birthday: editedPetData.birthday,
+            color: editedPetData.color,
+            status: editedPetData.status,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update pet profile");
+        }
+
+        const data = await response.json();
+        console.log("Pet profile updated:", data);
+
+        // Update the local state with the new data
+        const newAge = calculateAge(editedPetData.birthday);
+        const updatedPetData = { ...editedPetData, age: newAge };
+        setPetData(updatedPetData);
+        setIsEditing(false);
+      } catch (error) {
+        console.error("Error updating pet profile:", error);
+      }
+    });
+  };
 
   const handleCancel = () => {
     setIsEditing(false)

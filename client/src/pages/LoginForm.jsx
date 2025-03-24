@@ -22,6 +22,7 @@ function LoginForm() {
   useEffect(() => {
     fetchCaptcha();
   }, []);
+
   const fetchCaptcha = async () => {
     try {
       const response = await fetch("http://localhost:5000/auth/captcha", {
@@ -71,31 +72,82 @@ function LoginForm() {
     setCurrentStep("forgotPassword")
   }
 
-  const handleSendCode = (e) => {
-    e.preventDefault()
-    console.log("Send button clicked, transitioning to enterCode step")
-    setCurrentStep("enterCode")
-  }
+  const handleSendCode = async (e) => {
+  e.preventDefault();
+    try {
+      const response = await fetch("http://localhost:5000/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: formData.email }),
+      });
 
-  const handleResetPassword = (e) => {
-    e.preventDefault()
-    console.log("Reset Password button clicked, transitioning to newPassword step")
-    setCurrentStep("newPassword")
-  }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to send reset code");
 
-  const handleChangePassword = (e) => {
-    e.preventDefault()
-    console.log("Change Password button clicked, transitioning to login step")
-    setFormData({
-      email: "",
-      password: "",
-      captcha: "",
-      accessCode: "",
-      newPassword: "",
-      confirmPassword: "",
-    })
-    setCurrentStep("login")
-  }
+      console.log(data.message); // "Reset code sent to your email."
+      setMessage(data.message);
+      setCurrentStep("enterCode"); // Move to the next step
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      setMessage(error.message);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    console.log("Email:", formData.email);
+    console.log("Access Code:", formData.accessCode);
+    try {
+      const response = await fetch("http://localhost:5000/auth/verify-reset-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: formData.email, accessCode: formData.accessCode }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Invalid or expired reset code");
+
+      console.log(data.message); // "Code verified. Proceed to reset your password."
+      setMessage(data.message);
+      setCurrentStep("newPassword"); // Move to the next step
+    } catch (error) {
+      console.error("Error verifying reset code:", error);
+      setMessage(error.message);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    try {
+      if (formData.newPassword !== formData.confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+
+      const response = await fetch("http://localhost:5000/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          accessCode: formData.accessCode,
+          newPassword: formData.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to reset password");
+
+      setMessage(data.message);
+      setCurrentStep("login");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
 
   const handleResendCode = (e) => {
     e.preventDefault()
