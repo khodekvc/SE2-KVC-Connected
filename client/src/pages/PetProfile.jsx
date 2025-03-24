@@ -1,37 +1,27 @@
-"use client"
-import { useState, useEffect } from "react"
-import { Pencil, Plus} from "lucide-react"
-import "../css/PetProfile.css"
-import VisitHistory from "./VisitHistory"
-import { useConfirmDialog } from "../contexts/ConfirmDialogContext"
-import { calculateAge } from "../components/DateCalculator"
-import { useUserRole } from "../contexts/UserRoleContext"
+"use client";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { Pencil, Plus } from "lucide-react";
+import "../css/PetProfile.css";
+import VisitHistory from "./VisitHistory";
+import { useConfirmDialog } from "../contexts/ConfirmDialogContext";
+import { calculateAge } from "../components/DateCalculator";
+import { useUserRole } from "../contexts/UserRoleContext";
+import { useCallback } from "react";
 
 export default function PetProfile() {
-  const { hasPermission } = useUserRole()
-  const { showConfirmDialog } = useConfirmDialog()
-  const [activeTab, setActiveTab] = useState("profile")
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedPetData, setEditedPetData] = useState({})
+  const { pet_id } = useParams();
+  const { hasPermission } = useUserRole();
+  const { showConfirmDialog } = useConfirmDialog();
 
-  const [petData, setPetData] = useState({
-    id: "012345",
-    name: "Oreo",
-    species: "Dog",
-    breed: "Dalmatian",
-    gender: "Female",
-    birthday: "2021-05-06",
-    age: {
-      years: "03",
-      months: "07",
-    },
-    color: "White w/ spots",
-    status: "Alive",
-    owner: "Princess Tan",
-    email: "princess@gmail.com",
-    contact: "0912345678",
-    address: "Manila",
-  })
+  const [activeTab, setActiveTab] = useState("profile");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedPetData, setEditedPetData] = useState({});
+  const [petData, setPetData] = useState(null);
+  const [vaccinations, setVaccinations] = useState([]); // Move this above fetchPetData
+  const [vaccineType, setVaccineType] = useState("");
+  const [doses, setDoses] = useState("");
+  const [date, setDate] = useState("");
 
   const vaccineTypes = [
     "3 in 1 (for Cats' 1st Vaccine)",
@@ -42,51 +32,126 @@ export default function PetProfile() {
     "Anti-rabies (3 months start or succeeding ages)",
   ]
 
-  const [vaccinations, setVaccinations] = useState([
-    { type: "2 in 1 (for Dogs' 1st Vaccine, usually for puppies)", doses: 1, date: "11/20/2024" },
-    { type: "4 in 1 (for Cats' 2nd and succeeding shots)", doses: 2, date: "10/15/2024" },
-  ])
+  const fetchVaccinationRecords = useCallback(async (petId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/vax/pets/${petId}/viewVaccines`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-  const [vaccineType, setVaccineType] = useState("")
-  const [doses, setDoses] = useState("")
-  const [date, setDate] = useState("")
+      if (!response.ok) {
+        throw new Error("Failed to fetch vaccination records");
+      }
+
+      const data = await response.json();
+      console.log("Fetched vaccination records:", data);
+      setVaccinations(data); // Update vaccinations state
+    } catch (error) {
+      console.error("Error fetching vaccination records:", error);
+    }
+  }, []);
+  useEffect(() => {
+  const fetchPetData = async () => {
+    try {
+      console.log("Fetching pet data for pet_id:", pet_id);
+      const response = await fetch(`http://localhost:5000/pets/${pet_id}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch pet data");
+      }
+
+      const data = await response.json();
+      console.log("Fetched pet data:", data);
+
+      const age = calculateAge(data.birthday);
+      setPetData({ ...data, age });
+      setVaccinations(data.vaccinations || []);
+    } catch (error) {
+      console.error("Error fetching pet data:", error);
+    }
+  };
+
+  fetchPetData();
+  fetchVaccinationRecords(pet_id); // Fetch vaccination records
+}, [pet_id, fetchVaccinationRecords]);
+
+
+  if (!petData) {
+    return <div>Loading...</div>; // Show a loading message while fetching data
+  }
 
   const getCurrentDate = () => {
-    const today = new Date()
-    const month = String(today.getMonth() + 1).padStart(2, "0")
-    const day = String(today.getDate()).padStart(2, "0")
-    const year = today.getFullYear()
-    return `${month}/${day}/${year}`
-  }
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const year = today.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
 
   const formatDateToMMDDYYYY = (dateString) => {
-    const [year, month, day] = dateString.split("-")
-    return `${month}/${day}/${year}`
-  }
+    const [year, month, day] = dateString.split("-");
+    return `${month}/${day}/${year}`;
+  };
 
   const handleUpdateDose = (index) => {
-    if (!hasPermission("canAddVaccination")) return
+    if (!hasPermission("canAddVaccination")) return;
 
     setVaccinations((prevVaccinations) =>
       prevVaccinations.map((vax, i) =>
-        i === index ? { ...vax, doses: Number(vax.doses) + 1, date: getCurrentDate() } : vax,
-      ),
-    )
-  }
+        i === index ? { ...vax, doses: Number(vax.doses) + 1, date: getCurrentDate() } : vax
+      )
+    );
+  };
 
-  const handleAddVaccination = () => {
-    if (!hasPermission("canAddVaccination")) return
+  const handleAddVaccination = async () => {
+    if (!hasPermission("canAddVaccination")) return;
 
     if (!vaccineType || !doses || !date) {
-      alert("Please fill in all fields.")
-      return
+      alert("Please fill in all fields.");
+      return;
     }
-    const formattedDate = date ? formatDateToMMDDYYYY(date) : ""
-    setVaccinations([...vaccinations, { type: vaccineType, doses: Number(doses), date: formattedDate }])
-    setVaccineType("")
-    setDoses("")
-    setDate("")
-  }
+
+    const formattedDate = date ? formatDateToMMDDYYYY(date) : "";
+
+    try {
+      const response = await fetch(`http://localhost:5000/pets/${pet_id}/vaccines`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          vax_type: vaccineType,
+          imm_rec_quantity: Number(doses),
+          imm_rec_date: formattedDate,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add vaccination record");
+      }
+
+      const newRecord = await response.json();
+      console.log("Added vaccination record:", newRecord);
+
+      // Update the vaccinations state with the new record
+      setVaccinations((prevVaccinations) => [...prevVaccinations, newRecord]);
+      setVaccineType("");
+      setDoses("");
+      setDate("");
+    } catch (error) {
+      console.error("Error adding vaccination record:", error);
+    }
+  };
 
   const handleEdit = () => {
     if (!hasPermission("canEditPetProfile")) return
@@ -121,10 +186,13 @@ export default function PetProfile() {
     })
   }
 
+  /*const [age, setAge] = useState(null);
+
   useEffect(() => {
-    const age = calculateAge(petData.birthday)
-    setPetData((prevData) => ({ ...prevData, age }))
-  }, [petData.birthday])
+    if (petData?.birthday) {
+      setAge(calculateAge(petData.birthday));
+    }
+  }, [petData?.birthday]);*/
 
   return (
     <div className="pet-profile-page">
@@ -153,7 +221,7 @@ export default function PetProfile() {
               <div className="details-grid">
                 <div className="detail-item">
                   <label>ID</label>
-                  <span>{petData.id}</span>
+                  <span>{petData.pet_id}</span>
                 </div>
                 <div className="detail-item">
                   <label>Name</label>
@@ -295,7 +363,7 @@ export default function PetProfile() {
                   <div className="details-grid">
                     <div className="detail-item">
                       <label>Owner</label>
-                      <span>{petData.owner}</span>
+                      <span>{petData.owner_name}</span>
                     </div>
                     <div className="detail-item">
                       <label>Email</label>

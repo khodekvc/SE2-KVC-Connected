@@ -10,7 +10,7 @@ router.post(
     vaccineController.addPetVaccinationRecord
 );
 router.get(
-    "/pets/:pet_id/vaccines", // pet_id is now in the URL
+    "/pets/:pet_id/viewVaccines", // pet_id is now in the URL
     authenticate, // Ensure the user is authenticated
     vaccineController.getPetVaccinationRecords // Controller to fetch vaccination records
 );
