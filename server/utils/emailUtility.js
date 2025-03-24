@@ -12,7 +12,7 @@ const sendEmail = async (to, subject, body) => {
         });
 
         let mailOptions = {
-            from: `"Your Clinic" <${process.env.EMAIL_USER}>`,
+            from: `"Kho Veterinary Clinic Support" <${process.env.EMAIL_USER}>`,
             to: to,
             subject: subject,
             text: body,

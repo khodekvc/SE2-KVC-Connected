@@ -22,13 +22,13 @@ const requestPasswordReset = async (req, res) => {
         resetTokens.set(email, { token: resetToken, expires: Date.now() + 10 * 60 * 1000 }); // 10 min expiry
 
         // Professional email content
-        const subject = "Password Reset Request - PAWtient Tracker";
+        const subject = "Password Reset Request - Kho Veterinary Clinic";
         const body = `Greetings! \n\n
-We received a request to reset your password for your PAWtient Tracker account. If you requested this reset, please use the verification code below.\n\n
+We received a request to reset your password for your Kho Veterinary Clinic account. If you requested this reset, please use the verification code below.\n\n
 The code is valid for **10 minutes**. If you did not request this, please ignore this email, and your password will remain unchanged.\n\n
 For security reasons, do not share this code with anyone.\n\n
 Best regards,\n
-**PAWtient Tracker Support Team**\n\n\n
+**Kho Veterinary Clinic Support Team**\n\n\n
 🔑 **Reset Code:** ${resetToken}\n\n`;
 
         // Send email
