@@ -97,20 +97,24 @@ function LoginForm() {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    console.log("Reset Password button clicked"); // Debug log
     console.log("Email:", formData.email);
     console.log("Access Code:", formData.accessCode);
+  
     try {
       const response = await fetch("http://localhost:5000/auth/verify-reset-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: formData.email, accessCode: formData.accessCode }),
+        body: JSON.stringify({ email: formData.email, code: formData.accessCode }),
       });
-
+  
       const data = await response.json();
+      console.log("Response from server:", data); // Debug log
+  
       if (!response.ok) throw new Error(data.error || "Invalid or expired reset code");
-
+  
       console.log(data.message); // "Code verified. Proceed to reset your password."
       setMessage(data.message);
       setCurrentStep("newPassword"); // Move to the next step
@@ -122,11 +126,19 @@ function LoginForm() {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
+    console.log("Change Password button clicked"); // Debug log
+    console.log("Sending password reset request:", {
+      email: formData.email,
+      accessCode: formData.accessCode,
+      newPassword: formData.newPassword,
+      confirmPassword: formData.confirmPassword,
+    });
+  
     try {
       if (formData.newPassword !== formData.confirmPassword) {
         throw new Error("Passwords do not match");
       }
-
+  
       const response = await fetch("http://localhost:5000/auth/reset-password", {
         method: "POST",
         headers: {
@@ -136,18 +148,24 @@ function LoginForm() {
           email: formData.email,
           accessCode: formData.accessCode,
           newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword,
         }),
       });
-
+  
       const data = await response.json();
+      console.log("Response from server:", data); // Debug log
+  
       if (!response.ok) throw new Error(data.error || "Failed to reset password");
-
+  
       setMessage(data.message);
-      setCurrentStep("login");
+      console.log("Password reset successfully. Redirecting to login...");
+      setCurrentStep("login"); // Redirect to login
     } catch (error) {
+      console.error("Error resetting password:", error);
       setMessage(error.message);
     }
   };
+  
 
   const handleResendCode = (e) => {
     e.preventDefault()
@@ -240,7 +258,6 @@ function LoginForm() {
                 buttonStyle="btn--primary"
                 type="submit"
                 className="form-btn-1"
-                onClick={handleChangePassword} 
               >
                 CHANGE PASSWORD
               </Button>

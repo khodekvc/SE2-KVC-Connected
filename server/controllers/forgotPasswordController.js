@@ -7,6 +7,9 @@ const db = require("../config/db");
 // Store reset tokens temporarily
 const resetTokens = new Map(); // { email: { token, expires } }
 
+// Add a debug log to print the contents of resetTokens
+console.log("Current reset tokens:", resetTokens);
+
 // 📌 Request a password reset (Step 1)
 const requestPasswordReset = async (req, res) => {
     try {
@@ -49,7 +52,18 @@ const verifyResetCode = async (req, res) => {
         const { email, code } = req.body;
         const storedToken = resetTokens.get(email);
 
-        if (!storedToken || storedToken.token !== code || storedToken.expires < Date.now()) {
+        if (!storedToken) {
+            console.log("No token found for email:", email); // Debug log
+            return res.status(400).json({ error: "Invalid or expired reset code." });
+        }
+
+        if (storedToken.token !== code) {
+            console.log("Provided code does not match stored token:", { provided: code, stored: storedToken.token }); // Debug log
+            return res.status(400).json({ error: "Invalid or expired reset code." });
+        }
+
+        if (storedToken.expires < Date.now()) {
+            console.log("Reset code has expired for email:", email); // Debug log
             return res.status(400).json({ error: "Invalid or expired reset code." });
         }
 
@@ -63,11 +77,30 @@ const verifyResetCode = async (req, res) => {
 // 📌 Reset password (Step 3)
 const resetPassword = async (req, res) => {
     try {
-        const { email, code, newPassword, confirmPassword } = req.body;
-        if (newPassword !== confirmPassword) return res.status(400).json({ error: "Passwords do not match." });
+        const { email, accessCode, newPassword, confirmPassword } = req.body; // Use accessCode instead of code
+        console.log("Received password reset request:", req.body); // Debug log
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ error: "Passwords do not match." });
+        }
+
+        console.log("Current reset tokens:", Array.from(resetTokens.entries())); // Debug log
 
         const storedToken = resetTokens.get(email);
-        if (!storedToken || storedToken.token !== code || storedToken.expires < Date.now()) {
+        console.log("Stored token for email:", storedToken); // Debug log
+
+        if (!storedToken) {
+            console.log("No token found for email:", email); // Debug log
+            return res.status(400).json({ error: "Invalid or expired reset code." });
+        }
+
+        if (storedToken.token !== accessCode) { // Compare with accessCode
+            console.log("Provided code does not match stored token:", { provided: accessCode, stored: storedToken.token }); // Debug log
+            return res.status(400).json({ error: "Invalid or expired reset code." });
+        }
+
+        if (storedToken.expires < Date.now()) {
+            console.log("Reset code has expired for email:", email); // Debug log
             return res.status(400).json({ error: "Invalid or expired reset code." });
         }
 
@@ -78,9 +111,10 @@ const resetPassword = async (req, res) => {
         // Clear reset token
         resetTokens.delete(email);
 
+        console.log("Password reset successfully for:", email); // Debug log
         res.json({ message: "Password reset successfully. You can now log in." });
     } catch (error) {
-        console.error(error);
+        console.error("Error resetting password:", error);
         res.status(500).json({ error: "Server error while resetting password." });
     }
 };
