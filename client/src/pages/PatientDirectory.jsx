@@ -77,43 +77,62 @@ export default function PatientDirectory() {
   }
 
   const applyFilters = (filters) => {
-    setActiveFilters(filters)
-    let filteredPatients = [...originalPatients]
+    setActiveFilters(filters);
 
-    // id filter
-    if (filters.idFrom || filters.idTo) {
-      filteredPatients = filteredPatients.filter((patient) => {
-        const id = Number.parseInt(patient.id)
-        const from = filters.idFrom ? Number.parseInt(filters.idFrom) : 0
-        const to = filters.idTo ? Number.parseInt(filters.idTo) : Number.POSITIVE_INFINITY
-        return id >= from && id <= to
-      })
-    }
-
-    // species filter
-    if (filters.species) {
-      filteredPatients = filteredPatients.filter((patient) => patient.species === filters.species)
-    }
-
-    // sort by name or owner
-    if (filters.sortBy) {
-      const key = filters.sortBy === "petName" ? "name" : "owner"
-      filteredPatients.sort((a, b) => {
-        if (filters.sortOrder === "ascending") {
-          return a[key].localeCompare(b[key])
-        } else {
-          return b[key].localeCompare(a[key])
-        }
-      })
-    }
-
-    setPatients(filteredPatients)
-  }
+    // Call the search and filter function with the selected filters
+    searchAndFilterPets({
+        pet_id: filters.idFrom || undefined,
+        min_id: filters.idFrom || undefined,
+        max_id: filters.idTo || undefined,
+        pet_name: filters.petName || undefined,
+        owner_name: filters.ownerName || undefined,
+        species: filters.species || undefined,
+        sort_by: filters.sortBy ? (filters.sortBy === "petName" ? "pet_name" : "owner_name") : undefined,
+        sort_order: filters.sortBy ? (filters.sortOrder === "ascending" ? "asc" : "desc") : undefined,
+    });
+};
 
   const resetFilters = () => {
     setActiveFilters(null)
     setPatients(originalPatients)
   }
+
+  const searchAndFilterPets = async (filters) => {
+    try {
+      const queryParams = new URLSearchParams();
+  
+      // Add filters to query parameters
+      if (filters.search) queryParams.append("search", filters.search); // General search
+      if (filters.pet_id) queryParams.append("pet_id", filters.pet_id);
+      if (filters.pet_name) queryParams.append("pet_name", filters.pet_name);
+      if (filters.owner_name) queryParams.append("owner_name", filters.owner_name);
+      if (filters.species) queryParams.append("species", filters.species);
+      if (filters.sort_by) queryParams.append("sort_by", filters.sort_by);
+      if (filters.sort_order) queryParams.append("sort_order", filters.sort_order);
+      if (filters.min_id) queryParams.append("min_id", filters.min_id);
+      if (filters.max_id) queryParams.append("max_id", filters.max_id);
+  
+      const response = await fetch(`http://localhost:5000/pets/search-pets?${queryParams.toString()}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to search and filter pets");
+      }
+  
+      const data = await response.json();
+      console.log("Search and filter results:", data);
+  
+      // Update the patients state with the filtered data
+      setPatients(data);
+    } catch (error) {
+      console.error("Error searching and filtering pets:", error);
+    }
+  };
 
   return (
     <div className="patient-directory">
@@ -121,7 +140,12 @@ export default function PatientDirectory() {
         <h2>Patient Directory</h2>
         <div className="search-container">
           <Search className="search-icon" />
-          <input type="text" placeholder="Search..." className="search-input" />
+          <input
+            type="text"
+            placeholder="Search..."
+            className="search-input"
+            onChange={(e) => searchAndFilterPets({ search: e.target.value })} // Use the "search" parameter
+          />
           <button
             className={`filter-button ${activeFilters ? "active" : ""}`}
             onClick={() => setIsFilterModalOpen(true)}
@@ -148,8 +172,8 @@ export default function PatientDirectory() {
                 <tr key={patient.pet_id} className={index % 2 === 0 ? "row-even" : "row-odd"}>
                   <td>{patient.pet_id}</td>
                   <td>{patient.pet_name}</td>
-                  <td>{patient.owner_name}</td>
-                  <td>{patient.species}</td>
+                  <td>{patient.owner_name || "N/A"}</td> {/* Ensure owner_name is displayed */}
+                  <td>{patient.species || "N/A"}</td> {/* Ensure species is displayed */}
                   <td className="actions">
                     <Archive size={16} onClick={() => handleArchive(patient.pet_id)} style={{ cursor: "pointer" }} />
                     <ArrowRight size={16} className="view-profile" onClick={() => handleViewProfile(patient.pet_id)} />

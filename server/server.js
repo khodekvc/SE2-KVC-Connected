@@ -79,6 +79,11 @@ app.use("/pets", petRoutes);
 app.use("/vax", vaccineRoutes);
 app.use("/recs", recordRoutes);
 
+app.use((req, res, next) => {
+    console.log(`Unhandled request: ${req.method} ${req.originalUrl}`);
+    res.status(404).json({ error: "Not Found" });
+});
+
 // starts the server
 app.listen(port, () => {
     console.log(`✅ Server running at http://localhost:${port}`);

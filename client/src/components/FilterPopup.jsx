@@ -43,8 +43,16 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
   }
 
   const handleApply = () => {
-    onApply(filters)
-    onClose()
+    const updatedFilters = { ...filters };
+
+    // Remove sortBy and sortOrder if not explicitly selected
+    if (!filters.sortBy) {
+        delete updatedFilters.sortBy;
+        delete updatedFilters.sortOrder;
+    }
+
+    onApply(updatedFilters);
+    onClose();
   }
 
   if (!isOpen) return null
