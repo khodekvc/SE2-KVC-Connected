@@ -4,27 +4,29 @@ import { useState } from "react"
 import "../css/UnlockDiagnosis.css"
 
 const UnlockModal = ({ isOpen, onClose, onUnlock }) => {
-  const [reason, setReason] = useState("")
+  const [accessCode, setAccessCode] = useState("");
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    onUnlock(reason)
-    setReason("")
-    onClose()
-  }
+    e.preventDefault();
+    onUnlock(accessCode); // Pass the access code to the parent
+    setAccessCode("");
+    onClose();
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Modify Diagnosis</h2>
-        <p>Enter mo na yung code na binigay ni doc:</p>
+        <p>Enter the access code provided by the doctor:</p>
         <form onSubmit={handleSubmit}>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
+          <input
+            type="text"
+            value={accessCode}
+            onChange={(e) => setAccessCode(e.target.value)}
             required
+            placeholder="Enter Access Code"
           />
           <div className="modal-buttons">
             <button type="button" onClick={onClose} className="cancel-button">
@@ -37,7 +39,7 @@ const UnlockModal = ({ isOpen, onClose, onUnlock }) => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UnlockModal
+export default UnlockModal;

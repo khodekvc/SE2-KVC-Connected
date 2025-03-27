@@ -26,10 +26,6 @@ const getVisitRecords = async (req, res) => {
 // Ensure clinicians request an access code before adding a diagnosis
 const addRecord = async (req, res) => {
   try {
-    console.log("Add Record Route Hit");
-    console.log("Pet ID:", req.params.petId);
-    console.log("Request Body:", req.body);
-
     const { role } = req.user; // Assuming user role is available in req.user
     const { petId } = req.params;
     const {
@@ -157,7 +153,7 @@ const updateRecord = async (req, res) => {
         };
 
         console.log("DEBUG: Updated Record Data:", updatedRecordData); 
-        
+
         if (lab_description) {
             const lab_id = await getLabIdByDescription(lab_description);
             if (!lab_id) {
@@ -226,6 +222,14 @@ const updateRecord = async (req, res) => {
 // Allow clinicians to request an access code
 const requestDiagnosisAccessCode = async (req, res) => {
     try {
+        console.log("Request body:", req.body);
+        console.log("Session:", req.session);
+
+        const { role } = req.body; // Assuming `req.user` contains the authenticated user's data
+
+        if (role !== "clinician") {
+            return res.status(403).json({ error: "Only clinicians can request an access code." });
+        }
         const accessCode = crypto.randomBytes(4).toString("hex").toUpperCase();
 
         if (!req.session) {

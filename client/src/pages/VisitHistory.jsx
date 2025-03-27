@@ -9,6 +9,7 @@ import "../css/VisitHistory.css"
 import { useUserRole } from "../contexts/UserRoleContext"
 import { useParams } from "react-router-dom"; // Import useParams
 
+
 const VisitHistory = () => {
   const { pet_id } = useParams(); // Extract pet_id from the URL
   const { hasPermission } = useUserRole()
@@ -58,6 +59,11 @@ const VisitHistory = () => {
   }
 
   const handleViewRecord = (record) => {
+    if (!record || !record.id) {
+      console.error("Record ID is missing:", record);
+      return;
+    }
+    console.log("Selected Record:", record);
     setSelectedRecord(record)
   }
 
@@ -97,6 +103,7 @@ const VisitHistory = () => {
   }
 
   const updateRecord = async (recordId, updatedData) => {
+    console.log("Record ID in updateRecord:", recordId);
     try {
       const response = await fetch(`http://localhost:5000/recs/records/${recordId}`, {
         method: "PUT",
@@ -131,10 +138,13 @@ const VisitHistory = () => {
   if (selectedRecord) {
     return (
       <ViewRecord
-        record={selectedRecord}
-        onBack={() => setSelectedRecord(null)}
-        onUpdate={(updatedRecord) => updateRecord(updatedRecord.id, updatedRecord)}
-      />
+      record={selectedRecord}
+      onBack={() => setSelectedRecord(null)}
+      onUpdate={(updatedRecord) => {
+        console.log("Calling updateRecord with:", updatedRecord.id, updatedRecord); // Debugging
+        updateRecord(updatedRecord.id, updatedRecord);
+  }}
+/>
     );
   }
 

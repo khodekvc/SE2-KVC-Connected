@@ -20,7 +20,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
   const [editedRecord, setEditedRecord] = useState(record)
   const [loading, setLoading] = useState(true)
   const [error, setErrors] = useState({}) // Define setErrors
-
+  
   useEffect(() => {
     const fetchRecord = async () => {
       try {
@@ -38,9 +38,11 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
         }
 
         const data = await response.json();
-        setRecord(data); // Set the fetched record data
+        console.log("Fetched record:", data); // Debugging line
+        if (!data.id) throw new Error("Fetched record has no ID");
+        setEditedRecord(data); // Set the fetched record data
       } catch (err) {
-        setError(err.message);
+        setErrors(err.message);
       } finally {
         setLoading(false);
       }
@@ -58,61 +60,111 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
   }
 
   const handleInputChange = (e) => {
-    const { name, value, type } = e.target
-    if (type === "file") {
-      setEditedRecord((prev) => ({
-        ...prev,
-        [name]: e.target.files[0],
-      }))
-    } else {
-      setEditedRecord((prev) => ({
-        ...prev,
-        [name]: value,
-      }))
-    }
-
+    const { name, value, type } = e.target;
+    console.log("Input Change Triggered:", { name, value, type });
+  
+    setEditedRecord((prev) => ({
+      ...prev,
+      [name]: type === "file" ? e.target.files[0] : value,
+    }));
+  
     if (error[name]) {
-      setError((prev) => ({
+      setErrors((prev) => ({
         ...prev,
         [name]: "",
-      }))
+      }));
     }
-  }
-
+  };
+  
   const handleSave = () => {
     if (validateForm()) {
       showConfirmDialog("Do you want to save your changes?", () => {
-        onUpdate(editedRecord)
-        setIsEditing(false)
-      })
+        handleSubmit(); // Call handleSubmit to send the data to the backend
+      });
     }
-  }
+  };
 
-  const handleUnlockDiagnosis = () => {
-    setIsModalOpen(true)
-  }
+  const handleUnlockDiagnosis = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/recs/records/request-access-code", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: "clinician" }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to request access code.");
+      }
+
+      alert("Access code sent to the clinic owner's email."); // Notify the user
+      setIsModalOpen(true); // Open the popup
+    } catch (error) {
+      console.error("Error requesting access code:", error);
+      alert(error.message); // Show error to the user
+    }
+  };
+
+  const handleAccessCodeSubmit = (accessCode) => {
+    setEditedRecord((prev) => ({
+      ...prev,
+      accessCode, // Store the access code in the state
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault(); 
+
+    console.log("Record ID in handleSubmit:", record?.id);
+    if (!record || !record.id) {
+      console.error("Record ID is missing. Cannot update record.");
+      return;
+    }
 
     const updatedData = {
-      record_date: editedRecord.date,
+      record_date: editedRecord.date ? new Date(editedRecord.date).toISOString().split("T")[0] : null,
       record_weight: editedRecord.weight,
       record_temp: editedRecord.temperature,
-      record_condition: editedRecord.condition,
-      record_symptom: editedRecord.symptom,
-      record_recent_visit: editedRecord.recentVisit,
-      record_purchase: editedRecord.purchase,
-      record_purpose: editedRecord.purpose,
-      diagnosis_text: editedRecord.diagnosis, // Optional
+      record_condition: editedRecord.conditions,
+      record_symptom: editedRecord.symptoms,
+      record_recent_visit: editedRecord.recentVisit ? new Date(editedRecord.recentVisit).toISOString().split("T")[0] : null,
+      record_purchase: editedRecord.recentPurchase,
+      record_purpose: editedRecord.purposeOfVisit,
+      diagnosis_text: editedRecord.latestDiagnosis, // Optional
       lab_description: editedRecord.labDescription, // Optional
       surgery_type: editedRecord.surgeryType, // Optional
-      surgery_date: editedRecord.surgeryDate, // Optional
-      accessCode: editedRecord.accessCode, // Required for clinicians updating diagnosis
+      surgery_date: editedRecord.surgeryDate ? new Date(editedRecord.surgeryDate).toISOString().split("T")[0] : null,
+      accessCode: editedRecord.accessCode, // Include access code for clinicians
     };
+    console.log("Updated Data:", updatedData); 
+    try {
+      console.log("Record ID in handleSubmit:", record.id);
+      const response = await fetch(`http://localhost:5000/recs/records/${record.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
 
-    await updateRecord(record.id, updatedData); // Call the update function
+      if (!response.ok) {
+        throw new Error("Failed to update the record");
+      }
+
+      const updatedRecord = await response.json();
+      console.log("Record updated successfully:", updatedRecord);
+
+      onUpdate({ ...editedRecord, ...updatedRecord, id: record.id }); // Update the parent state
+      setIsEditing(false); // Exit editing mode
+    } catch (error) {
+      console.error("Error updating record:", error);
+    }
   };
+
 
   return (
     <>
@@ -156,7 +208,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
         </div>
       </div>
 
-      <UnlockModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onUnlock={unlockDiagnosis} />
+      <UnlockModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onUnlock={handleAccessCodeSubmit} />
     </>
   )
 }
