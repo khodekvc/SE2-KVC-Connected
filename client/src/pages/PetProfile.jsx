@@ -8,29 +8,18 @@ import { useConfirmDialog } from "../contexts/ConfirmDialogContext";
 import { calculateAge } from "../components/DateCalculator";
 import { useUserRole } from "../contexts/UserRoleContext";
 import { useCallback } from "react";
+import VaccinationRecord from "./VaccinationRecord";
+
 
 export default function PetProfile() {
   const { pet_id } = useParams();
   const { hasPermission } = useUserRole();
   const { showConfirmDialog } = useConfirmDialog();
-
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [editedPetData, setEditedPetData] = useState({});
   const [petData, setPetData] = useState(null);
-  const [vaccinations, setVaccinations] = useState([]); // Move this above fetchPetData
-  const [vaccineType, setVaccineType] = useState("");
-  const [doses, setDoses] = useState("");
-  const [date, setDate] = useState("");
 
-  const vaccineTypes = [
-    "3 in 1 (for Cats' 1st Vaccine)",
-    "4 in 1 (for Cats' 2nd and succeeding shots)",
-    "Kennel cough (for Dogs)",
-    "2 in 1 (for Dogs' 1st Vaccine, usually for puppies)",
-    "5 in 1 (for Dogs' 2nd and succeeding shots)",
-    "Anti-rabies (3 months start or succeeding ages)",
-  ]
 
   const fetchVaccinationRecords = useCallback(async (petId) => {
     try {
@@ -42,9 +31,11 @@ export default function PetProfile() {
         },
       });
 
+
       if (!response.ok) {
         throw new Error("Failed to fetch vaccination records");
       }
+
 
       const data = await response.json();
       console.log("Fetched vaccination records:", data);
@@ -53,6 +44,7 @@ export default function PetProfile() {
       console.error("Error fetching vaccination records:", error);
     }
   }, []);
+
 
   useEffect(() => {
   const fetchPetData = async () => {
@@ -66,12 +58,15 @@ export default function PetProfile() {
         },
       });
 
+
       if (!response.ok) {
         throw new Error("Failed to fetch pet data");
       }
 
+
       const data = await response.json();
       console.log("Fetched pet data:", data);
+
 
       const age = calculateAge(data.birthday);
       setPetData({ ...data, age });
@@ -81,128 +76,97 @@ export default function PetProfile() {
     }
   };
 
+
   fetchPetData();
   fetchVaccinationRecords(pet_id); // Fetch vaccination records
 }, [pet_id, fetchVaccinationRecords]);
+
+
 
 
   if (!petData) {
     return <div>Loading...</div>; // Show a loading message while fetching data
   }
 
-  const getCurrentDate = () => {
-    const today = new Date();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    const year = today.getFullYear();
-    return `${month}/${day}/${year}`;
-  };
-
-  const formatDateToMMDDYYYY = (dateString) => {
-    const [year, month, day] = dateString.split("-");
-    return `${month}/${day}/${year}`;
-  };
-
-  const handleUpdateDose = (index) => {
-    if (!hasPermission("canAddVaccination")) return;
-
-    setVaccinations((prevVaccinations) =>
-      prevVaccinations.map((vax, i) =>
-        i === index ? { ...vax, doses: Number(vax.doses) + 1, date: getCurrentDate() } : vax
-      )
-    );
-  };
-
-  const handleAddVaccination = async () => {
-    if (!hasPermission("canAddVaccination")) return;
-
-    if (!vaccineType || !doses || !date) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    const formattedDate = date ? formatDateToMMDDYYYY(date) : "";
-
-    try {
-      const response = await fetch(`http://localhost:5000/pets/${pet_id}/vaccines`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          vax_type: vaccineType,
-          imm_rec_quantity: Number(doses),
-          imm_rec_date: formattedDate,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add vaccination record");
-      }
-
-      const newRecord = await response.json();
-      console.log("Added vaccination record:", newRecord);
-
-      // Update the vaccinations state with the new record
-      setVaccinations((prevVaccinations) => [...prevVaccinations, newRecord]);
-      setVaccineType("");
-      setDoses("");
-      setDate("");
-    } catch (error) {
-      console.error("Error adding vaccination record:", error);
-    }
-  };
 
   const handleEdit = () => {
     if (!hasPermission("canEditPetProfile")) return
+
 
     setIsEditing(true)
     setEditedPetData({ ...petData })
   }
 
+
   const handleSave = async () => {
-    showConfirmDialog("Do you want to save your changes?", async () => {
-      try {
+    console.log("Save button clicked"); // Debugging line
+
+
+    try {
+        // Merge editedPetData with petData to ensure all fields are present
+        const updatedData = {
+            ...petData,
+            ...editedPetData,
+        };
+
+
+        console.log("Final data to save:", updatedData); // Debugging line
+
+
+        // Calculate age based on the selected birthday
+        const age = calculateAge(updatedData.birthday);
+        updatedData.age_year = age.years;
+        updatedData.age_month = age.months;
+
+
+        const statusValue = updatedData.status === "Alive" ? 1 : 0;
+
+
         const response = await fetch(`http://localhost:5000/pets/edit/${pet_id}`, {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            pet_name: editedPetData.name,
-            species: editedPetData.species,
-            breed: editedPetData.breed,
-            gender: editedPetData.gender,
-            birthday: editedPetData.birthday,
-            color: editedPetData.color,
-            status: editedPetData.status,
-          }),
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                pet_name: updatedData.name,
+                species: updatedData.species,
+                pet_breed: updatedData.breed,
+                pet_gender: updatedData.gender,
+                pet_birthday: updatedData.birthday,
+                pet_age_month: updatedData.age_month,
+                pet_age_year: updatedData.age_year,
+                pet_color: updatedData.color,
+                pet_status: statusValue,
+            }),
         });
 
+
         if (!response.ok) {
-          throw new Error("Failed to update pet profile");
+            throw new Error("Failed to update pet profile");
         }
+
 
         const data = await response.json();
         console.log("Pet profile updated:", data);
 
+
         // Update the local state with the new data
-        const newAge = calculateAge(editedPetData.birthday);
-        const updatedPetData = { ...editedPetData, age: newAge };
-        setPetData(updatedPetData);
+        //const newAge = calculateAge(editedPetData.birthday);
+        //const updatedPetData = { ...editedPetData, age: newAge };
+        setPetData(updatedData);
         setIsEditing(false);
-      } catch (error) {
+    } catch (error) {
         console.error("Error updating pet profile:", error);
-      }
-    });
-  };
+    }
+};
+
 
   const handleCancel = () => {
     setIsEditing(false)
     setEditedPetData({})
   }
+
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target
@@ -216,13 +180,6 @@ export default function PetProfile() {
     })
   }
 
-  /*const [age, setAge] = useState(null);
-
-  useEffect(() => {
-    if (petData?.birthday) {
-      setAge(calculateAge(petData.birthday));
-    }
-  }, [petData?.birthday]);*/
 
   return (
     <div className="pet-profile-page">
@@ -234,6 +191,7 @@ export default function PetProfile() {
           Visit History
         </button>
       </div>
+
 
       <div className="content-area">
         {activeTab === "profile" ? (
@@ -247,6 +205,7 @@ export default function PetProfile() {
                   </button>
                 )}
               </div>
+
 
               <div className="details-grid">
                 <div className="detail-item">
@@ -376,6 +335,7 @@ export default function PetProfile() {
                 </div>
               </div>
 
+
               {isEditing && (
                 <div className="edit-actions">
                   <button className="save-button" onClick={handleSave}>
@@ -386,6 +346,7 @@ export default function PetProfile() {
                   </button>
                 </div>
               )}
+
 
               {hasPermission("canViewContactInfo") && (
                 <>
@@ -412,92 +373,9 @@ export default function PetProfile() {
               )}
             </div>
 
+
             <div className="separator"></div>
-
-            <div className="vaccination-record">
-              <h2>Vaccination Record</h2>
-
-              {hasPermission("canAddVaccination") && (
-                <div className="vaccination-form">
-                  <div className="form-group">
-                    <label>
-                      Type of Vaccine<span className="required">*</span>
-                    </label>
-                    {/* Changed from input to select dropdown */}
-                    <select
-                      name="vaccineType"
-                      value={vaccineType}
-                      onChange={(e) => setVaccineType(e.target.value)}
-                      className="vaccine-select"
-                    >
-                      <option value="">Select vaccine type</option>
-                      {vaccineTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>
-                      Doses (Qty.)<span className="required">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      name="doses"
-                      value={doses}
-                      onChange={(e) => setDoses(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Date</label>
-                    <div className="date-input">
-                      <input
-                        type="date"
-                        placeholder="Select date"
-                        name="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <button className="add-button" onClick={handleAddVaccination}>
-                    <Plus size={16} />
-                    Add
-                  </button>
-                </div>
-              )}
-
-              <div className="vaccination-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Type of Vaccine</th>
-                      <th>Doses (Qty.)</th>
-                      <th>Date</th>
-                      {hasPermission("canAddVaccination") && <th></th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vaccinations.map((vax, index) => (
-                      <tr key={index}>
-                        <td>{vax.type}</td>
-                        <td>{vax.doses}</td>
-                        <td>{vax.date}</td>
-                        {hasPermission("canAddVaccination") && (
-                          <td>
-                            <button className="add-dose" onClick={() => handleUpdateDose(index)}>
-                              +
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <VaccinationRecord pet_id={pet_id} hasPermission={hasPermission} />
           </div>
         ) : (
           <div className="history-content">
@@ -508,3 +386,4 @@ export default function PetProfile() {
     </div>
   )
 }
+

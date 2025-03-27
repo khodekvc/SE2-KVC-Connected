@@ -6,7 +6,140 @@ const db = require("../config/db");
 const mysql = require("mysql2");
 
 // Routes that require clinician or doctor authorization
-router.put("/edit/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.updatePetProfile);
+router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
+    const { pet_id } = req.params
+    const { vax_type, imm_rec_quantity, imm_rec_date } = req.body
+ 
+    try {
+      // First, get the vax_id based on the vax_type
+      const [vaxResult] = await db.query("SELECT vax_id FROM vax_info WHERE vax_type = ?", [vax_type])
+ 
+      if (vaxResult.length === 0) {
+        return res.status(404).json({ error: "Vaccine type not found" })
+      }
+ 
+      const vax_id = vaxResult[0].vax_id
+ 
+      // Insert the vaccination record
+      const [result] = await db.query(
+        "INSERT INTO immunization_record (vax_id, pet_id, imm_rec_quantity, imm_rec_date) VALUES (?, ?, ?, ?)",
+        [vax_id, pet_id, imm_rec_quantity, imm_rec_date],
+      )
+ 
+      if (result.affectedRows === 0) {
+        return res.status(500).json({ error: "Failed to add vaccination record" })
+      }
+ 
+      // Return the newly created record with its ID
+      res.status(201).json({
+        id: result.insertId,
+        vax_id,
+        pet_id,
+        vax_type,
+        imm_rec_quantity,
+        imm_rec_date,
+      })
+    } catch (error) {
+      console.error("Error adding vaccination record:", error)
+      res.status(500).json({ error: "Failed to add vaccination record" })
+    }
+  })
+ 
+  // Route to get all vaccination records for a pet
+  router.get("/:pet_id/vaccines", authenticate, async (req, res) => {
+    const { pet_id } = req.params
+ 
+    try {
+      const [records] = await db.query(
+        `SELECT ir.*, vi.vax_type
+         FROM immunization_record ir
+         JOIN vax_info vi ON ir.vax_id = vi.vax_id
+         WHERE ir.pet_id = ?
+         ORDER BY ir.imm_rec_date DESC`,
+        [pet_id],
+      )
+ 
+      res.json(records)
+    } catch (error) {
+      console.error("Error fetching vaccination records:", error)
+      res.status(500).json({ error: "Failed to fetch vaccination records" })
+    }
+  })
+ 
+  // Route to update a vaccination record (for the + button)
+  router.put(
+    "/:pet_id/vaccines/:record_id",
+    authenticate,
+    authorize({ roles: ["clinician", "doctor"] }),
+    async (req, res) => {
+      const { pet_id, record_id } = req.params
+      const { imm_rec_quantity, imm_rec_date } = req.body
+ 
+      try {
+        const [result] = await db.query(
+          "UPDATE immunization_record SET imm_rec_quantity = ?, imm_rec_date = ? WHERE vax_id = ? AND pet_id = ?",
+          [imm_rec_quantity, imm_rec_date, record_id, pet_id],
+        )
+ 
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ error: "Vaccination record not found" })
+        }
+ 
+        res.json({ message: "Vaccination record updated successfully" })
+      } catch (error) {
+        console.error("Error updating vaccination record:", error)
+        res.status(500).json({ error: "Failed to update vaccination record" })
+      }
+    },
+  )
+ 
+router.put("/edit/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
+    const { pet_id } = req.params;
+    const updatedData = req.body;
+
+
+    console.log("API called to update pet profile for pet ID:", pet_id, "with data:", updatedData); // Debugging line
+
+
+    try {
+        // Provide default values for missing fields
+        const {
+            pet_name = "",
+            pet_breed = "",
+            pet_gender = "Unknown", // Default to "Unknown" if gender is missing
+            pet_birthday = null,
+            pet_age_month = "",
+            pet_age_year = "",
+            pet_color = "",
+            pet_status = "1", // Default to "Alive" if status is missing
+        } = updatedData;
+
+
+        const result = await db.query(
+            `UPDATE pet_info
+             SET pet_name = ?, pet_breed = ?, pet_gender = ?, pet_birthday = ?, pet_age_month = ?, pet_age_year = ?, pet_color = ?, pet_status = ?
+             WHERE pet_id = ?`,
+            [pet_name, pet_breed, pet_gender, pet_birthday, pet_age_month, pet_age_year, pet_color, pet_status, pet_id]
+        );
+
+
+        console.log("Database query result:", result); // Debugging line
+
+
+        if (result[0].affectedRows === 0) {
+            console.log("No rows affected"); // Debugging line
+            return res.status(404).json({ error: "Pet not found or no changes made" });
+        }
+
+
+        res.status(200).json({ message: "Pet profile updated successfully" });
+    } catch (error) {
+        console.error("Error updating pet profile:", error);
+        res.status(500).json({ error: "Failed to update pet profile" });
+    }
+});
+
+// router.put("/edit/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.updatePetProfile);
 router.put("/archive/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.archivePet);
 router.put("/restore/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.restorePet);
 
@@ -132,5 +265,5 @@ router.get("/search-pets", async (req, res) => {
 
 
 // Route to fetch pet details by pet_id
-//router.get("/:pet_id", authenticate, petController.getPetById);
+router.get("/:pet_id", authenticate, petController.getPetById);
 module.exports = router;
