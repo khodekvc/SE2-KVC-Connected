@@ -128,12 +128,18 @@ const updateRecord = async (req, res) => {
             return res.status(404).json({ error: "Record not found." });
         }
 
-        // 🔒 Enforce access code for clinicians trying to update a diagnosis
         if (role === "clinician" && diagnosis_text) {
-            if (!req.session.diagnosisAccessCode || accessCode !== req.session.diagnosisAccessCode) {
-                return res.status(403).json({ error: "Clinicians need a valid access code to update a diagnosis." });
-            }
-        }
+          if (!req.session || !req.session.diagnosisAccessCode) {
+              return res.status(403).json({ error: "Access code not requested or expired." });
+          }
+      
+          if (accessCode !== req.session.diagnosisAccessCode) {
+              console.error("❌ Invalid access code.");
+              console.log("Session Access Code!!:", req.session.diagnosisAccessCode);
+              console.log("Access Code Received!!:", accessCode);
+              return res.status(403).json({ error: "Invalid access code." });
+          }
+      }
 
         // Doctors can update without an access code
 
@@ -222,14 +228,6 @@ const updateRecord = async (req, res) => {
 // Allow clinicians to request an access code
 const requestDiagnosisAccessCode = async (req, res) => {
     try {
-        console.log("Request body:", req.body);
-        console.log("Session:", req.session);
-
-        const { role } = req.body; // Assuming `req.user` contains the authenticated user's data
-
-        if (role !== "clinician") {
-            return res.status(403).json({ error: "Only clinicians can request an access code." });
-        }
         const accessCode = crypto.randomBytes(4).toString("hex").toUpperCase();
 
         if (!req.session) {
@@ -237,6 +235,7 @@ const requestDiagnosisAccessCode = async (req, res) => {
         }
 
         req.session.diagnosisAccessCode = accessCode;
+        console.log("Generated Access Code:", accessCode);
 
         const clinicOwnerEmail = process.env.CLINIC_OWNER_EMAIL;
         if (!clinicOwnerEmail) {
@@ -248,11 +247,15 @@ const requestDiagnosisAccessCode = async (req, res) => {
 
         await sendEmail(clinicOwnerEmail, subject, body);
 
-        res.json({ message: "✅ Access code request sent. Await access code from the clinic owner." });
+        // Include the access code in the response
+        res.json({ 
+          message: "✅ Access code request sent. Await access code from the clinic owner.",
+          accessCode: accessCode // Pass the access code to the frontend
+      });
     } catch (error) {
         console.error("Access Code Request Error:", error);
         res.status(500).json({ error: "❌ Server error while requesting access code." });
     }
 };
 
-module.exports = { getVisitRecords, addRecord, updateRecord, requestDiagnosisAccessCode };
+module.exports = { getVisitRecords, addRecord, updateRecord, requestDiagnosisAccessCode};

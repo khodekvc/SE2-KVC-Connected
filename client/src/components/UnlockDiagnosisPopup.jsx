@@ -1,15 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import "../css/UnlockDiagnosis.css"
+import { useState } from "react";
+import "../css/UnlockDiagnosis.css";
 
-const UnlockModal = ({ isOpen, onClose, onUnlock }) => {
-  const [accessCode, setAccessCode] = useState("");
+const UnlockModal = ({ isOpen, onClose, onUnlock, generatedAccessCode }) => {
+  const [formData, setFormData] = useState({ accessCode: "" });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUnlock(accessCode); // Pass the access code to the parent
-    setAccessCode("");
+
+    const trimmedAccessCode = formData.accessCode.trim();
+    console.log("Access code being entered:", trimmedAccessCode);
+
+    // Compare the entered access code with the generated access code
+    if (trimmedAccessCode !== generatedAccessCode) {
+      alert("Invalid access code. Please try again.");
+      return;
+    }
+
+    // If the access code matches, unlock the diagnosis
+    console.log("Access code verified successfully!");
+    onUnlock(trimmedAccessCode);
     onClose();
   };
 
@@ -19,14 +34,14 @@ const UnlockModal = ({ isOpen, onClose, onUnlock }) => {
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Modify Diagnosis</h2>
-        <p>Enter the access code provided by the doctor:</p>
+        <p>Enter the access code provided by the clinic owner:</p>
         <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={accessCode}
-            onChange={(e) => setAccessCode(e.target.value)}
+          <textarea
+            name="accessCode"
+            placeholder="Enter access code"
+            value={formData.accessCode}
+            onChange={handleChange}
             required
-            placeholder="Enter Access Code"
           />
           <div className="modal-buttons">
             <button type="button" onClick={onClose} className="cancel-button">
