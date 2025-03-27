@@ -45,29 +45,33 @@ const PetInfo = () => {
     console.log("Pet Info Submitted:", formData);
 
     try {
-      const response = await fetch("http://localhost:5000/auth/signup/petowner-step2", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+        const response = await fetch("http://localhost:5000/auth/signup/petowner-step2", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+        });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Login failed");
+        const data = await response.json();
 
-      const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
-      if (token) {
-        localStorage.setItem("jwt", token);
-      }
+        if (!response.ok) {
+            if (data.newCaptcha) {
+                // Update the CAPTCHA image
+                setCaptcha({ image: data.newCaptcha.image, captchaKey: data.newCaptcha.captchaKey });
+            }
+            throw new Error(data.error || "An error occurred during signup.");
+        }
 
-      setMessage(data.message);
+        // Handle successful signup
+        console.log(data.message);
         window.location.replace(data.redirectUrl);
     } catch (error) {
-      setMessage(error.message);
+        console.error("Error:", error.message);
+        setMessage(error.message);
     }
-  };
+};
 
   return (
     <>

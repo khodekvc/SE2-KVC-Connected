@@ -1,9 +1,9 @@
-"use client"
-import Navbar from "../components/Navbar"
-import { useState, useEffect } from "react"
-import { Button } from "../components/Button"
-import FormGroup from "../components/FormGroup"
-import "../css/Forms.css"
+"use client";
+import Navbar from "../components/Navbar";
+import { useState, useEffect } from "react";
+import { Button } from "../components/Button";
+import FormGroup from "../components/FormGroup";
+import "../css/Forms.css";
 
 function LoginForm() {
   const [currentStep, setCurrentStep] = useState("login")
@@ -39,17 +39,26 @@ function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form Submitted");
+
     try {
       const response = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
           },
         body: JSON.stringify(formData),
       });
+
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Login failed");
+
+      if (!response.ok) {
+            if (data.newCaptcha) {
+                console.log("Refreshing CAPTCHA..."); // Debug log
+                setCaptcha({ image: data.newCaptcha.image, captchaKey: data.newCaptcha.captchaKey }); // Update CAPTCHA
+            }
+throw new Error(data.error || "Login failed");
+}
 
       const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
       if (token) {
@@ -57,8 +66,9 @@ function LoginForm() {
       }
 
       setMessage(data.message);
-      window.location.replace(data.redirectUrl)
+      window.location.replace(data.redirectUrl);
     } catch (error) {
+console.error("Error:", error.message);
       setMessage(error.message);
     }
   };

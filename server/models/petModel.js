@@ -1,6 +1,5 @@
 const db = require("../config/db");
 
-
 class PetModel {
     static async findByOwnerId(ownerId) {
         const [result] = await db.query(
@@ -41,33 +40,27 @@ class PetModel {
             [pet_id]
         );
 
-
         console.log("Query Result for pet_id:", pet_id, result); // Debugging log
         return result.length ? result[0] : null;
     }
-
 
     static async findSpeciesByDescription(description) {
         const [result] = await db.execute("SELECT * FROM pet_species WHERE spec_description = ?", [description]);
         return result.length ? result[0] : null;
     }
 
-
-    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }) {
-        const [result] = await db.query(
+    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }, connection) {
+        const [result] = await connection.query(
             "INSERT INTO pet_info (pet_name, pet_gender, pet_breed, pet_birthday, pet_vitality, pet_status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
             [petname, gender, breed, birthdate, true, true, userId] // pet_status = 1 (active)
         );
         const petId = result.insertId;
 
-
         // Insert into match_pet_species table
-        await db.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
-
+        await connection.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
 
         return petId;
     }
-
 
     static async updatePet(pet_id, updatedData) {
         const updateFields = Object.keys(updatedData);
@@ -83,21 +76,17 @@ class PetModel {
         return result;
     }
 
-
     static async updatePetSpecies(pet_id, speciesId) {
         return db.execute("UPDATE match_pet_species SET spec_id = ? WHERE pet_id = ?", [speciesId, pet_id]);
     }
-
 
     static async archivePet(pet_id) {
         return db.execute("UPDATE pet_info SET pet_status = 0 WHERE pet_id = ?", [pet_id]);
     }
 
-
     static async restorePet(pet_id) {
         return db.execute("UPDATE pet_info SET pet_status = 1 WHERE pet_id = ?", [pet_id]);
     }
-
 
     static async getAllActivePets() {
         const [result] = await db.execute(`
@@ -120,13 +109,11 @@ class PetModel {
         return result;
     }
 
-
     static async getAllArchivedPets() {
         const [result] = await db.execute("SELECT * FROM pet_info WHERE pet_status = 0");
         return result;
     }
 }
-
 
 module.exports = PetModel;
 

@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const petController = require("../controllers/petController");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../utils/authUtility");
 const db = require("../config/db");
 const mysql = require("mysql2");
 
 // Routes that require clinician or doctor authorization
-router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
+router.post("/:pet_id/vaccines", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
     const { pet_id } = req.params
     const { vax_type, imm_rec_quantity, imm_rec_date } = req.body
  
@@ -46,7 +47,7 @@ router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", 
   })
  
   // Route to get all vaccination records for a pet
-  router.get("/:pet_id/vaccines", authenticate, async (req, res) => {
+  router.get("/:pet_id/vaccines", authenticateToken, authenticate, async (req, res) => {
     const { pet_id } = req.params
  
     try {
@@ -68,7 +69,7 @@ router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", 
  
   // Route to update a vaccination record (for the + button)
   router.put(
-    "/:pet_id/vaccines/:record_id",
+    "/:pet_id/vaccines/:record_id", authenticateToken,
     authenticate,
     authorize({ roles: ["clinician", "doctor"] }),
     async (req, res) => {
@@ -139,25 +140,25 @@ router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", 
 //     }
 // });
 
-router.put("/edit/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.updatePetProfile);
-router.put("/archive/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.archivePet);
-router.put("/restore/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.restorePet);
+router.put("/edit/:pet_id", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.updatePetProfile);
+router.put("/archive/:pet_id", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.archivePet);
+router.put("/restore/:pet_id", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.restorePet);
 
 
 
 // Route for logged-in owners to add a pet
 //put authorize?
-router.post("/add", authenticate, authorize({ roles: ["owner"] }), petController.addPetForOwner);
+router.post("/add", authenticateToken, authenticate, authorize({ roles: ["owner"] }), petController.addPetForOwner);
 
 
-router.get("/pets/:user_id", authenticate, authorize({ roles: ["owner"], userIdParam: "userId" }), petController.getPetsByOwner);
+router.get("/pets/:user_id", authenticateToken, authenticate, authorize({ roles: ["owner"], userIdParam: "userId" }), petController.getPetsByOwner);
 
 // Routes accessible to all authenticated users
-router.get("/active", authenticate, petController.getAllActivePets);
-router.get("/archived", authenticate, petController.getAllArchivedPets);
+router.get("/active", authenticateToken, authenticate, petController.getAllActivePets);
+router.get("/archived", authenticateToken, authenticate, petController.getAllArchivedPets);
 
 // Search pets with filtering and sorting
-router.get("/search-pets", async (req, res) => {
+router.get("/search-pets", authenticateToken, async (req, res) => {
     try {
         console.log("Received query parameters:", req.query);
 
@@ -274,5 +275,5 @@ router.get("/search-pets", async (req, res) => {
 
 
 // Route to fetch pet details by pet_id
-router.get("/:pet_id", authenticate, petController.getPetById);
+router.get("/:pet_id", authenticateToken, authenticate, petController.getPetById);
 module.exports = router;

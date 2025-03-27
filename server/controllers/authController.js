@@ -8,6 +8,7 @@ const { generateCaptcha, generateCaptchaImage } = require("../utils/captchaUtili
 const { hashPassword } = require("../utils/passwordUtility");
 const { generateToken } = require("../utils/authUtility");
 const { sendEmail } = require("../utils/emailUtility");
+const db = require("../config/db");
 
 exports.getCaptcha = (req, res) => {
     const captchaText = generateCaptcha();
@@ -21,16 +22,33 @@ exports.loginUser = async (req, res) => {
     try {
         const { email, password, captchaInput } = req.body;
 
+// Validate CAPTCHA
         if (!req.session.captcha || captchaInput !== req.session.captcha) {
-            return res.status(401).json({ error: "❌ Incorrect CAPTCHA" });
-        }
-        req.session.captcha = null;
+const newCaptchaText = generateCaptcha();
+            const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+            req.session.captcha = newCaptchaText;
 
+            return res.status(401).json({
+error: "❌ Incorrect CAPTCHA",
+                newCaptcha: { image: newCaptchaImage, captchaKey: newCaptchaText },
+});
+        }
+        req.session.captcha = null; // Clear the CAPTCHA after validation
+
+// Validate email and password
         const user = await UserModel.findByEmail(email);
         if (!user || !(await bcrypt.compare(password, user.user_password))) {
-            return res.status(401).json({ error: "Invalid email or password" });
+const newCaptchaText = generateCaptcha();
+            const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+            req.session.captcha = newCaptchaText;
+
+            return res.status(401).json({
+error: "Invalid email or password",
+                newCaptcha: { image: newCaptchaImage, captchaKey: newCaptchaText },
+});
         }
 
+// Generate token and set cookie
         const token = generateToken(user.user_id, user.user_role);
         console.log("Generated Token:", token);
 
@@ -38,14 +56,13 @@ exports.loginUser = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "Strict",
-            maxAge: 15 * 60 * 1000
+            maxAge: 15 * 60 * 1000,
         });
 
         res.json({
             message: "✅ Login successful!",
             redirectUrl: "/patients",
         });
-
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).json({ error: "❌ Server error during login" });
@@ -85,51 +102,121 @@ exports.signupPetOwnerStep1 = async (req, res) => {
 exports.signupPetOwnerStep2 = async (req, res) => {
     const { petname, gender, speciesDescription, breed, birthdate, altPerson1, altContact1, captchaInput } = req.body;
 
+// Validate CAPTCHA
     if (!req.session.captcha || captchaInput !== req.session.captcha) {
-        console.log("❌ CAPTCHA Mismatch! Expected:", req.session.captcha, "Received:", req.body.captchaInput);
-        return res.status(400).json({ error: "❌ Incorrect CAPTCHA!" });
-    }
-    req.session.captcha = null;
+        const newCaptchaText = generateCaptcha();
+        const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+        req.session.captcha = newCaptchaText;
 
+        return res.status(400).json({
+error: "❌ Incorrect CAPTCHA!",
+            newCaptcha: { image: newCaptchaImage },
+});
+    }
+    req.session.captcha = null; // Clear the CAPTCHA after validation
+
+// Ensure Step 1 is completed
     if (!req.session.petOwnerData || !req.session.step1Completed) {
         return res.status(400).json({ error: "❌ Personal info missing or Step 1 not completed. Restart signup process." });
     }
 
+// Validate required fields
     if (!petname || !gender || !speciesDescription || !altPerson1 || !altContact1) {
-        return res.status(400).json({ error: "❌ All fields are required except breed and birthdate!" });
+const newCaptchaText = generateCaptcha();
+        const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+        req.session.captcha = newCaptchaText;
+
+        return res.status(400).json({
+error: "❌ All fields are required except breed and birthdate!",
+            newCaptcha: { image: newCaptchaImage, captchaKey: newCaptchaText },
+});
     }
+
     const { fname, lname, email, contact, address, password } = req.session.petOwnerData;
 
     try {
+// Find species ID by description
         const species = await PetModel.findSpeciesByDescription(speciesDescription);
         if (!species) {
-            return res.status(400).json({ error: "❌ Invalid species selected." });
+const newCaptchaText = generateCaptcha();
+            const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+            req.session.captcha = newCaptchaText;
+
+            return res.status(400).json({
+error: "❌ Invalid species selected.",
+                newCaptcha: { image: newCaptchaImage, captchaKey: newCaptchaText },
+});
         }
         const speciesId = species.spec_id;
 
-        console.log("Creating pet owner...");
-        const userId = await UserModel.createPetOwner({ fname, lname, email, contact, address, password, altPerson1, altContact1 });
-        console.log("Pet owner created with ID:", userId);
+// Start transaction
+        const connection = await db.getConnection();
+        await connection.beginTransaction();
 
-        console.log("Creating pet...");
-        const petId = await PetModel.createPet({ petname, gender, speciesId, breed, birthdate, userId });
-        console.log("Pet created with ID:", petId);
+        try {
+            // Create pet owner
+                const userId = await UserModel.createPetOwner(
+{ fname, lname, email, contact, address, password, altPerson1, altContact1 },
+connection
+);
 
+// Create pet
+                const petId = await PetModel.createPet(
+                {
+petname,
+gender,
+speciesId,
+                    breed: breed || null, // Handle nullable breed
+                    birthdate: birthdate || null, // Handle nullable birthdate
+                    userId,
+                },
+                connection
+            );
+        
+// Commit transaction
+            await connection.commit();
+
+            // Generate token for the new pet owner
         const token = generateToken(userId, "owner");
-        console.log('Generated Token:', token);
-        res.cookie("token", token, {
+                res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "Strict",
-            maxAge: 15 * 60 * 1000
+            maxAge: 15 * 60 * 1000,
         });
 
+// Clear session data
         req.session.petOwnerData = null;
         req.session.step1Completed = null;
+
         res.status(201).json({ message: "✅ Pet Owner account created successfully!" });
     } catch (error) {
-        console.error("Signup Error:", error.message);
-        res.status(500).json({ error: "❌ Server error during signup." });
+// Rollback transaction if anything fails
+            await connection.rollback();
+            console.error("Transaction Error:", error);
+
+            const newCaptchaText = generateCaptcha();
+            const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+            req.session.captcha = newCaptchaText;
+
+            res.status(500).json({
+error: "❌ Server error during signup. Please try again.",
+                newCaptcha: { image: newCaptchaImage, captchaKey: newCaptchaText },
+});
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error("Signup Step 2 Error:", error);
+
+        const newCaptchaText = generateCaptcha();
+        const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+        req.session.captcha = newCaptchaText;
+
+        res.status(500).json({
+error: "❌ Server error during signup.",
+            newCaptcha: { image: newCaptchaImage, captchaKey: newCaptchaText },
+});
     }
 };
 
@@ -138,7 +225,16 @@ exports.signupEmployeeRequest = async (req, res) => {
     const { fname, lname, contact, email, role, password, confirmPassword, captchaInput } = req.body;
 
     if (!req.session.captcha || captchaInput !== req.session.captcha) {
-        return res.status(400).json({ error: "❌ Incorrect CAPTCHA!" });
+        const newCaptchaText = generateCaptcha();
+        const newCaptchaImage = generateCaptchaImage(newCaptchaText);
+        req.session.captcha = newCaptchaText;
+
+        console.log("New CAPTCHA generated:", newCaptchaText); // Debug log
+
+        return res.status(400).json({
+            error: "❌ Incorrect CAPTCHA!",
+            newCaptcha: { image: newCaptchaImage },
+        });
     }
     req.session.captcha = null;
 
