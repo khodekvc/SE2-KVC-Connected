@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useParams } from "react-router-dom" // Import useParams
 import { ArrowLeft } from "lucide-react"
 import "../css/AddRecord.css"
 import { useDiagnosisLock } from "../contexts/DiagnosisLockContext"
@@ -9,6 +10,8 @@ import MedicalRecordForm from "../components/MedicalRecordForm"
 import { useUserRole } from "../contexts/UserRoleContext"
 
 const AddRecord = ({ onClose, onSubmit }) => {
+  const { pet_id } = useParams()
+  console.log("Pet ID:", pet_id) // Extract pet_id from the URL
   const { hasPermission } = useUserRole()
   const { isDiagnosisLocked } = useDiagnosisLock()
   const { showConfirmDialog } = useConfirmDialog()
@@ -40,10 +43,47 @@ const AddRecord = ({ onClose, onSubmit }) => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (validateForm()) {
-      showConfirmDialog("Are you sure you want to add this record?", () => onSubmit(formData))
+      showConfirmDialog("Are you sure you want to add this record?", async () => {
+        try {
+          const payload = {
+            record_date: formData.date,
+            record_weight: formData.weight,
+            record_temp: formData.temperature,
+            record_condition: formData.conditions,
+            record_symptom: formData.symptoms,
+            record_recent_visit: formData.recentVisit,
+            record_purchase: formData.recentPurchase,
+            record_purpose: formData.purposeOfVisit,
+            lab_description: formData.laboratories,
+            diagnosis_text: formData.latestDiagnosis,
+            surgery_type: formData.surgeryType,
+            surgery_date: formData.surgeryDate,
+          };
+
+          const response = await fetch(`http://localhost:5000/recs/records/${pet_id}`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to add record");
+          }
+
+          const newRecord = await response.json();
+          console.log("Newly added record:", newRecord);
+
+          onSubmit(newRecord); // Pass the new record to the parent component
+        } catch (error) {
+          console.error("Error adding record:", error);
+        }
+      });
     }
   }
 
@@ -95,14 +135,14 @@ const AddRecord = ({ onClose, onSubmit }) => {
       </div>
 
       <div className="form-content">
-      <MedicalRecordForm
-  formData={formData}
-  isEditing={true}
-  isDiagnosisLocked={!hasPermission("canAlwaysEditDiagnosis") && isDiagnosisLocked}
-  onInputChange={handleInputChange}
-  isAddRecord={true}
-  errors={errors} 
-/>
+        <MedicalRecordForm
+          formData={formData}
+          isEditing={true}
+          isDiagnosisLocked={!hasPermission("canAlwaysEditDiagnosis") && isDiagnosisLocked}
+          onInputChange={handleInputChange}
+          isAddRecord={true}
+          errors={errors}
+        />
       </div>
     </div>
   )

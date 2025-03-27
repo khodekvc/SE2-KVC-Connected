@@ -42,6 +42,7 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
 
+
 app.get("/auth/status", (req, res) => {
     if (req.session.user) {
         res.json({ authenticated: true, user: req.session.user });

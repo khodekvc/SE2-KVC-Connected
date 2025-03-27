@@ -7,69 +7,111 @@ const { sendEmail } = require("../utils/emailUtility");
 const crypto = require("crypto");
 
 const getVisitRecords = async (req, res) => {
-    try {
-        const records = await getAllVisitRecords();
-        res.json(records);
-    } catch (error) {
-        console.error("Error fetching visit records:", error);
-        res.status(500).json({ error: "Failed to fetch visit records" });
+  try {
+    const { pet_id } = req.query;
+
+    if (!pet_id) {
+      return res.status(400).json({ error: "pet_id is required" });
     }
+
+    const records = await getAllVisitRecords(pet_id); // Fetch records from the database
+    console.log("Fetched visit records:", records); // Log the records to verify their structure
+    res.json(records);
+  } catch (error) {
+    console.error("Error fetching visit records:", error);
+    res.status(500).json({ error: "Failed to fetch visit records" });
+  }
 };
 
 // Ensure clinicians request an access code before adding a diagnosis
 const addRecord = async (req, res) => {
-    try {
-        const { role } = req.user; // Assuming user role is available in req.user
-        const { petId } = req.params;
-        const { 
-            record_date, record_weight, record_temp, record_condition, record_symptom, 
-            lab_description, diagnosis_text, surgery_type, surgery_date, 
-            record_recent_visit, record_purchase, record_purpose 
-        } = req.body;
+  try {
+    console.log("Add Record Route Hit");
+    console.log("Pet ID:", req.params.petId);
+    console.log("Request Body:", req.body);
 
-        // Validate required fields
-        if (!record_date || !record_weight || !record_temp || !record_condition || !record_symptom || !record_recent_visit || !record_purchase || !record_purpose) {
-            return res.status(400).json({ error: "Missing required fields." });
-        }
+    const { role } = req.user; // Assuming user role is available in req.user
+    const { petId } = req.params;
+    const {
+      record_date,
+      record_weight,
+      record_temp,
+      record_condition,
+      record_symptom,
+      lab_description,
+      diagnosis_text,
+      surgery_type,
+      surgery_date,
+      record_recent_visit,
+      record_purchase,
+      record_purpose,
+    } = req.body;
 
-        // ❌ Prevent clinicians from adding diagnosis
-        if (role === "clinician" && diagnosis_text) {
-            return res.status(403).json({ error: "Clinicians cannot add a diagnosis when creating a record." });
-        }
-
-        let lab_id = null;
-        if (lab_description) {
-            lab_id = await getLabIdByDescription(lab_description);
-            if (!lab_id) {
-                return res.status(400).json({ error: "Invalid lab description." });
-            }
-        }
-
-        let diagnosis_id = null;
-        if (role === "doctor" && diagnosis_text) {
-            diagnosis_id = await insertDiagnosis(diagnosis_text);
-        }
-
-        let surgery_id = null;
-        if (surgery_type && surgery_date) {
-            surgery_id = await insertSurgeryInfo(surgery_type, surgery_date);
-        }
-
-        const recordId = await insertRecord(petId, {
-            record_date, record_weight, record_temp, record_condition, 
-            record_symptom, record_recent_visit, record_purchase, 
-            record_purpose, lab_id, diagnosis_id, surgery_id, record_lab_file: null
-        });
-
-        if (lab_id) {
-            await insertMatchRecLab(recordId, lab_id);
-        }
-
-        res.status(201).json({ message: "Medical record added successfully!" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Server error while adding medical record." });
+    // Validate required fields
+    if (
+      !record_date ||
+      !record_weight ||
+      !record_temp ||
+      !record_condition ||
+      !record_symptom ||
+      !record_recent_visit ||
+      !record_purchase ||
+      !record_purpose
+    ) {
+      return res.status(400).json({ error: "Missing required fields." });
     }
+
+    // ❌ Prevent clinicians from adding diagnosis
+    if (role === "clinician" && diagnosis_text) {
+      return res.status(403).json({ error: "Clinicians cannot add a diagnosis when creating a record." });
+    }
+
+    let lab_id = null;
+    if (lab_description) {
+      lab_id = await getLabIdByDescription(lab_description);
+      if (!lab_id) {
+        return res.status(400).json({ error: "Invalid lab description." });
+      }
+    }
+
+    let diagnosis_id = null;
+    if (role === "doctor" && diagnosis_text) {
+      diagnosis_id = await insertDiagnosis(diagnosis_text);
+    }
+
+    let surgery_id = null;
+    if (surgery_type && surgery_date) {
+      surgery_id = await insertSurgeryInfo(surgery_type, surgery_date);
+    }
+
+    const recordId = await insertRecord(petId, {
+      record_date,
+      record_weight,
+      record_temp,
+      record_condition,
+      record_symptom,
+      record_recent_visit,
+      record_purchase,
+      record_purpose,
+      lab_id,
+      diagnosis_id,
+      surgery_id,
+      record_lab_file: null,
+    });
+
+    if (lab_id) {
+      await insertMatchRecLab(recordId, lab_id);
+    }
+
+    // Fetch the newly added record
+    const newRecord = await getRecordById(recordId);
+    console.log("Newly added record:", newRecord); 
+
+    res.status(201).json(newRecord); // Return the newly added record
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error while adding medical record." });
+  }
 };
 
 
@@ -86,6 +128,7 @@ const updateRecord = async (req, res) => {
 
         const currentRecord = await getRecordById(recordId);
         if (!currentRecord) {
+            console.error(`❌ Record with ID ${recordId} not found.`);
             return res.status(404).json({ error: "Record not found." });
         }
 
@@ -113,6 +156,8 @@ const updateRecord = async (req, res) => {
             record_lab_file: currentRecord.record_lab_file
         };
 
+        console.log("DEBUG: Updated Record Data:", updatedRecordData); 
+        
         if (lab_description) {
             const lab_id = await getLabIdByDescription(lab_description);
             if (!lab_id) {

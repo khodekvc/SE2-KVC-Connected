@@ -19,7 +19,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedRecord, setEditedRecord] = useState(record)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState({})
+  const [error, setErrors] = useState({}) // Define setErrors
 
   useEffect(() => {
     const fetchRecord = async () => {
@@ -53,7 +53,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
     const newErrors = {}
     if (!editedRecord.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
-    setErrors(newErrors)
+    setErrors(newErrors) // Use setErrors to update the error state
     return Object.keys(newErrors).length === 0
   }
 
@@ -91,6 +91,28 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
   const handleUnlockDiagnosis = () => {
     setIsModalOpen(true)
   }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const updatedData = {
+      record_date: editedRecord.date,
+      record_weight: editedRecord.weight,
+      record_temp: editedRecord.temperature,
+      record_condition: editedRecord.condition,
+      record_symptom: editedRecord.symptom,
+      record_recent_visit: editedRecord.recentVisit,
+      record_purchase: editedRecord.purchase,
+      record_purpose: editedRecord.purpose,
+      diagnosis_text: editedRecord.diagnosis, // Optional
+      lab_description: editedRecord.labDescription, // Optional
+      surgery_type: editedRecord.surgeryType, // Optional
+      surgery_date: editedRecord.surgeryDate, // Optional
+      accessCode: editedRecord.accessCode, // Required for clinicians updating diagnosis
+    };
+
+    await updateRecord(record.id, updatedData); // Call the update function
+  };
 
   return (
     <>

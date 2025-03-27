@@ -1,8 +1,8 @@
 const db = require("../config/db");
 
-const getAllVisitRecords = async () => {
+const getAllVisitRecords = async (pet_id) => {
   try {
-    const [rows] = await db.query(`
+    const query = `
       SELECT 
         r.record_id AS id,
         r.record_date AS date,
@@ -22,7 +22,11 @@ const getAllVisitRecords = async () => {
       LEFT JOIN lab_info l ON r.lab_id = l.lab_id
       LEFT JOIN surgery_info s ON r.surgery_id = s.surgery_id
       LEFT JOIN diagnosis d ON r.diagnosis_id = d.diagnosis_id
-    `);
+      WHERE r.pet_id = ?
+      ORDER BY r.record_date DESC
+    `;
+
+    const [rows] = await db.query(query, [pet_id]);
     return rows;
   } catch (error) {
     console.error("Error fetching visit records:", error);
@@ -73,6 +77,11 @@ const updateRecordInDB = async (recordId, recordData) => {
         [recordId]
     );
 
+    if (!currentRecord || currentRecord.length === 0) {
+        console.error(`❌ Record with ID ${recordId} not found.`);
+        throw new Error("Record not found.");
+    }
+
     // If diagnosis_id is missing from update, keep the existing one
     if (!("diagnosis_id" in recordData)) {
         recordData.diagnosis_id = currentRecord[0].diagnosis_id;
@@ -99,11 +108,6 @@ const updateRecordInDB = async (recordId, recordData) => {
     console.log("DEBUG: Update affected rows:", result.affectedRows);
     return result.affectedRows;
 };
-
-
-
-
-
 
 const getRecordById = async (recordId) => {
     const [result] = await db.query("SELECT * FROM record_info WHERE record_id = ?", [recordId]);
@@ -133,6 +137,5 @@ const updateDiagnosisText = async (diagnosisId, newDiagnosisText) => {
         throw error;
     }
 };
-
 
 module.exports = { getAllVisitRecords, insertLabInfo, getLabIdByDescription, insertDiagnosis, insertSurgeryInfo, insertRecord, updateRecordInDB, getRecordById, insertMatchRecLab, updateMatchRecLab, updateDiagnosisText };
