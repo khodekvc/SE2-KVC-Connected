@@ -1,19 +1,20 @@
 const express = require("express");
 const recordController = require("../controllers/recordController");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../utils/authUtility");
 const generatePdf = require('../utils/generatePDF');
 const db = require("../config/db");
 
 const router = express.Router();
 
-router.get("/visit-records", authenticate, recordController.getVisitRecords);
+router.get("/visit-records", authenticateToken, authenticate, recordController.getVisitRecords);
 
-router.post("/records/:petId", authenticate, authorize({ roles: ["doctor", "clinician"] }), recordController.addRecord);
-router.put("/records/:recordId", authenticate, authorize({ roles: ["doctor", "clinician"] }), recordController.updateRecord);
-router.get("/records/request-access-code", authenticate, authorize({ roles: ["clinician"] }), recordController.requestDiagnosisAccessCode);
+router.post("/records/:petId", authenticateToken, authenticate, authorize({ roles: ["doctor", "clinician"] }), recordController.addRecord);
+router.put("/records/:recordId", authenticateToken, authenticate, authorize({ roles: ["doctor", "clinician"] }), recordController.updateRecord);
+router.get("/records/request-access-code", authenticateToken, authenticate, authorize({ roles: ["clinician"] }), recordController.requestDiagnosisAccessCode);
 
 // GET records with sorting and filtering by date
-router.get("/search-records", async (req, res) => {
+router.get("/search-records", authenticateToken, async (req, res) => {
     try {
         let { pet_id, sort_order, start_date, end_date } = req.query;
 
@@ -58,7 +59,7 @@ router.get("/search-records", async (req, res) => {
 });
 
 // Route to download a specific record for a pet
-router.get("/generate-pdf/:petId/:recordId", async (req, res) => {
+router.get("/generate-pdf/:petId/:recordId", authenticateToken, async (req, res) => {
     const { petId, recordId } = req.params;
     await generatePdf(recordId, petId, res);
 });

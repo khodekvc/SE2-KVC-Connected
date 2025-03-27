@@ -53,8 +53,8 @@ class PetModel {
     }
 
 
-    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }) {
-        const [result] = await db.query(
+    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }, connection) {
+        const [result] = await connection.query(
             "INSERT INTO pet_info (pet_name, pet_gender, pet_breed, pet_birthday, pet_vitality, pet_status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
             [petname, gender, breed, birthdate, true, true, userId] // pet_status = 1 (active)
         );
@@ -62,7 +62,7 @@ class PetModel {
 
 
         // Insert into match_pet_species table
-        await db.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
+        await connection.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
 
 
         return petId;

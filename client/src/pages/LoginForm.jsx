@@ -1,12 +1,12 @@
-"use client"
-import Navbar from "../components/Navbar"
-import { useState, useEffect } from "react"
-import { Button } from "../components/Button"
-import FormGroup from "../components/FormGroup"
-import "../css/Forms.css"
+"use client";
+import Navbar from "../components/Navbar";
+import { useState, useEffect } from "react";
+import { Button } from "../components/Button";
+import FormGroup from "../components/FormGroup";
+import "../css/Forms.css";
 
 function LoginForm() {
-  const [currentStep, setCurrentStep] = useState("login")
+  const [currentStep, setCurrentStep] = useState("login");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -15,7 +15,7 @@ function LoginForm() {
     accessCode: "",
     newPassword: "",
     confirmPassword: "",
-  })
+  });
   const [captcha, setCaptcha] = useState({ image: "", captchaKey: "" });
   const [message, setMessage] = useState("");
 
@@ -29,7 +29,7 @@ function LoginForm() {
         credentials: "include",
       });
       const data = await response.json();
-      console.log("CAPTCHA loaded:", data);  
+      console.log("CAPTCHA loaded:", data);
       setCaptcha({ image: data.image, captchaKey: data.captchaKey });
     } catch (error) {
       console.error("Failed to load CAPTCHA:", error);
@@ -44,47 +44,61 @@ function LoginForm() {
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
-          },
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Login failed");
+      if (!response.ok) {
+        if (data.newCaptcha) {
+          console.log("Refreshing CAPTCHA..."); // Debug log
+          setCaptcha({
+            image: data.newCaptcha.image,
+            captchaKey: data.newCaptcha.captchaKey,
+          }); // Update CAPTCHA
+        }
+        throw new Error(data.error || "Login failed");
+      }
 
-      const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
+      const token =
+        response.headers.get("Authorization")?.split(" ")[1] || data.token;
       if (token) {
         localStorage.setItem("jwt", token);
       }
 
       setMessage(data.message);
-      window.location.replace(data.redirectUrl)
+      window.location.replace(data.redirectUrl);
     } catch (error) {
       setMessage(error.message);
     }
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleForgotPassword = (e) => {
-    e.preventDefault()
-    setCurrentStep("forgotPassword")
-  }
+    e.preventDefault();
+    setCurrentStep("forgotPassword");
+  };
 
   const handleSendCode = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: formData.email }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/auth/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: formData.email }),
+        }
+      );
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to send reset code");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to send reset code");
 
       console.log(data.message); // "Reset code sent to your email."
       setMessage(data.message);
@@ -100,21 +114,28 @@ function LoginForm() {
     console.log("Reset Password button clicked"); // Debug log
     console.log("Email:", formData.email);
     console.log("Access Code:", formData.accessCode);
-  
+
     try {
-      const response = await fetch("http://localhost:5000/auth/verify-reset-code", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: formData.email, code: formData.accessCode }),
-      });
-  
+      const response = await fetch(
+        "http://localhost:5000/auth/verify-reset-code",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            code: formData.accessCode,
+          }),
+        }
+      );
+
       const data = await response.json();
       console.log("Response from server:", data); // Debug log
-  
-      if (!response.ok) throw new Error(data.error || "Invalid or expired reset code");
-  
+
+      if (!response.ok)
+        throw new Error(data.error || "Invalid or expired reset code");
+
       console.log(data.message); // "Code verified. Proceed to reset your password."
       setMessage(data.message);
       setCurrentStep("newPassword"); // Move to the next step
@@ -133,30 +154,34 @@ function LoginForm() {
       newPassword: formData.newPassword,
       confirmPassword: formData.confirmPassword,
     });
-  
+
     try {
       if (formData.newPassword !== formData.confirmPassword) {
         throw new Error("Passwords do not match");
       }
-  
-      const response = await fetch("http://localhost:5000/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          accessCode: formData.accessCode,
-          newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword,
-        }),
-      });
-  
+
+      const response = await fetch(
+        "http://localhost:5000/auth/reset-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            accessCode: formData.accessCode,
+            newPassword: formData.newPassword,
+            confirmPassword: formData.confirmPassword,
+          }),
+        }
+      );
+
       const data = await response.json();
       console.log("Response from server:", data); // Debug log
-  
-      if (!response.ok) throw new Error(data.error || "Failed to reset password");
-  
+
+      if (!response.ok)
+        throw new Error(data.error || "Failed to reset password");
+
       setMessage(data.message);
       console.log("Password reset successfully. Redirecting to login...");
       setCurrentStep("login"); // Redirect to login
@@ -165,31 +190,34 @@ function LoginForm() {
       setMessage(error.message);
     }
   };
-  
 
   const handleResendCode = async (e) => {
     e.preventDefault();
     console.log("Resending code to:", formData.email);
 
     try {
-        const response = await fetch("http://localhost:5000/auth/resend-reset-code", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email: formData.email }),
-        });
+      const response = await fetch(
+        "http://localhost:5000/auth/resend-reset-code",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: formData.email }),
+        }
+      );
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Failed to resend reset code");
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to resend reset code");
 
-        console.log(data.message); // "A new reset code has been sent to your email."
-        setMessage(data.message);
+      console.log(data.message); // "A new reset code has been sent to your email."
+      setMessage(data.message);
     } catch (error) {
-        console.error("Error resending reset code:", error);
-        setMessage(error.message);
+      console.error("Error resending reset code:", error);
+      setMessage(error.message);
     }
-};
+  };
 
   const renderForm = () => {
     switch (currentStep) {
@@ -207,18 +235,24 @@ function LoginForm() {
                 onChange={handleChange}
                 required
               />
-              <Button buttonStyle='btn--secondary' onClick={() => setCurrentStep("login")} className="form-btn-3">BACK TO LOGIN</Button>
+              <Button
+                buttonStyle="btn--secondary"
+                onClick={() => setCurrentStep("login")}
+                className="form-btn-3"
+              >
+                BACK TO LOGIN
+              </Button>
               <Button
                 buttonStyle="btn--primary"
                 type="submit"
                 className="form-btn-1"
-                onClick={handleSendCode} 
+                onClick={handleSendCode}
               >
                 SEND
               </Button>
             </form>
           </>
-        )
+        );
 
       case "enterCode":
         return (
@@ -249,7 +283,7 @@ function LoginForm() {
               </Button>
             </form>
           </>
-        )
+        );
 
       case "newPassword":
         return (
@@ -282,7 +316,7 @@ function LoginForm() {
               </Button>
             </form>
           </>
-        )
+        );
 
       default:
         return (
@@ -314,7 +348,11 @@ function LoginForm() {
               <div className="forms-group captcha">
                 <label htmlFor="captcha">Enter Captcha</label>
                 <div className="captcha-container">
-                  <img src={`${captcha.image}`} className="generated" alt="CAPTCHA" />
+                  <img
+                    src={`${captcha.image}`}
+                    className="generated"
+                    alt="CAPTCHA"
+                  />
                   <input
                     type="text"
                     id="captcha"
@@ -325,14 +363,18 @@ function LoginForm() {
                   />
                 </div>
               </div>
-              <Button buttonStyle="btn--primary" to="/patients" className="form-btn-1">
+              <Button
+                buttonStyle="btn--primary"
+                to="/patients"
+                className="form-btn-1"
+              >
                 LOGIN
               </Button>
             </form>
           </>
-        )
+        );
     }
-  }
+  };
 
   return (
     <>
@@ -348,7 +390,7 @@ function LoginForm() {
         <div className="right-section">{renderForm()}</div>
       </div>
     </>
-  )
+  );
 }
 
-export default LoginForm
+export default LoginForm;
