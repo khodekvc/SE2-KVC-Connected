@@ -78,40 +78,42 @@ const VisitHistory = () => {
  }
 
 
- const applyFilters = (filters) => {
-   let filteredRecords = [...visitRecords]
+ const applyFilters = async (filters) => {
+    try {
+        const queryParams = new URLSearchParams();
 
+        if (filters.dateFrom) {
+            queryParams.append("start_date", filters.dateFrom);
+        }
+        if (filters.dateTo) {
+            queryParams.append("end_date", filters.dateTo);
+        }
+        if (filters.sortOrder) {
+            queryParams.append("sort_order", filters.sortOrder === "oldest" ? "asc" : "desc");
+        }
+        queryParams.append("pet_id", pet_id); // Include pet_id in the query
 
-   // date range filter to
-   if (filters.dateFrom || filters.dateTo) {
-     filteredRecords = filteredRecords.filter((record) => {
-       const recordDate = new Date(record.date)
-       const fromDate = filters.dateFrom ? new Date(filters.dateFrom) : null
-       const toDate = filters.dateTo ? new Date(filters.dateTo) : null
+        console.log("Query Params:", queryParams.toString()); // Debugging line
 
+        const response = await fetch(`http://localhost:5000/recs/search-records?${queryParams.toString()}`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
 
-       if (fromDate && toDate) {
-         return recordDate >= fromDate && recordDate <= toDate
-       } else if (fromDate) {
-         return recordDate >= fromDate
-       } else if (toDate) {
-         return recordDate <= toDate
-       }
-       return true
-     })
-   }
+        if (!response.ok) {
+            throw new Error("Failed to fetch filtered records");
+        }
 
-
-   // sort oldest newest
-   filteredRecords.sort((a, b) => {
-     const dateA = new Date(a.date)
-     const dateB = new Date(b.date)
-     return filters.sortOrder === "oldest" ? dateA - dateB : dateB - dateA
-   })
-
-
-   setVisitRecords(filteredRecords)
- }
+        const data = await response.json();
+        console.log("Filtered and sorted records:", data); // Debugging line
+        setVisitRecords(data); // Update the records in the state
+    } catch (error) {
+        console.error("Error applying filters:", error);
+    }
+};
 
 
  const resetFilters = () => {
@@ -205,32 +207,32 @@ const VisitHistory = () => {
              </tr>
            </thead>
            <tbody>
-             {visitRecords.map((record, index) => (
-               <tr key={record.id} className={index % 2 === 0 ? "row-even" : "row-odd"}>
-                 <td className="number-column">{index + 1}</td>
-                 <td>
-                   {record.date
-                     ? new Date(record.date).toLocaleDateString("en-US", {
-                         year: "numeric",
-                         month: "long",
-                         day: "numeric",
-                       })
-                     : "No Date Available"}
-                 </td>
-                 <td>{record.purposeOfVisit || "No Details Available"}</td>
-                 <td className="action-column">
-                   <button className="action-btn">
-                     <Download size={20} />
-                   </button>
-                 </td>
-                 <td className="action-column">
-                   <button className="action-btn" onClick={() => handleViewRecord(record)}>
-                     <ArrowRight size={20} />
-                   </button>
-                 </td>
-               </tr>
-             ))}
-           </tbody>
+    {visitRecords.map((record, index) => (
+        <tr key={record.id} className={index % 2 === 0 ? "row-even" : "row-odd"}>
+            <td className="number-column">{index + 1}</td>
+            <td>
+                {record.date
+                    ? new Date(record.date).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                      })
+                    : "No Date Available"}
+            </td>
+            <td>{record.purposeOfVisit || "No Details Available"}</td>
+            <td className="action-column">
+                <button className="action-btn">
+                    <Download size={20} />
+                </button>
+            </td>
+            <td className="action-column">
+                <button className="action-btn" onClick={() => handleViewRecord(record)}>
+                    <ArrowRight size={20} />
+                </button>
+            </td>
+        </tr>
+    ))}
+</tbody>
          </table>
        </div>
      </div>
