@@ -167,10 +167,29 @@ function LoginForm() {
   };
   
 
-  const handleResendCode = (e) => {
-    e.preventDefault()
-    console.log("Resending code to:", formData.email)
-  }
+  const handleResendCode = async (e) => {
+    e.preventDefault();
+    console.log("Resending code to:", formData.email);
+
+    try {
+        const response = await fetch("http://localhost:5000/auth/resend-reset-code", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: formData.email }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to resend reset code");
+
+        console.log(data.message); // "A new reset code has been sent to your email."
+        setMessage(data.message);
+    } catch (error) {
+        console.error("Error resending reset code:", error);
+        setMessage(error.message);
+    }
+};
 
   const renderForm = () => {
     switch (currentStep) {

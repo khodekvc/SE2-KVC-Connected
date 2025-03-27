@@ -44,7 +44,31 @@ Best regards,\n
     }
 };
 
+// 📌 Resend password reset code (FIXED FUNCTION)
+const resendResetCode = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: "Email is required." });
 
+        // Check if the user exists in the database
+        const [user] = await db.query("SELECT * FROM users WHERE user_email = ?", [email]);
+        if (!user) return res.status(404).json({ error: "User not found." });
+
+        // Generate a new reset code
+        const newResetToken = generateResetToken();
+        resetTokens.set(email, { token: newResetToken, expires: Date.now() + 10 * 60 * 1000 });
+
+        // Send the new reset code via email
+        const subject = "Password Reset Code - Kho Veterinary Clinic";
+        const body = `Hello,\n\nYour new password reset code is: ${newResetToken}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nKho Veterinary Clinic Support Team`;
+        await sendEmail(email, subject, body);
+
+        res.json({ message: "A new reset code has been sent to your email." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error while resending reset code." });
+    }
+};
 
 // 📌 Verify reset code (Step 2)
 const verifyResetCode = async (req, res) => {
@@ -119,4 +143,4 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { requestPasswordReset, verifyResetCode, resetPassword };
+module.exports = { requestPasswordReset, verifyResetCode, resetPassword, resendResetCode };
