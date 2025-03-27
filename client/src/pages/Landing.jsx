@@ -103,7 +103,7 @@ function Landing() {
                 <p>
                   <strong>LOCATION</strong>
                 </p>
-                <p>730 Earnshaw st, Cayco St, Sampaloc, Manila, 1008 Metro Manila</p>
+                <p>715 Earnshaw St, Sampaloc, Manila, 1008 Metro Manila</p>
               </div>
               <div className="contact-detail-item">
                 <FontAwesomeIcon icon={faPhone} className="contact-icon"/>
