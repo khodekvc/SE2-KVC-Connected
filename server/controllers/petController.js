@@ -167,3 +167,80 @@ exports.getPetById = async (req, res) => {
         res.status(500).json({ error: "❌ Server error while fetching pet details." });
     }
 };
+
+exports.addPetForOwner = async (req, res) => {
+    const { name, speciesDescription, gender, breed, birthday } = req.body;
+    const userId = req.user.userId; // Assuming the authenticated user's ID is available in req.user
+
+
+    console.log("Authenticated User:", req.user);
+    console.log("User ID:", userId);
+    try {
+        // Validate required fields
+        if (!name || !speciesDescription || !gender) {
+            return res.status(400).json({ error: "❌ Name, species, and gender are required." });
+        }
+
+
+        // Find the species ID based on the species description
+        const species = await PetModel.findSpeciesByDescription(speciesDescription);
+        if (!species) {
+            return res.status(400).json({ error: "❌ Invalid species selected." });
+        }
+
+
+        const speciesId = species.spec_id;
+
+
+        // Add the pet to the database
+        const petId = await PetModel.createPet({
+            petname: name,
+            gender,
+            speciesId,
+            breed,
+            birthdate: birthday || null, // Birthday is optional
+            userId,
+        });
+
+
+        res.status(201).json({ message: "✅ Pet added successfully!", petId });
+    } catch (error) {
+        console.error("Error adding pet:", error);
+        res.status(500).json({ error: "❌ Server error while adding pet." });
+    }
+};
+
+
+// Function to get all pets of an owner
+exports.getPetsByOwner = async (req, res) => {
+    try {
+        const ownerId = parseInt(req.params.user_id); // Ensure it's an integer
+
+
+        console.log("Authenticated User:", req.user); // Debugging log
+        console.log("Owner ID from Params:", ownerId); // Debugging log
+        console.log("User ID from req.user:", req.user.userId); // Debugging log
+
+
+        // Validate the authenticated user
+        if (req.user.userId !== ownerId) {
+            return res.status(403).json({ error: "❌ Forbidden: You can only view your own pets." });
+        }
+
+
+        // Fetch pets using the PetModel
+        const pets = await PetModel.findByOwnerId(ownerId);
+
+
+        if (pets.length === 0) {
+            return res.status(404).json({ message: "No pets found for this owner." });
+        }
+
+
+        res.status(200).json({ pets });
+    } catch (error) {
+        console.error("❌ Error retrieving pets:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
