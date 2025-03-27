@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { Download, ArrowRight, Plus, Filter } from "lucide-react"
 import AddRecord from "./AddRecord"
@@ -8,13 +7,13 @@ import FilterModal from "../components/FilterPopup"
 import "../css/VisitHistory.css"
 import { useUserRole } from "../contexts/UserRoleContext"
 
-
 const VisitHistory = () => {
   const { hasPermission } = useUserRole()
   const [showAddRecord, setShowAddRecord] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   const [visitRecords, setVisitRecords] = useState([])
+  const [isDownloading, setIsDownloading] = useState(false)
 
   useEffect(() => {
     const fetchVisitRecords = async () => {
@@ -25,22 +24,22 @@ const VisitHistory = () => {
           headers: {
             "Content-Type": "application/json",
           },
-        });
+        })
 
         if (!response.ok) {
-          throw new Error("Failed to fetch visit records");
+          throw new Error("Failed to fetch visit records")
         }
 
-        const data = await response.json();
-        console.log("Fetched visit records:", data);
-        setVisitRecords(data);
+        const data = await response.json()
+        console.log("Fetched visit records:", data)
+        setVisitRecords(data)
       } catch (error) {
-        console.error("Error fetching visit records:", error);
+        console.error("Error fetching visit records:", error)
       }
-    };
+    }
 
-    fetchVisitRecords();
-  }, []);
+    fetchVisitRecords()
+  }, [])
 
   const handleUpdateRecord = (updatedRecord) => {
     setVisitRecords((prevRecords) =>
@@ -69,6 +68,40 @@ const VisitHistory = () => {
 
   const handleViewRecord = (record) => {
     setSelectedRecord(record)
+  }
+
+  const handleDownloadPDF = async (record) => {
+    try {
+      setIsDownloading(true)
+
+      // Get the pet ID from the record
+      const petId = record.petId
+
+      if (!petId) {
+        console.error("Pet ID not found in record:", record)
+        alert("Cannot download PDF: Pet ID not found in record")
+        setIsDownloading(false)
+        return
+      }
+
+      console.log(`Downloading PDF for pet ID: ${petId}`)
+
+      // Create a link element to trigger the download
+      const link = document.createElement("a")
+      link.href = `http://localhost:5000/pdf/generate/${petId}`
+      link.target = "_blank"
+
+      // Append to the document, click it, and remove it
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      setIsDownloading(false)
+    } catch (error) {
+      console.error("Error downloading PDF:", error)
+      alert("Failed to download PDF. Please try again.")
+      setIsDownloading(false)
+    }
   }
 
   const applyFilters = (filters) => {
@@ -127,11 +160,11 @@ const VisitHistory = () => {
       </div>
 
       <div className="visit-content">
-      {hasPermission("canAddRecord") && (
-        <button className="add-record-btn" onClick={() => setShowAddRecord(true)}>
-          <Plus size={20} />
-          Add New Record
-        </button>
+        {hasPermission("canAddRecord") && (
+          <button className="add-record-btn" onClick={() => setShowAddRecord(true)}>
+            <Plus size={20} />
+            Add New Record
+          </button>
         )}
 
         <div className="visit-table-container">
@@ -149,10 +182,16 @@ const VisitHistory = () => {
               {visitRecords.map((record, index) => (
                 <tr key={record.id} className={index % 2 === 0 ? "row-even" : "row-odd"}>
                   <td className="number-column">{index + 1}</td>
-                  <td>{new Date(record.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</td>
+                  <td>
+                    {new Date(record.date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </td>
                   <td>{record.purposeOfVisit}</td>
                   <td className="action-column">
-                    <button className="action-btn">
+                    <button className="action-btn" onClick={() => handleDownloadPDF(record)} disabled={isDownloading}>
                       <Download size={20} />
                     </button>
                   </td>
@@ -180,3 +219,4 @@ const VisitHistory = () => {
 }
 
 export default VisitHistory
+

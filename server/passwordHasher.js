@@ -1,6 +1,6 @@
 const { hashPassword } = require('./utils/passwordUtility');
 
-const password = 'april24taurusshei'; // Replace with the password you want to hash
+const password = 'drkho789'; // Replace with the password you want to hash
 
 hashPassword(password)
     .then(hashedPassword => {
@@ -9,3 +9,5 @@ hashPassword(password)
     .catch(err => {
         console.error('Error hashing password:', err);
     });
+
+    
