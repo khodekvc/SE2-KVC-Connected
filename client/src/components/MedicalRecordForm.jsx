@@ -96,7 +96,7 @@ const MedicalRecordForm = ({
           value={value}
           onChange={onInputChange}
           rows={3}
-          disabled={!isEditing || (name === "latestDiagnosis" && isDiagnosisLocked)}
+          disabled={!isEditing || (name === "latestDiagnoses" && isDiagnosisLocked)}
           className={isEditing ? "editable-value" : ""}
         />
       )
@@ -122,7 +122,7 @@ const MedicalRecordForm = ({
           </label>
           {isEditing || type === "radio" ? input : <span className="value-text">{value}</span>}
           {errors && errors[name] && <span className="error-message">{errors[name]}</span>} {/* Show error */}
-          {name === "latestDiagnosis" && isDiagnosisLocked && isEditing && !isAddRecord && (
+          {name === "latestDiagnoses" && isDiagnosisLocked && isEditing && !isAddRecord && (
             <button type="button" className="unlock-diagnosis-btn" onClick={onUnlockDiagnosis}>
               Unlock Diagnosis
             </button>
@@ -158,7 +158,7 @@ const MedicalRecordForm = ({
           <div className="form-row">{renderField("Type of Surgery", "surgeryType", "text", { isFullWidth: true })}</div>
         )}
         <div className="form-row">
-          {renderField("Latest Diagnosis", "latestDiagnosis", "textarea", { isFullWidth: true })}
+          {renderField("Latest Diagnosis", "latestDiagnoses", "textarea", { isFullWidth: true })}
         </div>
       </section>
       <section className="visit-details">

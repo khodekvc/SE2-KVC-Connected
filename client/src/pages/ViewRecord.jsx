@@ -139,12 +139,18 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
       record_recent_visit: editedRecord.recentVisit ? new Date(editedRecord.recentVisit).toISOString().split("T")[0] : null,
       record_purchase: editedRecord.recentPurchase,
       record_purpose: editedRecord.purposeOfVisit,
-      diagnosis_text: editedRecord.latestDiagnosis, // Optional
+      //diagnosis_text: editedRecord.latestDiagnoses, // Optional
       lab_description: editedRecord.labDescription, // Optional
-      surgery_type: editedRecord.surgeryType, // Optional
+      surgery_type: editedRecord.pastSurgeries, // Optional
       surgery_date: editedRecord.surgeryDate ? new Date(editedRecord.surgeryDate).toISOString().split("T")[0] : null,
-      accessCode: editedRecord.accessCode, // Include access code for clinicians
+      //accessCode: editedRecord.accessCode, // Include access code for clinicians
     };
+    if (hasPermission("canAlwaysEditDiagnosis") || !isDiagnosisLocked) {  
+      updatedData.diagnosis_text = editedRecord.latestDiagnoses;
+      if (!hasPermission("canAlwaysEditDiagnosis")) {  
+        updatedData.accessCode = editedRecord.accessCode; // Only include access code if needed
+      }
+    }
     console.log("Updated Data:", updatedData); 
     console.log("Access Code Sent:", editedRecord.accessCode);
     try {

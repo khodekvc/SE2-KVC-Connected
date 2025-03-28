@@ -18,7 +18,6 @@ const VisitHistory = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   const [visitRecords, setVisitRecords] = useState([])
 
-  useEffect(() => {
     const fetchVisitRecords = async () => {
       try {
         const response = await fetch(`http://localhost:5000/recs/visit-records?pet_id=${pet_id}`, {
@@ -41,8 +40,9 @@ const VisitHistory = () => {
       }
     };
 
-    fetchVisitRecords();
-  }, [pet_id]); // Re-fetch records if pet_id changes
+      useEffect(() => {
+        fetchVisitRecords();
+      }, [pet_id]); 
 
   const handleUpdateRecord = (updatedRecord) => {
     setVisitRecords((prevRecords) =>
@@ -51,12 +51,13 @@ const VisitHistory = () => {
     setSelectedRecord(updatedRecord); // Update the selected record
   };
 
-  const handleAddRecord = (newRecord) => {
-    // Use the backend response to add the new record
+  const handleAddRecord = async (newRecord) => {
     console.log("Adding new record to state:", newRecord);
     setVisitRecords((prevRecords) => [newRecord, ...prevRecords]);
     setShowAddRecord(false);
-  }
+    await fetchVisitRecords(); // Re-fetch the latest visit records
+  };
+  
 
   const handleViewRecord = (record) => {
     if (!record || !record.id) {

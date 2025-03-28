@@ -26,7 +26,7 @@ const AddRecord = ({ onClose, onSubmit }) => {
     hadSurgery: false,
     surgeryDate: "",
     surgeryType: "",
-    latestDiagnosis: "",
+    latestDiagnoses: "",
     recentVisit: "",
     recentPurchase: "",
     purposeOfVisit: "",
@@ -58,7 +58,7 @@ const AddRecord = ({ onClose, onSubmit }) => {
             record_purchase: formData.recentPurchase,
             record_purpose: formData.purposeOfVisit,
             lab_description: formData.laboratories,
-            diagnosis_text: formData.latestDiagnosis,
+            diagnosis_text: formData.latestDiagnoses,
             surgery_type: formData.surgeryType,
             surgery_date: formData.surgeryDate,
           };
