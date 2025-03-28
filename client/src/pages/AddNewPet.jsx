@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "../css/AddNewPet.css";
 
 export default function AddNewPet() {
   const [petData, setPetData] = useState({
     name: "",
-    species: "",
+    speciesDescription: "",
     gender: "male",
     breed: "",
     birthday: "",
   });
+
+  const navigate = useNavigate(); // Initialize navigate
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,6 +46,9 @@ export default function AddNewPet() {
       const result = await response.json();
       console.log("Pet added successfully:", result);
       alert("Pet added successfully!");
+
+      // Redirect to MyPets page
+      navigate("/MyPets");
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("An error occurred while adding the pet.");
@@ -144,7 +150,6 @@ export default function AddNewPet() {
                 />
               </div>
             </div>
-            {/*  */}
             <div className="form-field empty-field"></div>
           </div>
 

@@ -150,8 +150,8 @@ router.put("/restore/:pet_id", authenticateToken, authenticate, authorize({ role
 //put authorize?
 router.post("/add", authenticateToken, authenticate, authorize({ roles: ["owner"] }), petController.addPetForOwner);
 
-
-router.get("/pets/:user_id", authenticateToken, authenticate, authorize({ roles: ["owner"], userIdParam: "userId" }), petController.getPetsByOwner);
+router.get("/mypets", authenticateToken, authenticate, authorize({ roles: ["owner"] }), petController.getPetsByOwner);
+//router.get("/pets/:user_id", authenticateToken, authenticate, authorize({ roles: ["owner"], userIdParam: "userId" }), petController.getPetsByOwner);
 
 // Routes accessible to all authenticated users
 router.get("/active", authenticateToken, authenticate, petController.getAllActivePets);

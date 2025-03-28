@@ -6,6 +6,7 @@ import "./App.css";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import OwnerSidebar from "./components/OwnerSidebar";
+import MyPets from "./pages/MyPets";
 import PatientDirectory from "./pages/PatientDirectory";
 import PetProfile from "./pages/PetProfile";
 import MyAccount from "./pages/MyAccount";
@@ -45,25 +46,39 @@ function ProtectedRoutes() {
       <div className="app-container">
         <div className="main-content">
           {isPetOwner ? (
-             <OwnerSidebar className={isSidebarVisible ? "visible" : ""} onMenuItemClick={handleMenuItemClick} />
+            <OwnerSidebar className={isSidebarVisible ? "visible" : ""} onMenuItemClick={handleMenuItemClick} />
           ) : (
             <Sidebar className={isSidebarVisible ? "visible" : ""} onMenuItemClick={handleMenuItemClick} />
           )}
           <Routes>
-            <Route path="/patients" element={<PatientDirectory />} />
-            <Route path="/PetProfile/:pet_id" element={<PetProfile />} />
-            {/* render diff account pages based on role */}
-            <Route path="/account" element={isPetOwner ? <OwnerMyAccount /> : <MyAccount />} />
-            {/* only pet owners can access add pet */}
-            <Route path="/add-pet" element={isPetOwner ? <AddNewPet /> : <Navigate to="/patients" />} />
-            {/*  */}
-            <Route path="*" element={<Navigate to="/patients" />} />
+            {/* Routes for Pet Owner */}
+            {isPetOwner && (
+              <>
+                <Route path="/mypets" element={<MyPets />} />
+                <Route path="/account" element={<OwnerMyAccount />} />
+                <Route path="/add-pet" element={<AddNewPet />} />
+                <Route path="/PetProfile/:pet_id" element={<PetProfile />} />
+                <Route path="*" element={<Navigate to="/mypets" />} />
+              </>
+            )}
+
+
+            {/* Routes for Other Roles */}
+            {!isPetOwner && (
+              <>
+                <Route path="/patients" element={<PatientDirectory />} />
+                <Route path="/PetProfile/:pet_id" element={<PetProfile />} />
+                <Route path="/account" element={<MyAccount />} />
+                <Route path="*" element={<Navigate to="/patients" />} />
+              </>
+            )}
           </Routes>
         </div>
       </div>
     </>
-  )
+  );
 }
+
 
 function App() {
   return (
