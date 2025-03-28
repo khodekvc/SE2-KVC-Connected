@@ -23,33 +23,33 @@ const VisitHistory = () => {
 
 
  useEffect(() => {
-   const fetchVisitRecords = async () => {
-     try {
-       const response = await fetch(`http://localhost:5000/recs/visit-records?pet_id=${pet_id}`, {
-         method: "GET",
-         credentials: "include",
-         headers: {
-           "Content-Type": "application/json",
-         },
-       });
+  const fetchVisitRecords = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/recs/visit-records?pet_id=${pet_id}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
 
-       if (!response.ok) {
-         throw new Error("Failed to fetch visit records");
-       }
+      if (!response.ok) {
+        throw new Error("Failed to fetch visit records");
+      }
 
 
-       const data = await response.json();
-       console.log("Fetched visit records:", data); // Log the data to verify its structure
-       setVisitRecords(data);
-     } catch (error) {
-       console.error("Error fetching visit records:", error);
-     }
-   };
+      const data = await response.json();
+      console.log("Fetched visit records:", data); // Log the data to verify its structure
+      setVisitRecords(data);
+    } catch (error) {
+      console.error("Error fetching visit records:", error);
+    }
+  };
 
 
-   fetchVisitRecords();
- }, [pet_id]); // Re-fetch records if pet_id changes
+  fetchVisitRecords();
+}, [pet_id]); // Re-fetch records if pet_id changes
 
 
  const handleUpdateRecord = (updatedRecord) => {
@@ -221,10 +221,70 @@ const VisitHistory = () => {
             </td>
             <td>{record.purposeOfVisit || "No Details Available"}</td>
             <td className="action-column">
-                <button className="action-btn">
+                <button
+                    className="action-btn"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`http://localhost:5000/recs/generate-pdf/${pet_id}/${record.id}`, {
+                          method: "GET",
+                          credentials: "include",
+                        })
+
+
+                        if (!response.ok) {
+                          throw new Error("Failed to download PDF")
+                        }
+
+
+                        const blob = await response.blob()
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement("a")
+                        a.href = url
+
+
+                        const contentDisposition = response.headers.get("Content-Disposition")
+                        let filename
+                        if (contentDisposition) {
+                          const filenameMatch = contentDisposition.match(/filename=([^;]+)/)
+                          filename = filenameMatch ? filenameMatch[1].trim() : null
+                        }
+
+
+                        if (!filename) {
+                          // Format date to match backend format (YYYY-MM-DD)
+                          const recordDate = record.date ? new Date(record.date) : new Date()
+                          const year = recordDate.getFullYear()
+                          const month = String(recordDate.getMonth() + 1).padStart(2, "0")
+                          const day = String(recordDate.getDate()).padStart(2, "0")
+                          const formattedDate = `${year}-${month}-${day}`
+
+
+                          filename = `${record.pet_name}_Medical_Record_${formattedDate}.pdf`
+                        }
+
+
+                        a.download = filename
+                        document.body.appendChild(a)
+                        a.click()
+
+
+                        setTimeout(() => {
+                          window.URL.revokeObjectURL(url)
+                          document.body.removeChild(a)
+                        }, 100)
+
+
+                        console.log(`PDF downloaded for record ID: ${record.id}`)
+                      } catch (error) {
+                        console.error("Error downloading PDF:", error)
+                        alert("Failed to download the PDF. Please try again.")
+                      }
+                    }}
+                  >
                     <Download size={20} />
-                </button>
-            </td>
+                  </button>
+              </td>
+
             <td className="action-column">
                 <button className="action-btn" onClick={() => handleViewRecord(record)}>
                     <ArrowRight size={20} />

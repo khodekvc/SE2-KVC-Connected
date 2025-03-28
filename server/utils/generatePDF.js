@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
 
-async function generatePdf(petId) {
+async function generatePdf(petId, recordId) {
     try {
         console.log("Generating PDF for pet ID:", petId);
     
@@ -94,10 +94,10 @@ async function generatePdf(petId) {
             LEFT JOIN lab_info l ON mrl.lab_id = l.lab_id
             LEFT JOIN immunization_record v ON p.pet_id = v.pet_id
             LEFT JOIN vax_info vi ON v.vax_id = vi.vax_id
-            WHERE p.pet_id = ?
+            WHERE p.pet_id = ? AND r.record_id = ?
         `;
 
-        const [rows] = await db.query(petQuery, [petId]);
+        const [rows] = await db.query(petQuery, [petId, recordId]);
         console.log("Raw Query Result:", rows);
 
         const petData = rows.length > 0 ? rows[0] : null;
@@ -348,6 +348,13 @@ async function generatePdf(petId) {
         });
         
         doc.end();
+
+        await new Promise((resolve, reject) => {
+            stream.on('finish', resolve);
+            stream.on('error', reject);
+        });
+
+
         return pdfPath;
     } catch (error) {
         throw error;

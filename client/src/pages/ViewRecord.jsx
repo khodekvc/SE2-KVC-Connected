@@ -14,15 +14,17 @@ import { useParams } from "react-router-dom"
 
 const ViewRecord = ({ record, onBack, onUpdate }) => {
  const { pet_id } = useParams();
- const { hasPermission } = useUserRole()
- const { showConfirmDialog } = useConfirmDialog()
- const [isModalOpen, setIsModalOpen] = useState(false)
- const { isDiagnosisLocked, unlockDiagnosis } = useDiagnosisLock()
- const [isEditing, setIsEditing] = useState(false)
- const [editedRecord, setEditedRecord] = useState(record)
- const [loading, setLoading] = useState(true)
- const [error, setErrors] = useState({}) // Define setErrors
-  useEffect(() => {
+ const { hasPermission } = useUserRole();
+ const { showConfirmDialog } = useConfirmDialog();
+ const [isModalOpen, setIsModalOpen] = useState(false);
+ const { unlockDiagnosis, lockDiagnosis, isDiagnosisLocked } = useDiagnosisLock();
+ const [isEditing, setIsEditing] = useState(false);
+ const [editedRecord, setEditedRecord] = useState(record);
+ const [loading, setLoading] = useState(true);
+ const [error, setErrors] = useState({});
+
+
+ useEffect(() => {
    const fetchRecord = async () => {
      try {
        setLoading(true);
@@ -89,37 +91,45 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
  };
 
 
- const handleUnlockDiagnosis = async () => {
+ // Function to request access code and open the modal
+ const handleRequestAccessCode = async () => {
    try {
      const response = await fetch("http://localhost:5000/recs/records/request-access-code", {
-       method: "POST",
+       method: "GET",
        credentials: "include",
        headers: {
          "Content-Type": "application/json",
        },
-       body: JSON.stringify({ role: "clinician" }),
      });
 
 
      if (!response.ok) {
-       const errorData = await response.json();
-       throw new Error(errorData.error || "Failed to request access code.");
+       throw new Error("Failed to request access code");
      }
 
 
-     alert("Access code sent to the clinic owner's email."); // Notify the user
-     setIsModalOpen(true); // Open the popup
+     const data = await response.json();
+
+
+     // Store the access code in the state
+     setEditedRecord((prev) => ({
+       ...prev,
+       accessCode: data.accessCode, // Save the access code in the record state
+     }));
+
+
+     setIsModalOpen(true); // Open the modal after requesting the code
    } catch (error) {
      console.error("Error requesting access code:", error);
-     alert(error.message); // Show error to the user
    }
  };
 
 
- const handleAccessCodeSubmit = (accessCode) => {
+ const handleUnlockDiagnosis = (accessCode) => {
+   unlockDiagnosis(); // Unlock the diagnosis field
    setEditedRecord((prev) => ({
      ...prev,
-     accessCode, // Store the access code in the state
+     accessCode, // Save the validated access code
    }));
  };
 
@@ -151,6 +161,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
      accessCode: editedRecord.accessCode, // Include access code for clinicians
    };
    console.log("Updated Data:", updatedData);
+   console.log("Access Code Sent:", editedRecord.accessCode);
    try {
      console.log("Record ID in handleSubmit:", record.id);
      const response = await fetch(`http://localhost:5000/recs/records/${record.id}`, {
@@ -173,7 +184,9 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
 
 
      onUpdate({ ...editedRecord, ...updatedRecord, id: record.id }); // Update the parent state
-     setIsEditing(false); // Exit editing mode
+     lockDiagnosis();
+     setIsEditing(false);
+    
    } catch (error) {
      console.error("Error updating record:", error);
    }
@@ -217,7 +230,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
              isEditing={isEditing}
              isDiagnosisLocked={!hasPermission("canAlwaysEditDiagnosis") && isDiagnosisLocked}
              onInputChange={handleInputChange}
-             onUnlockDiagnosis={handleUnlockDiagnosis}
+             onUnlockDiagnosis={handleRequestAccessCode} // Request access code
              isAddRecord={false}
              error={error}
            />
@@ -226,7 +239,13 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
      </div>
 
 
-     <UnlockModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onUnlock={handleAccessCodeSubmit} />
+     <UnlockModal
+       isOpen={isModalOpen}
+       onClose={() => setIsModalOpen(false)}
+       onUnlock={(accessCode) => handleUnlockDiagnosis(accessCode)} // Pass the access code
+       recordId={editedRecord.id}
+       generatedAccessCode={editedRecord.accessCode}
+     />
    </>
  )
 }

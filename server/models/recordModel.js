@@ -1,6 +1,8 @@
 const db = require("../config/db");
 
 
+
+
 const getAllVisitRecords = async (pet_id) => {
  try {
    const query = `
@@ -15,11 +17,13 @@ const getAllVisitRecords = async (pet_id) => {
        r.record_recent_visit AS recentVisit,
        r.record_purchase AS recentPurchase,
        r.record_lab_file AS file,
+       p.pet_name,
        l.lab_description AS laboratories,
        s.surgery_type AS pastSurgeries,
        d.diagnosis_text AS latestDiagnoses,
        r.pet_id AS petId
      FROM record_info r
+     LEFT JOIN pet_info p ON r.pet_id = p.pet_id
      LEFT JOIN lab_info l ON r.lab_id = l.lab_id
      LEFT JOIN surgery_info s ON r.surgery_id = s.surgery_id
      LEFT JOIN diagnosis d ON r.diagnosis_id = d.diagnosis_id
@@ -43,10 +47,14 @@ const insertLabInfo = async (lab_description) => {
 };
 
 
+
+
 const getLabIdByDescription = async (lab_description) => {
    const [result] = await db.query("SELECT lab_id FROM lab_info WHERE lab_description = ?", [lab_description]);
    return result.length ? result[0].lab_id : null;
 };
+
+
 
 
 const insertDiagnosis = async (diagnosisText) => {
@@ -61,10 +69,16 @@ const insertDiagnosis = async (diagnosisText) => {
 
 
 
+
+
+
+
 const insertSurgeryInfo = async (surgery_type, surgery_date) => {
    const [surgeryResult] = await db.query("INSERT INTO surgery_info (surgery_type, surgery_date) VALUES (?, ?)", [surgery_type, surgery_date]);
    return surgeryResult.insertId;
 };
+
+
 
 
 const insertRecord = async (petId, recordData) => {
@@ -79,6 +93,8 @@ const insertRecord = async (petId, recordData) => {
 };
 
 
+
+
 const updateRecordInDB = async (recordId, recordData) => {
    // Fetch current record to preserve diagnosis_id
    const [currentRecord] = await db.query(
@@ -87,14 +103,20 @@ const updateRecordInDB = async (recordId, recordData) => {
    );
 
 
+
+
    // If diagnosis_id is missing from update, keep the existing one
    if (!("diagnosis_id" in recordData)) {
        recordData.diagnosis_id = currentRecord[0].diagnosis_id;
    }
 
 
+
+
    const fields = Object.keys(recordData);
    const values = Object.values(recordData);
+
+
 
 
    if (fields.length === 0) {
@@ -102,12 +124,18 @@ const updateRecordInDB = async (recordId, recordData) => {
    }
 
 
+
+
    const setClause = fields.map(field => `${field} = ?`).join(", ");
+
+
 
 
    console.log("DEBUG: Running SQL Query:");
    console.log(`UPDATE record_info SET ${setClause} WHERE record_id = ?`);
    console.log("DEBUG: Values:", [...values, recordId]);
+
+
 
 
    const [result] = await db.query(
@@ -116,9 +144,13 @@ const updateRecordInDB = async (recordId, recordData) => {
    );
 
 
+
+
    console.log("DEBUG: Update affected rows:", result.affectedRows);
    return result.affectedRows;
 };
+
+
 
 
 const getRecordById = async (recordId) => {
@@ -127,15 +159,21 @@ const getRecordById = async (recordId) => {
 };
 
 
+
+
 const insertMatchRecLab = async (recordId, labId) => {
    await db.query("INSERT INTO match_rec_lab (record_id, lab_id) VALUES (?, ?)", [recordId, labId]);
 };
+
+
 
 
 const updateMatchRecLab = async (recordId, labId) => {
    await db.query("DELETE FROM match_rec_lab WHERE record_id = ?", [recordId]);
    await db.query("INSERT INTO match_rec_lab (record_id, lab_id) VALUES (?, ?)", [recordId, labId]);
 };
+
+
 
 
 const updateDiagnosisText = async (diagnosisId, newDiagnosisText) => {
@@ -152,6 +190,8 @@ const updateDiagnosisText = async (diagnosisId, newDiagnosisText) => {
        throw error;
    }
 };
+
+
 
 
 module.exports = { getAllVisitRecords, insertLabInfo, getLabIdByDescription, insertDiagnosis, insertSurgeryInfo, insertRecord, updateRecordInDB, getRecordById, insertMatchRecLab, updateMatchRecLab, updateDiagnosisText };
