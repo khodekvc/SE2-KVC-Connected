@@ -11,7 +11,7 @@ router.get("/visit-records", authenticateToken, authenticate, recordController.g
 
 router.post("/records/:petId", authenticateToken, authenticate, authorize({ roles: ["doctor", "clinician"] }), recordController.addRecord);
 router.put("/records/:recordId", authenticateToken, authenticate, authorize({ roles: ["doctor", "clinician"] }), recordController.updateRecord);
-router.get("/records/request-access-code", authenticateToken, authenticate, authorize({ roles: ["clinician"] }), recordController.requestDiagnosisAccessCode);
+router.post("/records/request-access-code", authenticateToken, authenticate, authorize({ roles: ["clinician"] }), recordController.requestDiagnosisAccessCode);
 
 // GET records with sorting and filtering by date
 router.get("/search-records", authenticateToken, async (req, res) => {

@@ -1,17 +1,19 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ArrowLeft } from "lucide-react"
-import "../css/AddRecord.css"
-import { useDiagnosisLock } from "../contexts/DiagnosisLockContext"
-import { useConfirmDialog } from "../contexts/ConfirmDialogContext"
-import MedicalRecordForm from "../components/MedicalRecordForm"
-import { useUserRole } from "../contexts/UserRoleContext"
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import "../css/AddRecord.css";
+import { useDiagnosisLock } from "../contexts/DiagnosisLockContext";
+import { useConfirmDialog } from "../contexts/ConfirmDialogContext";
+import MedicalRecordForm from "../components/MedicalRecordForm";
+import { useUserRole } from "../contexts/UserRoleContext";
 
 const AddRecord = ({ onClose, onSubmit }) => {
-  const { hasPermission } = useUserRole()
-  const { isDiagnosisLocked } = useDiagnosisLock()
-  const { showConfirmDialog } = useConfirmDialog()
+  const { pet_id } = useParams();
+  const { hasPermission } = useUserRole();
+  const { isDiagnosisLocked } = useDiagnosisLock();
+  const { showConfirmDialog } = useConfirmDialog();
   const [formData, setFormData] = useState({
     date: "",
     weight: "",
@@ -27,46 +29,90 @@ const AddRecord = ({ onClose, onSubmit }) => {
     recentVisit: "",
     recentPurchase: "",
     purposeOfVisit: "",
-  })
+  });
 
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState({});
 
   const validateForm = () => {
-    const newErrors = {}
-    if (!formData.date) newErrors.date = "Date is required"
-    if (!formData.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
+    const newErrors = {};
+    if (!formData.date) newErrors.date = "Date is required";
+    if (!formData.purposeOfVisit)
+      newErrors.purposeOfVisit = "Purpose of visit is required";
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (validateForm()) {
-      showConfirmDialog("Are you sure you want to add this record?", () => onSubmit(formData))
+      showConfirmDialog(
+        "Are you sure you want to add this record?",
+        async () => {
+          try {
+            const payload = {
+              record_date: formData.date,
+              record_weight: formData.weight,
+              record_temp: formData.temperature,
+              record_condition: formData.conditions,
+              record_symptom: formData.symptoms,
+              record_recent_visit: formData.recentVisit,
+              record_purchase: formData.recentPurchase,
+              record_purpose: formData.purposeOfVisit,
+              lab_description: formData.laboratories,
+              diagnosis_text: formData.latestDiagnosis,
+              surgery_type: formData.surgeryType,
+              surgery_date: formData.surgeryDate,
+            };
+
+            const response = await fetch(
+              `http://localhost:5000/recs/records/${pet_id}`,
+              {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error("Failed to add record");
+            }
+
+            const newRecord = await response.json();
+            console.log("Newly added record:", newRecord);
+
+            onSubmit(newRecord); // Pass the new record to the parent component
+          } catch (error) {
+            console.error("Error adding record:", error);
+          }
+        }
+      );
     }
-  }
+  };
 
   const handleInputChange = (e) => {
-    const { name, value, type } = e.target
+    const { name, value, type } = e.target;
     if (type === "file") {
       setFormData((prev) => ({
         ...prev,
         [name]: e.target.files[0],
-      }))
+      }));
     } else {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
-      }))
+      }));
     }
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: "",
-      }))
+      }));
     }
-  }
+  };
 
   return (
     <div className="add-record-container">
@@ -95,17 +141,19 @@ const AddRecord = ({ onClose, onSubmit }) => {
       </div>
 
       <div className="form-content">
-      <MedicalRecordForm
-  formData={formData}
-  isEditing={true}
-  isDiagnosisLocked={!hasPermission("canAlwaysEditDiagnosis") && isDiagnosisLocked}
-  onInputChange={handleInputChange}
-  isAddRecord={true}
-  errors={errors} 
-/>
+        <MedicalRecordForm
+          formData={formData}
+          isEditing={true}
+          isDiagnosisLocked={
+            !hasPermission("canAlwaysEditDiagnosis") && isDiagnosisLocked
+          }
+          onInputChange={handleInputChange}
+          isAddRecord={true}
+          errors={errors}
+        />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AddRecord
+export default AddRecord;

@@ -1,29 +1,46 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import "../css/UnlockDiagnosis.css"
+import { useState } from "react";
+import "../css/UnlockDiagnosis.css";
 
-const UnlockModal = ({ isOpen, onClose, onUnlock }) => {
-  const [reason, setReason] = useState("")
+const UnlockModal = ({ isOpen, onClose, onUnlock, generatedAccessCode }) => {
+  const [formData, setFormData] = useState({ accessCode: "" });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    onUnlock(reason)
-    setReason("")
-    onClose()
-  }
+    e.preventDefault();
 
-  if (!isOpen) return null
+    const trimmedAccessCode = formData.accessCode.trim();
+    console.log("Access code being entered:", trimmedAccessCode);
+
+    // Compare the entered access code with the generated access code
+    if (trimmedAccessCode !== generatedAccessCode) {
+      alert("Invalid access code. Please try again.");
+      return;
+    }
+
+    // If the access code matches, unlock the diagnosis
+    console.log("Access code verified successfully!");
+    onUnlock(trimmedAccessCode);
+    onClose();
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Modify Diagnosis</h2>
-        <p>Enter mo na yung code na binigay ni doc:</p>
+        <p>Enter the access code provided by the clinic owner:</p>
         <form onSubmit={handleSubmit}>
           <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            name="accessCode"
+            placeholder="Enter access code"
+            value={formData.accessCode}
+            onChange={handleChange}
             required
           />
           <div className="modal-buttons">
@@ -37,7 +54,7 @@ const UnlockModal = ({ isOpen, onClose, onUnlock }) => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UnlockModal
+export default UnlockModal;
