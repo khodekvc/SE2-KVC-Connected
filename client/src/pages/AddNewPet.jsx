@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import "../css/AddNewPet.css"
+import { useState } from "react";
+import "../css/AddNewPet.css";
 
 export default function AddNewPet() {
   const [petData, setPetData] = useState({
@@ -10,20 +10,44 @@ export default function AddNewPet() {
     gender: "male",
     breed: "",
     birthday: "",
-  })
+  });
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setPetData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log(petData)
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch("http://localhost:5000/pets/add", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(petData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error adding pet:", errorData.error);
+        alert(`Error: ${errorData.error}`);
+        return;
+      }
+
+      const result = await response.json();
+      console.log("Pet added successfully:", result);
+      alert("Pet added successfully!");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("An error occurred while adding the pet.");
+    }
+  };
 
   return (
     <div className="add-pet-container">
@@ -41,17 +65,31 @@ export default function AddNewPet() {
           <div className="form-row">
             <div className="form-field">
               <label>Name</label>
-              <input type="text" name="name" value={petData.name} onChange={handleInputChange} required />
+              <input
+                type="text"
+                name="name"
+                value={petData.name}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             <div className="form-field">
               <label>Species</label>
-              <select name="species" value={petData.species} onChange={handleInputChange} required>
+              <select
+                name="speciesDescription"
+                value={petData.speciesDescription}
+                onChange={handleInputChange}
+                required
+              >
                 <option value="">Select species</option>
-                <option value="Dog">Dog</option>
-                <option value="Cat">Cat</option>
-                <option value="Bird">Bird</option>
-                <option value="Rabbit">Rabbit</option>
-                <option value="Snake">Snake</option>
+                <option value="Dog (Standard)">Dog</option>
+                <option value="Cat (Standard)">Cat</option>
+                <option value="Snake (Exotic)">Snake</option>
+                <option value="Turtles (Exotic)">Turtles</option>
+                <option value="Birds (Exotic)">Birds</option>
+                <option value="Rabbit (Exotic)">Rabbit</option>
+                <option value="Lab Rat (Exotic)">Lab Rat</option>
+                <option value="Others">Others</option>
               </select>
             </div>
           </div>
@@ -84,7 +122,13 @@ export default function AddNewPet() {
             </div>
             <div className="form-field">
               <label>Breed</label>
-              <input type="text" name="breed" value={petData.breed} onChange={handleInputChange} required />
+              <input
+                type="text"
+                name="breed"
+                value={petData.breed}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
 
@@ -92,7 +136,12 @@ export default function AddNewPet() {
             <div className="form-field">
               <label>Birthday (Optional)</label>
               <div className="date-input">
-                <input type="date" name="birthday" value={petData.birthday} onChange={handleInputChange} />
+                <input
+                  type="date"
+                  name="birthday"
+                  value={petData.birthday}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
             {/*  */}
@@ -107,6 +156,6 @@ export default function AddNewPet() {
         </form>
       </div>
     </div>
-  )
+  );
 }
 

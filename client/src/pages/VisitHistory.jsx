@@ -22,34 +22,35 @@ const VisitHistory = () => {
  const [visitRecords, setVisitRecords] = useState([])
 
 
- useEffect(() => {
-  const fetchVisitRecords = async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/recs/visit-records?pet_id=${pet_id}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+ const fetchVisitRecords = async () => {
+  try {
+    const response = await fetch(`http://localhost:5000/recs/visit-records?pet_id=${pet_id}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch visit records");
-      }
-
-
-      const data = await response.json();
-      console.log("Fetched visit records:", data); // Log the data to verify its structure
-      setVisitRecords(data);
-    } catch (error) {
-      console.error("Error fetching visit records:", error);
+    if (!response.ok) {
+      throw new Error("Failed to fetch visit records");
     }
-  };
 
 
-  fetchVisitRecords();
-}, [pet_id]); // Re-fetch records if pet_id changes
+    const data = await response.json();
+    console.log("Fetched visit records:", data); // Log the data to verify its structure
+    setVisitRecords(data);
+  } catch (error) {
+    console.error("Error fetching visit records:", error);
+  }
+};
+
+
+  useEffect(() => {
+    fetchVisitRecords();
+  }, [pet_id]);
+
 
 
  const handleUpdateRecord = (updatedRecord) => {
@@ -60,11 +61,12 @@ const VisitHistory = () => {
  };
 
 
- const handleAddRecord = (newRecord) => {
+ const handleAddRecord = async (newRecord) => {
    // Use the backend response to add the new record
    console.log("Adding new record to state:", newRecord);
    setVisitRecords((prevRecords) => [newRecord, ...prevRecords]);
    setShowAddRecord(false);
+   await fetchVisitRecords();
  }
 
 

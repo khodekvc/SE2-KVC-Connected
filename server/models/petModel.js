@@ -49,18 +49,21 @@ class PetModel {
         return result.length ? result[0] : null;
     }
 
-    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }, connection) {
-        const [result] = await connection.query(
+    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }) {
+        const [result] = await db.query(
             "INSERT INTO pet_info (pet_name, pet_gender, pet_breed, pet_birthday, pet_vitality, pet_status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
             [petname, gender, breed, birthdate, true, true, userId] // pet_status = 1 (active)
         );
         const petId = result.insertId;
 
+
         // Insert into match_pet_species table
-        await connection.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
+        await db.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
+
 
         return petId;
     }
+
 
     static async updatePet(pet_id, updatedData) {
         const updateFields = Object.keys(updatedData);
