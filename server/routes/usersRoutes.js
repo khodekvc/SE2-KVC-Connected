@@ -5,6 +5,7 @@ const { authenticateToken } = require("../utils/authUtility");
 const router = express.Router();
 
 router.get("/myAccount", authenticateToken, authenticate, usersController.getEmployeeProfile);
+router.get("/owner/myAccount", authenticateToken, authenticate, usersController.getOwnerProfile);
 
 // update profile (Protected route)
 router.put("/update-employee-profile", authenticateToken, authenticate, usersController.updateEmployeeProfile);
