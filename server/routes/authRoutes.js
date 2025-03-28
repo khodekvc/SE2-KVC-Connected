@@ -1,7 +1,7 @@
 const express = require("express");
 const { generateCaptcha, generateCaptchaImage } = require("../utils/captchaUtility");
 const authController = require("../controllers/authController");
-const { requestPasswordReset, verifyResetCode, resetPassword } = require("../controllers/forgotPasswordController");
+const { requestPasswordReset, verifyResetCode, resetPassword, resendResetCode } = require("../controllers/forgotPasswordController");
 const { authenticate } = require("../middleware/authMiddleware");
 const db = require("../config/db");
 const bcrypt = require('bcrypt');
@@ -49,5 +49,6 @@ router.post("/logout", authenticate, authController.logoutUser);
  router.post("/forgot-password", requestPasswordReset);
  router.post("/verify-reset-code", verifyResetCode);
  router.post("/reset-password", resetPassword);
+ router.post("/resend-reset-code", resendResetCode);
 
 module.exports = router;

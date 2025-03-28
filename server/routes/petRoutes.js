@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const petController = require("../controllers/petController");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
+const { authenticateToken } = require("../utils/authUtility");
 const db = require("../config/db");
-
+const mysql = require("mysql2");
 
 // Routes that require clinician or doctor authorization
-router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
+router.post("/:pet_id/vaccines", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
     const { pet_id } = req.params
     const { vax_type, imm_rec_quantity, imm_rec_date } = req.body
  
@@ -46,7 +47,7 @@ router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", 
   })
  
   // Route to get all vaccination records for a pet
-  router.get("/:pet_id/vaccines", authenticate, async (req, res) => {
+  router.get("/:pet_id/vaccines", authenticateToken, authenticate, async (req, res) => {
     const { pet_id } = req.params
  
     try {
@@ -68,7 +69,7 @@ router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", 
  
   // Route to update a vaccination record (for the + button)
   router.put(
-    "/:pet_id/vaccines/:record_id",
+    "/:pet_id/vaccines/:record_id", authenticateToken,
     authenticate,
     authorize({ roles: ["clinician", "doctor"] }),
     async (req, res) => {
@@ -92,107 +93,81 @@ router.post("/:pet_id/vaccines", authenticate, authorize({ roles: ["clinician", 
       }
     },
   )
- 
+
   router.put("/edit/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
-    const { pet_id } = req.params
-    const updatedData = req.body
-    console.log("API called to update pet profile for pet ID:", pet_id, "with data:", updatedData) // Debugging line
-  
+    const { pet_id } = req.params;
+    const updatedData = req.body;
+
+
+    console.log("API called to update pet profile for pet ID:", pet_id, "with data:", updatedData); // Debugging line
+
+
     try {
-      await db.query("START TRANSACTION")
-  
-      const {
-        pet_name = "",
-        pet_breed = "",
-        pet_gender = "", 
-        pet_birthday = null,
-        pet_age_month = "",
-        pet_age_year = "",
-        pet_color = "",
-        pet_status = "1", 
-        spec_id = 1, 
-      } = updatedData
-  
-      const [petResult] = await db.query(
-        `UPDATE pet_info
-               SET pet_name = ?, pet_breed = ?, pet_gender = ?, pet_birthday = ?, pet_age_month = ?, pet_age_year = ?, pet_color = ?, pet_status = ?
-               WHERE pet_id = ?`,
-        [pet_name, pet_breed, pet_gender, pet_birthday, pet_age_month, pet_age_year, pet_color, pet_status, pet_id],
-      )
-  
-      const [existingRecords] = await db.query(`SELECT * FROM match_pet_species WHERE pet_id = ?`, [pet_id])
-  
-      if (existingRecords.length > 0) {
-        await db.query(
-          `UPDATE match_pet_species
-                   SET spec_id = ?
-                   WHERE pet_id = ?`,
-          [spec_id, pet_id],
-        )
-        console.log(`Updated species for pet_id ${pet_id} to spec_id ${spec_id}`)
-      } else {
-        await db.query(
-          `INSERT INTO match_pet_species (pet_id, spec_id)
-                   VALUES (?, ?)`,
-          [pet_id, spec_id],
-        )
-        console.log(`Inserted new species record for pet_id ${pet_id} with spec_id ${spec_id}`)
-      }
-  
-      await db.query("COMMIT")
-  
-      console.log("Database query result:", petResult) // Debugging line
-  
-      if (petResult.affectedRows === 0) {
-        console.log("No rows affected") // Debugging line
-        return res.status(404).json({ error: "Pet not found or no changes made" })
-      }
-  
-      const [updatedPet] = await db.query(
-        `SELECT p.*, ps.spec_description as species
-               FROM pet_info p
-               JOIN match_pet_species mps ON p.pet_id = mps.pet_id
-               JOIN pet_species ps ON mps.spec_id = ps.spec_id
-               WHERE p.pet_id = ?`,
-        [pet_id],
-      )
-  
-      res.status(200).json({
-        message: "Pet profile updated successfully",
-        pet: updatedPet[0],
-      })
+        // Provide default values for missing fields
+        const {
+            pet_name = "",
+            pet_breed = "",
+            pet_gender = "Unknown", // Default to "Unknown" if gender is missing
+            pet_birthday = null,
+            pet_age_month = "",
+            pet_age_year = "",
+            pet_color = "",
+            pet_status = "1", // Default to "Alive" if status is missing
+        } = updatedData;
+
+
+        const result = await db.query(
+            `UPDATE pet_info
+             SET pet_name = ?, pet_breed = ?, pet_gender = ?, pet_birthday = ?, pet_age_month = ?, pet_age_year = ?, pet_color = ?, pet_status = ?
+             WHERE pet_id = ?`,
+            [pet_name, pet_breed, pet_gender, pet_birthday, pet_age_month, pet_age_year, pet_color, pet_status, pet_id]
+        );
+
+
+        console.log("Database query result:", result); // Debugging line
+
+
+        if (result[0].affectedRows === 0) {
+            console.log("No rows affected"); // Debugging line
+            return res.status(404).json({ error: "Pet not found or no changes made" });
+        }
+
+
+        res.status(200).json({ message: "Pet profile updated successfully" });
     } catch (error) {
-      // Rollback the transaction in case of error
-      await db.query("ROLLBACK")
-      console.error("Error updating pet profile:", error)
-      res.status(500).json({ error: "Failed to update pet profile" })
+        console.error("Error updating pet profile:", error);
+        res.status(500).json({ error: "Failed to update pet profile" });
     }
-  })
-  
+});
 
-router.put("/archive/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.archivePet);
-router.put("/restore/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.restorePet);
+router.put("/edit/:pet_id", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.updatePetProfile);
+router.put("/archive/:pet_id", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.archivePet);
+router.put("/restore/:pet_id", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), petController.restorePet);
 
+
+
+// Route for logged-in owners to add a pet
+//put authorize?
+router.post("/add", authenticateToken, authenticate, authorize({ roles: ["owner"] }), petController.addPetForOwner);
+
+
+router.get("/pets/:user_id", authenticateToken, authenticate, authorize({ roles: ["owner"], userIdParam: "userId" }), petController.getPetsByOwner);
 
 // Routes accessible to all authenticated users
-router.get("/active", authenticate, petController.getAllActivePets);
-router.get("/archived", authenticate, petController.getAllArchivedPets);
-
-
-// Route to fetch pet details by pet_id
-router.get("/:pet_id", authenticate, petController.getPetById);
-
+router.get("/active", authenticateToken, authenticate, petController.getAllActivePets);
+router.get("/archived", authenticateToken, authenticate, petController.getAllArchivedPets);
 
 // Search pets with filtering and sorting
-router.get("/search-pets", async (req, res) => {
+router.get("/search-pets", authenticateToken, async (req, res) => {
     try {
-        const { pet_id, pet_name, owner_name, species, sort_by, sort_order, min_id, max_id } = req.query;
+        console.log("Received query parameters:", req.query);
 
+        const { pet_id, pet_name, owner_name, species, sort_by, sort_order, min_id, max_id, search } = req.query;
 
         let query = `
-            SELECT pet_info.pet_id, pet_info.pet_name, pet_info.pet_breed, pet_info.pet_gender,
-                users.user_firstname AS owner_firstname, users.user_lastname AS owner_lastname,
-                pet_species.spec_description
+            SELECT pet_info.pet_id, pet_info.pet_name, pet_info.pet_breed, pet_info.pet_gender, 
+                   CONCAT(users.user_firstname, ' ', users.user_lastname) AS owner_name,
+                   pet_species.spec_description AS species
             FROM pet_info
             JOIN users ON pet_info.user_id = users.user_id
             JOIN match_pet_species ON pet_info.pet_id = match_pet_species.pet_id
@@ -200,41 +175,48 @@ router.get("/search-pets", async (req, res) => {
             WHERE 1
         `;
 
-
         let queryParams = [];
 
-
-        // Search by pet_id (exact match or range)
-        if (pet_id) {
+        // Add filters
+        if (pet_id && !min_id && !max_id) {
             query += " AND pet_info.pet_id = ?";
             queryParams.push(pet_id);
-        }
-        if (min_id && max_id) {
+        } else if (min_id && max_id) {
             query += " AND pet_info.pet_id BETWEEN ? AND ?";
             queryParams.push(min_id, max_id);
+        } else if (min_id) {
+            query += " AND pet_info.pet_id >= ?";
+            queryParams.push(min_id);
+        } else if (max_id) {
+            query += " AND pet_info.pet_id <= ?";
+            queryParams.push(max_id);
         }
-
-
-        // Search by pet_name (partial match)
         if (pet_name) {
             query += " AND pet_info.pet_name LIKE ?";
             queryParams.push(`%${pet_name}%`);
         }
-
-
-        // Search by owner_name (partial match in first or last name)
         if (owner_name) {
             query += " AND (users.user_firstname LIKE ? OR users.user_lastname LIKE ?)";
             queryParams.push(`%${owner_name}%`, `%${owner_name}%`);
         }
-
-
-        // Search by species (partial match)
         if (species) {
             query += " AND pet_species.spec_description LIKE ?";
             queryParams.push(`%${species}%`);
         }
 
+        // Add general search
+        if (search) {
+            const searchTerm = `%${search}%`;
+            query += `
+                AND (
+                    pet_info.pet_name LIKE ?
+                    OR CONCAT(users.user_firstname, ' ', users.user_lastname) LIKE ?
+                    OR pet_species.spec_description LIKE ?
+                    OR pet_info.pet_id LIKE ?
+                )
+            `;
+            queryParams.push(searchTerm, searchTerm, searchTerm, searchTerm);
+        }
 
         // Sorting logic
         const allowedSorts = {
@@ -244,15 +226,46 @@ router.get("/search-pets", async (req, res) => {
             species: "pet_species.spec_description"
         };
 
+        let orderClause = "";
 
-        // Validate sorting column
-        if (sort_by in allowedSorts) {
-            let order = sort_order === "desc" ? "DESC" : "ASC"; // Default to ASC
-            query += ` ORDER BY ${allowedSorts[sort_by]} ${order}`;
+        // Determine sorting priority
+        if (sort_by && sort_by in allowedSorts) {
+            // If a specific sort_by is provided, use it as the primary sorting field
+            let order = sort_order === "desc" ? "DESC" : "ASC";
+            orderClause = ` ORDER BY ${allowedSorts[sort_by]} ${order}`;
+        } else if (species && !sort_by) {
+            // If only species is selected, sort by pet_id in ascending order
+            orderClause = ` ORDER BY pet_info.pet_id ASC`;
+        } else if (min_id || max_id) {
+            // If range of id is selected, default to sorting by pet_id
+            orderClause = ` ORDER BY pet_info.pet_id ASC`;
         }
 
+        // Handle combinations of filters
+        if (sort_by === "pet_name" && species) {
+            orderClause = ` ORDER BY pet_info.pet_name ${sort_order === "desc" ? "DESC" : "ASC"}`;
+        } else if (sort_by === "owner_name" && species) {
+            orderClause = ` ORDER BY users.user_lastname ${sort_order === "desc" ? "DESC" : "ASC"}`;
+        } else if (sort_by === "pet_name" && sort_by === "owner_name") {
+            // Default to pet_name if both pet_name and owner_name are selected
+            orderClause = ` ORDER BY pet_info.pet_name ${sort_order === "desc" ? "DESC" : "ASC"}`;
+        }
+
+        // Default sorting if no specific sort_by is provided
+        if (!orderClause) {
+            orderClause = ` ORDER BY pet_info.pet_id ASC`;
+        }
+
+        // Append the order clause to the query
+        query += orderClause;
+
+        // Log the raw SQL query
+        const rawQuery = mysql.format(query, queryParams);
+        console.log("Sorting by:", sort_by, "Order:", sort_order);
+        console.log("Raw SQL Query:", rawQuery);
 
         const [results] = await db.query(query, queryParams);
+        console.log("Query Results:", results);
         res.json(results);
     } catch (error) {
         console.error("Error searching pets:", error);
@@ -261,5 +274,6 @@ router.get("/search-pets", async (req, res) => {
 });
 
 
+// Route to fetch pet details by pet_id
+router.get("/:pet_id", authenticateToken, authenticate, petController.getPetById);
 module.exports = router;
-

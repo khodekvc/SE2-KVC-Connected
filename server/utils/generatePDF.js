@@ -348,6 +348,12 @@ async function generatePdf(petId) {
         });
         
         doc.end();
+        
+        // ito lang nabago from shai's current code
+        await new Promise((resolve, reject) => {
+            stream.on('finish', resolve);
+            stream.on('error', reject);
+        });
         return pdfPath;
     } catch (error) {
         throw error;

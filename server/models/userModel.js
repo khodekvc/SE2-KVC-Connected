@@ -32,15 +32,18 @@ class UserModel {
         return results.length > 0;
     }
 
-    static async createPetOwner({ fname, lname, email, contact, address, password, altPerson1, altContact1 }) {
-        const [userResult] = await db.query(
-            "INSERT INTO users (user_email, user_password, user_firstname, user_lastname, user_contact, user_role) VALUES (?, ?, ?, ?, ?, ?)",
-            [email, password, fname, lname, contact, "owner"]
+    static async createPetOwner({ fname, lname, email, contact, address, password, altPerson1, altContact1 }, connection) {
+        const [result] = await connection.query(
+            "INSERT INTO users (user_firstname, user_lastname, user_email, user_contact, user_password, user_role) VALUES (?, ?, ?, ?, ?, ?)",
+            [fname, lname, email, contact, password, "owner"]
         );
-        const userId = userResult.insertId;
-        
-        await db.execute("INSERT INTO owner (user_id, owner_address, owner_alt_person1, owner_alt_contact1) VALUES (?, ?, ?, ?)", [userId, address, altPerson1, altContact1]);
-        
+        const userId = result.insertId;
+
+        await connection.query(
+            "INSERT INTO owner (user_id, owner_address, owner_alt_person1, owner_alt_contact1) VALUES (?, ?, ?, ?)",
+            [userId, address, altPerson1, altContact1]
+        );
+
         return userId;
     }
 
