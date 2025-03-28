@@ -89,7 +89,7 @@ const VisitHistory = () => {
             queryParams.append("end_date", filters.dateTo);
         }
         if (filters.sortOrder) {
-            queryParams.append("sort_order", filters.sortOrder === "oldest" ? "asc" : "desc");
+            queryParams.append("sort_order", filters.sortOrder);
         }
         queryParams.append("pet_id", pet_id); // Include pet_id in the query
 
@@ -116,9 +116,27 @@ const VisitHistory = () => {
 };
 
 
- const resetFilters = () => {
-   setVisitRecords(visitRecords)
- }
+const resetFilters = async () => {
+  try {
+      const response = await fetch(`http://localhost:5000/recs/visit-records?pet_id=${pet_id}`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+              "Content-Type": "application/json",
+          },
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to reset filters");
+      }
+
+      const data = await response.json();
+      console.log("Reset records to original state:", data); // Debugging line
+      setVisitRecords(data); // Reset the records to the original state
+  } catch (error) {
+      console.error("Error resetting filters:", error);
+  }
+};
 
 
  const updateRecord = async (recordId, updatedData) => {

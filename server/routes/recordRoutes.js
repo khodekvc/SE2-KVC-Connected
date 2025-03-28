@@ -49,8 +49,8 @@ router.get("/search-records", async (req, res) => {
         }
 
         // ✅ Sorting by Date (oldest → newest, newest → oldest)
-        if (sort_order && (sort_order === "asc" || sort_order === "desc")) {
-            query += ` ORDER BY record_info.record_date ${sort_order.toUpperCase()}`;
+        if (sort_order === "ASC" || sort_order === "DESC") {
+            query += ` ORDER BY record_info.record_date ${sort_order}`;
         } else {
             query += " ORDER BY record_info.record_date DESC"; // Default: Newest to Oldest
         }
