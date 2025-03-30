@@ -43,6 +43,9 @@ const SignupEmployee = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const { setCurrentRole } = useUserRole(); // Access the context to set the role
+  const navigate = useNavigate();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log("Signing up employee:", formData);
@@ -77,7 +80,7 @@ const SignupEmployee = () => {
             // Handle successful signup
             console.log(data.message);
             setCurrentRole(data.role); // Set the user's role in the context
-      navigate(getLandingPage(data.role)); // Redirect to the landing page based on role
+      navigate(data.redirectUrl); // Redirect to the landing page based on role
             window.location.replace(data.redirectUrl);
         } catch (error) {
             console.error("Error:", error.message);
@@ -201,7 +204,6 @@ const SignupEmployee = () => {
 
 function getLandingPage(role) {
     switch (role) {
-      case "doctor":
       case "clinician":
       case "staff":
         return "/patients";      
