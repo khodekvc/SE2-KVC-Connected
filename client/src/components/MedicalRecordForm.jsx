@@ -63,18 +63,54 @@ const MedicalRecordForm = ({
           </label>
         </div>
       )
-    } else if (type === "file") {
-      input = isEditing ? (
-        <input type="file" id={name} name={name} onChange={onInputChange} className="file-input" />
-      ) : (
-        value && (
-          <button className="view-file-btn">
-            View File
-            <span className="file-name">{value.name}</span>
-          </button>
-        )
-      )
-    } else if (type === "date") {
+    } 
+    
+    else if (type === "file") {
+      input = (
+          <div>
+              {isEditing && (
+                  <input
+                      type="file"
+                      id={name}
+                      name={name}
+                      onChange={onInputChange}
+                      className="file-input"
+                  />
+              )}
+  
+              {/* Show previous file if it exists */}
+              {value instanceof File ? (
+                  <div>
+                      <p className="file-name">{formData.laboratories} - {value.name}</p>
+                      <img
+                          src={URL.createObjectURL(value)} // ✅ Fix: Show file preview
+                          alt={`${name} uploaded`}
+                          style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      />
+                      <a href={URL.createObjectURL(value)} target="_blank" rel="noopener noreferrer">
+                          View File
+                      </a>
+                  </div>
+              ) : typeof value === "string" && value.trim() !== "" ? (
+                  <div>
+                      <p className="file-name">{formData.laboratories} - {value.split('/').pop()}</p>
+                      <img
+                          src={value}
+                          alt={`${name} uploaded`}
+                          style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      />
+                      <a href={value} target="_blank" rel="noopener noreferrer">
+                          View File
+                      </a>
+                  </div>
+              ) : (
+                  <span>No file available</span>
+              )}
+          </div>
+      );
+  }
+  
+     else if (type === "date") {
       input = (
         <div className="date-input">
           <input
@@ -115,20 +151,20 @@ const MedicalRecordForm = ({
     }
 
     return (
-        <div className={`form-field ${isFullWidth ? "full-width" : ""}`}>
-          <label htmlFor={name}>
-            {label}
-            {isRequired && <span className="required">*</span>}
-          </label>
-          {isEditing || type === "radio" ? input : <span className="value-text">{value}</span>}
-          {errors && errors[name] && <span className="error-message">{errors[name]}</span>} {/* Show error */}
-          {name === "latestDiagnoses" && isDiagnosisLocked && isEditing && !isAddRecord && (
-            <button type="button" className="unlock-diagnosis-btn" onClick={onUnlockDiagnosis}>
-              Unlock Diagnosis
-            </button>
-          )}
-        </div>
-      )
+      <div className={`form-field ${isFullWidth ? "full-width" : ""}`}>
+        <label htmlFor={name}>
+          {label}
+          {isRequired && <span className="required">*</span>}
+        </label>
+        {isEditing || type === "radio" || type === "file" ? input : <span className="value-text">{value}</span>}
+        {errors && errors[name] && <span className="error-message">{errors[name]}</span>}
+        {name === "latestDiagnoses" && isDiagnosisLocked && isEditing && !isAddRecord && (
+          <button type="button" className="unlock-diagnosis-btn" onClick={onUnlockDiagnosis}>
+            Unlock Diagnosis
+          </button>
+        )}
+      </div>
+    );    
       
   }
 

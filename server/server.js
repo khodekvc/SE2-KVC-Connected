@@ -6,7 +6,6 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
 // database and route handler imports
 const db = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
@@ -41,7 +40,6 @@ app.use(cors({
 }));
 app.use(express.urlencoded({ extended: true })); 
 app.use(bodyParser.json());
-
 
 app.get("/auth/status", (req, res) => {
     if (req.session.user) {
@@ -79,6 +77,10 @@ app.use("/user", usersRoutes);
 app.use("/pets", petRoutes);
 app.use("/vax", vaccineRoutes);
 app.use("/recs", recordRoutes);
+
+//FILE UPLOADS
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // starts the server
 app.listen(port, () => {

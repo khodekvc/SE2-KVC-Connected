@@ -27,6 +27,15 @@ const getAllVisitRecords = async (pet_id) => {
     `;
 
     const [rows] = await db.query(query, [pet_id]);
+
+    rows.forEach(record => {
+        if (record.file) {
+          record.file = `http://localhost:5000/uploads/${record.file}`;
+        } else {
+          record.file = null;
+        }
+      });
+
     return rows;
   } catch (error) {
     console.error("Error fetching visit records:", error);
@@ -44,15 +53,16 @@ const getLabIdByDescription = async (lab_description) => {
     return result.length ? result[0].lab_id : null;
 };
 
+
 const insertDiagnosis = async (diagnosisText) => {
     const [result] = await db.query(
         "INSERT INTO diagnosis (diagnosis_text) VALUES (?)",
         [diagnosisText]
     );
+    console.log("Diagnosis Text being inserted:", diagnosisText, typeof diagnosisText);
     console.log("New diagnosis ID:", result.insertId); // Debugging
     return result.insertId; // Return the new diagnosis ID
 };
-
 
 const insertSurgeryInfo = async (surgery_type, surgery_date) => {
     const [surgeryResult] = await db.query("INSERT INTO surgery_info (surgery_type, surgery_date) VALUES (?, ?)", [surgery_type, surgery_date]);

@@ -1,4 +1,7 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const recordController = require("../controllers/recordController");
 const { authenticate, authorize } = require("../middleware/authMiddleware");
 const generatePdf = require('../utils/generatePDF');
@@ -6,9 +9,50 @@ const db = require("../config/db");
 
 const router = express.Router();
 
+// ✅ Ensure upload directory exists
+const uploadDir = path.join(__dirname, "../uploads");
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// ✅ Multer configuration 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowedMimeTypes = ["image/jpeg", "image/png"];
+        if (allowedMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Invalid file type. Only JPG, PNG, and PDF files are allowed."));
+        }
+    },
+});
+
 router.get("/visit-records", authenticate, recordController.getVisitRecords);
-router.post("/records/:petId", authenticate, authorize({roles: ["doctor", "clinician"]}), recordController.addRecord);
-router.put("/records/:recordId", authenticate, authorize({roles: ["doctor", "clinician"]}), recordController.updateRecord);
+router.post(
+    "/records/:petId",
+    authenticate,
+    authorize({ roles: ["doctor", "clinician"] }),
+    upload.single("record_lab_file"),
+    recordController.addRecord
+);
+router.put(
+    "/records/:recordId",
+    authenticate,
+    authorize({ roles: ["doctor", "clinician"] }),
+    upload.single("record_lab_file"),
+    recordController.updateRecord
+);
 router.get("/records/request-access-code", authenticate, authorize({roles: ["clinician"]}), recordController.requestDiagnosisAccessCode);
 
 // GET records with sorting and filtering by date

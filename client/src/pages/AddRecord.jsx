@@ -48,53 +48,62 @@ const AddRecord = ({ onClose, onSubmit }) => {
     if (validateForm()) {
       showConfirmDialog("Are you sure you want to add this record?", async () => {
         try {
-          const payload = {
-            record_date: formData.date,
-            record_weight: formData.weight,
-            record_temp: formData.temperature,
-            record_condition: formData.conditions,
-            record_symptom: formData.symptoms,
-            record_recent_visit: formData.recentVisit,
-            record_purchase: formData.recentPurchase,
-            record_purpose: formData.purposeOfVisit,
-            lab_description: formData.laboratories,
-            diagnosis_text: formData.latestDiagnoses,
-            surgery_type: formData.surgeryType,
-            surgery_date: formData.surgeryDate,
-          };
+          const formDataPayload = new FormData();
+          formDataPayload.append("record_date", formData.date);
+          formDataPayload.append("record_weight", formData.weight);
+          formDataPayload.append("record_temp", formData.temperature);
+          formDataPayload.append("record_condition", formData.conditions);
+          formDataPayload.append("record_symptom", formData.symptoms);
+          formDataPayload.append("record_recent_visit", formData.recentVisit);
+          formDataPayload.append("record_purchase", formData.recentPurchase);
+          formDataPayload.append("record_purpose", formData.purposeOfVisit);
+          formDataPayload.append("lab_description", formData.laboratories);
+          formDataPayload.append("diagnosis_text", formData.latestDiagnoses);
+          formDataPayload.append("surgery_type", formData.surgeryType);
+          formDataPayload.append("surgery_date", formData.surgeryDate);
+          if (formData.file instanceof File) {
+            formDataPayload.append("record_lab_file", formData.file);
+          }          
+          for (let pair of formDataPayload.entries()) {
+            console.log(pair[0] + ": " + pair[1]);
+          }
+          console.log("File Details:", formDataPayload.get("record_lab_file"));
 
+          
           const response = await fetch(`http://localhost:5000/recs/records/${pet_id}`, {
             method: "POST",
             credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
+            body: formDataPayload, // ✅ Send FormData instead of JSON
           });
-
+  
           if (!response.ok) {
             throw new Error("Failed to add record");
           }
-
+  
           const newRecord = await response.json();
           console.log("Newly added record:", newRecord);
-
-          onSubmit(newRecord); // Pass the new record to the parent component
+  
+          onSubmit(newRecord);
         } catch (error) {
           console.error("Error adding record:", error);
         }
       });
     }
-  }
+  };
+  
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target
     if (type === "file") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: e.target.files[0],
-      }))
-    } else {
+      const file = e.target.files[0];
+      if (file) {
+        setFormData((prev) => ({
+          ...prev,
+          file, // ✅ Store the file object
+        }));
+      }
+    }
+    else {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -107,6 +116,7 @@ const AddRecord = ({ onClose, onSubmit }) => {
       }))
     }
   }
+
 
   return (
     <div className="add-record-container">

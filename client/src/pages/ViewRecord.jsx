@@ -39,8 +39,10 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
 
         const data = await response.json();
         console.log("Fetched record:", data); // Debugging line
-        if (!data.id) throw new Error("Fetched record has no ID");
-        setEditedRecord(data); // Set the fetched record data
+        if (!data.id) throw new Error("Fetched record has no ID");        
+
+        setEditedRecord({ ...data, file: data.record_lab_file || "" });
+        
       } catch (err) {
         setErrors(err.message);
       } finally {
@@ -54,28 +56,37 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
   const validateForm = () => {
     const newErrors = {}
     if (!editedRecord.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
+    if (!editedRecord.date) newErrors.date = "Date is required";
+    if (!editedRecord.weight) newErrors.weight = "Weight is required";
+    if (!editedRecord.temperature) newErrors.temperature = "Temperature is required";
+    if (!editedRecord.conditions) newErrors.conditions = "Conditions are required";
+    if (!editedRecord.symptoms) newErrors.symptoms = "Symptoms are required";
+    if (!editedRecord.recentVisit) newErrors.recentVisit = "Recent visit date is required";
+    if (!editedRecord.recentPurchase) newErrors.recentPurchase = "Recent purchase date is required";
 
     setErrors(newErrors) // Use setErrors to update the error state
     return Object.keys(newErrors).length === 0
   }
 
   const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-    console.log("Input Change Triggered:", { name, value, type });
-  
-    setEditedRecord((prev) => ({
-      ...prev,
-      [name]: type === "file" ? e.target.files[0] : value,
-    }));
-  
-    if (error[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+    const { name, type } = e.target;
+
+    if (type === "file") {
+        const file = e.target.files[0];
+        setEditedRecord((prev) => ({
+            ...prev,
+            [name]: file || prev[name], // ✅ Keep existing file if no new file is selected
+            filePreview: file ? URL.createObjectURL(file) : prev.filePreview, // ✅ Maintain preview
+        }));
+    } else {
+        setEditedRecord((prev) => ({
+            ...prev,
+            [name]: e.target.value,
+        }));
     }
-  };
-  
+};
+
+
   const handleSave = () => {
     if (validateForm()) {
       showConfirmDialog("Do you want to save your changes?", () => {
@@ -126,59 +137,83 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
 
     console.log("Record ID in handleSubmit:", record?.id);
     if (!record || !record.id) {
-      console.error("Record ID is missing. Cannot update record.");
+      console.error("❌ Record ID is missing. Cannot update record.");
       return;
     }
 
-    const updatedData = {
-      record_date: editedRecord.date ? new Date(editedRecord.date).toISOString().split("T")[0] : null,
-      record_weight: editedRecord.weight,
-      record_temp: editedRecord.temperature,
-      record_condition: editedRecord.conditions,
-      record_symptom: editedRecord.symptoms,
-      record_recent_visit: editedRecord.recentVisit ? new Date(editedRecord.recentVisit).toISOString().split("T")[0] : null,
-      record_purchase: editedRecord.recentPurchase,
-      record_purpose: editedRecord.purposeOfVisit,
-      //diagnosis_text: editedRecord.latestDiagnoses, // Optional
-      lab_description: editedRecord.labDescription, // Optional
-      surgery_type: editedRecord.pastSurgeries, // Optional
-      surgery_date: editedRecord.surgeryDate ? new Date(editedRecord.surgeryDate).toISOString().split("T")[0] : null,
-      //accessCode: editedRecord.accessCode, // Include access code for clinicians
+    console.log("Edited Record:", editedRecord);
+
+    const formDataPayload = new FormData();
+
+    const appendField = (key, value) => {
+      if (value !== undefined && value !== null && value !== "") {
+        formDataPayload.append(key, value);
+      } else {
+        console.warn(`⚠️ Skipping empty field: ${key}`);
+      }
     };
+    
+    appendField("record_date", editedRecord.date ? new Date(editedRecord.date).toISOString().slice(0, 19).replace("T", " ") : null);
+    appendField("record_weight", editedRecord.weight);
+    appendField("record_temp", editedRecord.temperature);
+    appendField("record_condition", editedRecord.conditions);
+    appendField("record_symptom", editedRecord.symptoms);
+    appendField("record_recent_visit", editedRecord.recentVisit ? new Date(editedRecord.recentVisit).toISOString().slice(0, 19).replace("T", " ") : null);
+    appendField("record_purchase", editedRecord.recentPurchase);
+    appendField("record_purpose", editedRecord.purposeOfVisit);
+    appendField("lab_description", editedRecord.laboratories);
+    appendField("diagnosis_text", editedRecord.latestDiagnoses);
+    appendField("surgery_type", editedRecord.pastSurgeries);
+    appendField("surgery_date", editedRecord.surgeryDate ? new Date(editedRecord.surgeryDate).toISOString().slice(0, 19).replace("T", " ") : null);
+
+    // ✅ Fix for File Handling
+    if (editedRecord.file instanceof File) {
+      formDataPayload.append("record_lab_file", editedRecord.file);
+    } else if (typeof editedRecord.file === "string" && editedRecord.file.startsWith("http")) {
+      formDataPayload.append("record_lab_file", editedRecord.file);
+    } else {
+      console.warn("⚠️ No valid file found.");
+    }
+
+    // 🚀 Log FormData Contents Before Sending
+    console.log("✅ Final FormData Entries:");
+    for (let pair of formDataPayload.entries()) {
+      console.log(pair[0] + ": ", pair[1]);
+    }
+
+    // ✅ Ensure Diagnosis Text and Access Code Are Sent
     if (hasPermission("canAlwaysEditDiagnosis") || !isDiagnosisLocked) {  
-      updatedData.diagnosis_text = editedRecord.latestDiagnoses;
+      formDataPayload.append("diagnosis_text", editedRecord.latestDiagnoses);
       if (!hasPermission("canAlwaysEditDiagnosis")) {  
-        updatedData.accessCode = editedRecord.accessCode; // Only include access code if needed
+        formDataPayload.append("accessCode", editedRecord.accessCode);
       }
     }
-    console.log("Updated Data:", updatedData); 
-    console.log("Access Code Sent:", editedRecord.accessCode);
+
+    console.log("✅ Access Code Sent:", editedRecord.accessCode);
+
     try {
-      console.log("Record ID in handleSubmit:", record.id);
+      console.log(`✅ Sending request to: http://localhost:5000/recs/records/${record.id}`);
       const response = await fetch(`http://localhost:5000/recs/records/${record.id}`, {
         method: "PUT",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
+        body: formDataPayload,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update the record");
+        throw new Error("❌ Failed to update the record");
       }
 
       const updatedRecord = await response.json();
-      console.log("Record updated successfully:", updatedRecord);
+      console.log("✅ Record updated successfully:", updatedRecord);
 
-      onUpdate({ ...editedRecord, ...updatedRecord, id: record.id }); // Update the parent state
+      onUpdate({ ...editedRecord, ...updatedRecord, id: record.id });
       lockDiagnosis(); 
       setIsEditing(false);
       
     } catch (error) {
-      console.error("Error updating record:", error);
+      console.error("❌ Error updating record:", error);
     }
-  };
+};
 
 
   return (

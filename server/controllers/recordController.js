@@ -42,7 +42,7 @@ const addRecord = async (req, res) => {
       record_purchase,
       record_purpose,
     } = req.body;
-
+    const record_lab_file = req.file ? req.file.filename : null;
     // Validate required fields
     if (
       !record_date ||
@@ -92,7 +92,7 @@ const addRecord = async (req, res) => {
       lab_id,
       diagnosis_id,
       surgery_id,
-      record_lab_file: null,
+      record_lab_file,
     });
 
     if (lab_id) {
@@ -110,7 +110,6 @@ const addRecord = async (req, res) => {
   }
 };
 
-
 // Enforce access code validation for updating diagnosis
 const updateRecord = async (req, res) => {
     try {
@@ -121,6 +120,7 @@ const updateRecord = async (req, res) => {
             lab_description, diagnosis_text, surgery_type, surgery_date, 
             record_recent_visit, record_purchase, record_purpose, accessCode 
         } = req.body;
+        const record_lab_file = req.file ? req.file.filename : null;
 
         const currentRecord = await getRecordById(recordId);
         if (!currentRecord) {
@@ -155,7 +155,7 @@ const updateRecord = async (req, res) => {
             lab_id: currentRecord.lab_id,
             diagnosis_id: currentRecord.diagnosis_id,
             surgery_id: currentRecord.surgery_id,
-            record_lab_file: currentRecord.record_lab_file
+            record_lab_file: currentRecord.record_lab_file,
         };
 
         console.log("DEBUG: Updated Record Data:", updatedRecordData); 
@@ -204,8 +204,6 @@ const updateRecord = async (req, res) => {
         await updateRecordInDB(recordId, updatedRecordData);
         console.log("Final Update Executed!");
         
-        
-
         if (surgery_type && surgery_date) {
             const surgery_id = await insertSurgeryInfo(surgery_type, surgery_date);
             updatedRecordData.surgery_id = surgery_id;
@@ -223,7 +221,6 @@ const updateRecord = async (req, res) => {
         res.status(500).json({ error: "Server error while updating medical record." });
     }
 };
-
 
 // Allow clinicians to request an access code
 const requestDiagnosisAccessCode = async (req, res) => {
