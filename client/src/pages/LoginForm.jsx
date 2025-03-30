@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { Button } from "../components/Button";
 import FormGroup from "../components/FormGroup";
 import "../css/Forms.css";
+import { useUserRole } from "../contexts/UserRoleContext";
+import { useNavigate } from "react-router-dom";
+
 
 function LoginForm() {
   const [currentStep, setCurrentStep] = useState("login")
@@ -36,6 +39,9 @@ function LoginForm() {
     }
   };
 
+  const { setCurrentRole } = useUserRole(); // Access the context to set the role
+  const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form Submitted");
@@ -65,11 +71,25 @@ throw new Error(data.error || "Login failed");
         localStorage.setItem("jwt", token);
       }
 
+      setCurrentRole(data.role);
       setMessage(data.message);
-      window.location.replace(data.redirectUrl);
+      navigate(getLandingPage(data.role)); 
     } catch (error) {
 console.error("Error:", error.message);
       setMessage(error.message);
+    }
+  };
+
+  const getLandingPage = (role) => {
+    switch (role) {
+      case "doctor":
+      case "clinician":
+      case "staff":
+        return "/patients";
+      case "owner":
+        return "/mypets";
+      default:
+        return "/login";
     }
   };
 

@@ -61,6 +61,7 @@ error: "Invalid email or password",
 
         res.json({
             message: "✅ Login successful!",
+            role: user.user_role,
             redirectUrl: "/patients",
         });
     } catch (error) {
@@ -189,7 +190,7 @@ speciesId,
         req.session.petOwnerData = null;
         req.session.step1Completed = null;
 
-        res.status(201).json({ message: "✅ Pet Owner account created successfully!" });
+        res.status(201).json({ message: "✅ Pet Owner account created successfully!", role: "owner", redirectUrl: "/patients" });
     } catch (error) {
 // Rollback transaction if anything fails
             await connection.rollback();
@@ -307,6 +308,7 @@ exports.signupEmployeeComplete = async (req, res) => {
 
         res.json({
             message: "✅ Signup successful! You can now log in.",
+            role,
             redirectUrl: "/patients",
         });
     } catch (error) {

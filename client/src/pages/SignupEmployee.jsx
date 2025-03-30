@@ -4,6 +4,9 @@ import { Link } from "react-router-dom";
 import { Button } from "../components/Button";
 import FormGroup from "../components/FormGroup";
 import "../css/Forms.css";
+import { useUserRole } from "../contexts/UserRoleContext";
+import { useNavigate } from "react-router-dom";
+
 
 const SignupEmployee = () => {
     const [formData, setFormData] = useState({
@@ -73,6 +76,8 @@ const SignupEmployee = () => {
 
             // Handle successful signup
             console.log(data.message);
+            setCurrentRole(data.role); // Set the user's role in the context
+      navigate(getLandingPage(data.role)); // Redirect to the landing page based on role
             window.location.replace(data.redirectUrl);
         } catch (error) {
             console.error("Error:", error.message);
@@ -193,5 +198,17 @@ const SignupEmployee = () => {
         </>
     );
 };
+
+function getLandingPage(role) {
+    switch (role) {
+      case "doctor":
+      case "clinician":
+      case "staff":
+        return "/patients";      
+      default:
+        return "/login";
+    }
+  }
+
 
 export default SignupEmployee;
