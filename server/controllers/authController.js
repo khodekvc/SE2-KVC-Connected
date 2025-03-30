@@ -226,16 +226,16 @@ exports.signupEmployeeRequest = async (req, res) => {
     const { fname, lname, contact, email, role, password, confirmPassword, captchaInput } = req.body;
 
     if (!req.session.captcha || captchaInput !== req.session.captcha) {
-        const newCaptchaText = generateCaptcha();
+const newCaptchaText = generateCaptcha();
         const newCaptchaImage = generateCaptchaImage(newCaptchaText);
         req.session.captcha = newCaptchaText;
 
         console.log("New CAPTCHA generated:", newCaptchaText); // Debug log
 
         return res.status(400).json({
-            error: "❌ Incorrect CAPTCHA!",
+error: "❌ Incorrect CAPTCHA!",
             newCaptcha: { image: newCaptchaImage },
-        });
+});
     }
     req.session.captcha = null;
 
@@ -308,7 +308,7 @@ exports.signupEmployeeComplete = async (req, res) => {
 
         res.json({
             message: "✅ Signup successful! You can now log in.",
-            role,
+            role: role,
             redirectUrl: "/patients",
         });
     } catch (error) {

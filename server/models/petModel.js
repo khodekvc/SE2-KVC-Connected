@@ -49,21 +49,24 @@ class PetModel {
         return result.length ? result[0] : null;
     }
 
-    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }) {
-        const [result] = await db.query(
-            "INSERT INTO pet_info (pet_name, pet_gender, pet_breed, pet_birthday, pet_vitality, pet_status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [petname, gender, breed, birthdate, true, true, userId] // pet_status = 1 (active)
-        );
-        const petId = result.insertId;
+    static async createPet({ petname, gender, speciesId, breed, birthdate, userId }, connection) {
+        try {
+            // Use the provided connection for the transaction
+            const [result] = await connection.query(
+                "INSERT INTO pet_info (pet_name, pet_gender, pet_breed, pet_birthday, pet_vitality, pet_status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [petname, gender, breed, birthdate, true, true, userId] // pet_status = 1 (active)
+            );
+            const petId = result.insertId;
 
+            // Insert into match_pet_species table
+            await connection.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
 
-        // Insert into match_pet_species table
-        await db.query("INSERT INTO match_pet_species (spec_id, pet_id) VALUES (?, ?)", [speciesId, petId]);
-
-
-        return petId;
+            return petId;
+        } catch (error) {
+            console.error("Error in createPet:", error);
+            throw error; // Rethrow the error to handle it in the calling function
+        }
     }
-
 
     static async updatePet(pet_id, updatedData) {
         const updateFields = Object.keys(updatedData);

@@ -41,6 +41,8 @@ const PetInfo = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  const { setCurrentRole } = useUserRole(); // Access the context to set the role
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,8 +71,7 @@ const PetInfo = () => {
         // Handle successful signup
         setCurrentRole(data.role); // Set the user's role in the context
       navigate(getLandingPage(data.role)); // Redirect to the landing page based on role
-        console.log(data.message);
-        window.location.replace(data.redirectUrl);
+        
     } catch (error) {
         console.error("Error:", error.message);
         setMessage(error.message);
