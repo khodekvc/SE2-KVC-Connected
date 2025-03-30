@@ -19,9 +19,11 @@ const getAllVisitRecords = async (pet_id) => {
        r.record_lab_file AS file,
        p.pet_name,
        l.lab_description AS laboratories,
-       s.surgery_type AS pastSurgeries,
-       d.diagnosis_text AS latestDiagnoses,
-       r.pet_id AS petId
+       s.surgery_type AS surgeryType,
+       s.surgery_date AS surgeryDate,
+       d.diagnosis_text AS latestDiagnosis,
+       r.pet_id AS petId,
+       CASE WHEN s.surgery_id IS NOT NULL THEN TRUE ELSE FALSE END AS hadSurgery
      FROM record_info r
      LEFT JOIN pet_info p ON r.pet_id = p.pet_id
      LEFT JOIN lab_info l ON r.lab_id = l.lab_id
@@ -33,165 +35,323 @@ const getAllVisitRecords = async (pet_id) => {
 
 
    const [rows] = await db.query(query, [pet_id]);
-   return rows;
+   rows.forEach(record => {
+    if (record.file) {
+      record.file = `http://localhost:5000/uploads/${record.file}`;
+    } else {
+      record.file = null;
+    }
+  });
+
+   const formattedRows = rows.map((row) => ({
+        ...row,
+        hadSurgery: row.hadSurgery === 1, 
+        surgeryDate: row.surgeryDate, 
+    }));
+    return formattedRows
  } catch (error) {
    console.error("Error fetching visit records:", error);
    throw error;
  }
 };
 
-
-const insertLabInfo = async (lab_description) => {
-   const [labResult] = await db.query("INSERT INTO lab_info (lab_description) VALUES (?)", [lab_description]);
-   return labResult.insertId;
-};
-
-
-
-
-const getLabIdByDescription = async (lab_description) => {
-   const [result] = await db.query("SELECT lab_id FROM lab_info WHERE lab_description = ?", [lab_description]);
-   return result.length ? result[0].lab_id : null;
-};
-
-
-
-
-const insertDiagnosis = async (diagnosisText) => {
-   const [result] = await db.query(
-       "INSERT INTO diagnosis (diagnosis_text) VALUES (?)",
-       [diagnosisText]
-   );
-   console.log("New diagnosis ID:", result.insertId); // Debugging
-   return result.insertId; // Return the new diagnosis ID
-};
-
-
-
-
-
-
-
-
-const insertSurgeryInfo = async (surgery_type, surgery_date) => {
-   const [surgeryResult] = await db.query("INSERT INTO surgery_info (surgery_type, surgery_date) VALUES (?, ?)", [surgery_type, surgery_date]);
-   return surgeryResult.insertId;
-};
-
-
-
-
-const insertRecord = async (petId, recordData) => {
-   const { record_date, record_weight, record_temp, record_condition, record_symptom, record_recent_visit, record_purchase, record_purpose, lab_id, diagnosis_id, surgery_id, record_lab_file } = recordData;
-   const [result] = await db.query(
-       `INSERT INTO record_info (pet_id, record_date, record_weight, record_temp, record_condition,
-           record_symptom, record_recent_visit, record_purchase, record_purpose, lab_id, diagnosis_id, surgery_id, record_lab_file)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-       [petId, record_date, record_weight, record_temp, record_condition, record_symptom, record_recent_visit, record_purchase, record_purpose, lab_id, diagnosis_id, surgery_id, record_lab_file]
-   );
-   return result.insertId;
-};
-
-
-
-
-const updateRecordInDB = async (recordId, recordData) => {
-   // Fetch current record to preserve diagnosis_id
-   const [currentRecord] = await db.query(
-       `SELECT diagnosis_id FROM record_info WHERE record_id = ?`,
-       [recordId]
-   );
-
-
-
-
-   // If diagnosis_id is missing from update, keep the existing one
-   if (!("diagnosis_id" in recordData)) {
-       recordData.diagnosis_id = currentRecord[0].diagnosis_id;
-   }
-
-
-
-
-   const fields = Object.keys(recordData);
-   const values = Object.values(recordData);
-
-
-
-
-   if (fields.length === 0) {
-       throw new Error("No fields provided for update.");
-   }
-
-
-
-
-   const setClause = fields.map(field => `${field} = ?`).join(", ");
-
-
-
-
-   console.log("DEBUG: Running SQL Query:");
-   console.log(`UPDATE record_info SET ${setClause} WHERE record_id = ?`);
-   console.log("DEBUG: Values:", [...values, recordId]);
-
-
-
-
-   const [result] = await db.query(
-       `UPDATE record_info SET ${setClause} WHERE record_id = ?`,
-       [...values, recordId]
-   );
-
-
-
-
-   console.log("DEBUG: Update affected rows:", result.affectedRows);
-   return result.affectedRows;
-};
-
-
-
-
-const getRecordById = async (recordId) => {
-   const [result] = await db.query("SELECT * FROM record_info WHERE record_id = ?", [recordId]);
-   return result.length ? result[0] : null;
-};
-
-
-
-
-const insertMatchRecLab = async (recordId, labId) => {
-   await db.query("INSERT INTO match_rec_lab (record_id, lab_id) VALUES (?, ?)", [recordId, labId]);
-};
-
-
-
-
-const updateMatchRecLab = async (recordId, labId) => {
-   await db.query("DELETE FROM match_rec_lab WHERE record_id = ?", [recordId]);
-   await db.query("INSERT INTO match_rec_lab (record_id, lab_id) VALUES (?, ?)", [recordId, labId]);
-};
-
-
-
-
-const updateDiagnosisText = async (diagnosisId, newDiagnosisText) => {
-   try {
-       console.log(`Updating diagnosis ${diagnosisId} with text: "${newDiagnosisText}"`);
-       const [result] = await db.query(
-           "UPDATE diagnosis SET diagnosis_text = ? WHERE diagnosis_id = ?",
-           [newDiagnosisText, diagnosisId]
-       );
-       console.log("SQL Update Result:", result);
-       return result;
-   } catch (error) {
-       console.error("❌ Error updating diagnosis:", error);
-       throw error;
-   }
-};
-
-
-
-
-module.exports = { getAllVisitRecords, insertLabInfo, getLabIdByDescription, insertDiagnosis, insertSurgeryInfo, insertRecord, updateRecordInDB, getRecordById, insertMatchRecLab, updateMatchRecLab, updateDiagnosisText };
+const updateSurgeryInfo = async (surgeryId, surgeryType, surgeryDate) => {
+    try {
+      if (!surgeryId) return null
+  
+  
+  
+  
+      const [result] = await db.query("UPDATE surgery_info SET surgery_type = ?, surgery_date = ? WHERE surgery_id = ?", [
+        surgeryType,
+        surgeryDate,
+        surgeryId,
+      ])
+  
+  
+  
+  
+      console.log(`Updated surgery info for surgery_id ${surgeryId}`)
+      return result.affectedRows > 0
+    } catch (error) {
+      console.error("Error updating surgery info:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  // to remove surgery_id from record
+  const removeSurgeryFromRecord = async (recordId) => {
+    try {
+      const [result] = await db.query("UPDATE record_info SET surgery_id = NULL WHERE record_id = ?", [recordId])
+  
+  
+  
+  
+      console.log(`Removed surgery_id from record ${recordId}`)
+      return result.affectedRows > 0
+    } catch (error) {
+      console.error("Error removing surgery from record:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  // to get the current surgery_id for a record
+  const getSurgeryIdForRecord = async (recordId) => {
+    try {
+      const [result] = await db.query("SELECT surgery_id FROM record_info WHERE record_id = ?", [recordId])
+  
+  
+  
+  
+      return result.length > 0 ? result[0].surgery_id : null
+    } catch (error) {
+      console.error("Error getting surgery_id for record:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const insertLabInfo = async (labDescription) => {
+    try {
+      const [result] = await db.query("INSERT INTO lab_info (lab_description) VALUES (?)", [labDescription])
+      return result.insertId
+    } catch (error) {
+      console.error("Error inserting lab info:", error)
+      throw error
+    }
+  }
+  
+
+
+
+
+  const getLabIdByDescription = async (labDescription) => {
+    try {
+      const [rows] = await db.query("SELECT lab_id FROM lab_info WHERE lab_description = ?", [labDescription])
+      return rows.length > 0 ? rows[0].lab_id : null
+    } catch (error) {
+      console.error("Error getting lab ID by description:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const insertDiagnosis = async (diagnosisText) => {
+    try {
+      const [result] = await db.query("INSERT INTO diagnosis (diagnosis_text) VALUES (?)", [diagnosisText])
+      return result.insertId
+    } catch (error) {
+      console.error("Error inserting diagnosis:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const insertSurgeryInfo = async (surgeryType, surgeryDate) => {
+    try {
+      const [result] = await db.query("INSERT INTO surgery_info (surgery_type, surgery_date) VALUES (?, ?)", [
+        surgeryType,
+        surgeryDate,
+      ])
+      return result.insertId
+    } catch (error) {
+      console.error("Error inserting surgery info:", error)
+      throw error
+    }
+  }
+  
+  
+  const insertRecord = async (
+    petId,  
+    recordDate,
+    recordWeight,
+    recordTemp,
+    recordCondition,
+    recordSymptom,
+    recordRecentVisit,
+    recordPurchase,
+    recordPurpose,
+    recordLabFile,
+    labId, 
+    diagnosisId,
+    surgeryId,
+  ) => {
+    try {
+      const [result] = await db.query(
+        "INSERT INTO record_info (pet_id, record_date, record_weight, record_temp, record_condition, record_symptom, record_recent_visit, record_purchase, record_purpose, record_lab_file, lab_id, diagnosis_id, surgery_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          petId,
+          recordDate,
+          recordWeight,
+          recordTemp,
+          recordCondition,
+          recordSymptom,
+          recordRecentVisit,
+          recordPurchase,
+          recordPurpose,
+          recordLabFile,
+          labId,
+          diagnosisId,
+          surgeryId,
+        ],
+      )
+      return result.insertId
+    } catch (error) {
+      console.error("Error inserting record:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const updateRecordInDB = async (
+    recordId,
+    recordDate,
+    recordPurpose,
+    recordWeight,
+    recordTemp,
+    recordCondition,
+    recordSymptom,
+    recordRecentVisit,
+    recordPurchase,
+    recordLabFile,
+  ) => {
+    try {
+      const [result] = await db.query(
+        "UPDATE record_info SET record_date = ?, record_purpose = ?, record_weight = ?, record_temp = ?, record_condition = ?, record_symptom = ?, record_recent_visit = ?, record_purchase = ?, record_lab_file = ? WHERE record_id = ?",
+        [
+          recordDate,
+          recordPurpose,
+          recordWeight,
+          recordTemp,
+          recordCondition,
+          recordSymptom,
+          recordRecentVisit,
+          recordPurchase,
+          recordLabFile,
+          recordId,
+        ],
+      )
+      return result.affectedRows > 0
+    } catch (error) {
+      console.error("Error updating record:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const getRecordById = async (recordId) => {
+    try {
+      const [rows] = await db.query("SELECT * FROM record_info WHERE record_id = ?", [recordId])
+      return rows.length > 0 ? rows[0] : null
+    } catch (error) {
+      console.error("Error getting record by ID:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const insertMatchRecLab = async (recordId, labId) => {
+    try {
+      const [result] = await db.query("INSERT INTO match_rec_lab (record_id, lab_id) VALUES (?, ?)", [recordId, labId])
+      return result.insertId
+    } catch (error) {
+      console.error("Error inserting record lab match:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const updateMatchRecLab = async (recordId, labId) => {
+    try {
+      const [result] = await db.query("UPDATE match_rec_lab SET lab_id = ? WHERE record_id = ?", [labId, recordId])
+      return result.affectedRows > 0
+    } catch (error) {
+      console.error("Error updating record lab match:", error)
+      throw error
+    }
+  }
+  
+  
+  
+  
+  const updateDiagnosisText = async (diagnosisId, diagnosisText) => {
+    try {
+      const query = `
+        UPDATE diagnosis
+        SET diagnosis_text = ?
+        WHERE diagnosis_id = ?
+      `;
+      console.log("Executing query:", query, [diagnosisText, diagnosisId]);
+      const [result] = await db.query(query, [diagnosisText, diagnosisId]); // Ensure only two parameters are passed
+      return result;
+    } catch (error) {
+      console.error("Error updating diagnosis text:", error);
+      throw error;
+    }
+  }
+
+  // to delete a surgery record
+const deleteSurgeryInfo = async (surgeryId) => {
+    try {
+      if (!surgeryId) return null
+  
+  
+  
+  
+      console.log(`Deleting surgery with ID: ${surgeryId}`)
+      const [result] = await db.query("DELETE FROM surgery_info WHERE surgery_id = ?", [surgeryId])
+  
+  
+  
+  
+      console.log(`Deleted surgery info for surgery_id ${surgeryId}. Affected rows: ${result.affectedRows}`)
+      return result.affectedRows > 0
+    } catch (error) {
+      console.error("Error deleting surgery info:", error)
+      throw error
+    }
+  }
+  
+  
+  
+
+
+
+
+  module.exports = {
+    getAllVisitRecords,
+    insertLabInfo,
+    getLabIdByDescription,
+    insertDiagnosis,
+    insertSurgeryInfo,
+    insertRecord,
+    updateRecordInDB,
+    getRecordById,
+    insertMatchRecLab,
+    updateMatchRecLab,
+    updateDiagnosisText,
+    updateSurgeryInfo,
+    removeSurgeryFromRecord,
+    getSurgeryIdForRecord,
+    deleteSurgeryInfo,
+  }

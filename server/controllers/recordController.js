@@ -1,11 +1,64 @@
+const db = require("../config/db")
+
 const {
     getAllVisitRecords, insertDiagnosis, insertSurgeryInfo, insertRecord, insertMatchRecLab,
-    getLabIdByDescription, updateRecordInDB, updateMatchRecLab, getRecordById, updateDiagnosisText
+    getLabIdByDescription, updateRecordInDB, updateMatchRecLab, getRecordById, updateDiagnosisText, updateSurgeryInfo, deleteSurgeryInfo, insertLabInfo
  } = require("../models/recordModel");
  const { authenticate, authorize } = require("../middleware/authMiddleware");
  const { sendEmail } = require("../utils/emailUtility");
  const crypto = require("crypto");
  
+// to get a complete record with all related data
+const getCompleteRecordById = async (recordId) => {
+    try {
+      const query = `
+        SELECT
+          r.record_id AS id,
+          r.record_date AS date,
+          r.record_purpose AS purposeOfVisit,
+          r.record_weight AS weight,
+          r.record_temp AS temperature,
+          r.record_condition AS conditions,
+          r.record_symptom AS symptoms,
+          r.record_recent_visit AS recentVisit,
+          r.record_purchase AS recentPurchase,
+          r.record_lab_file AS file,
+          l.lab_description AS laboratories,
+          s.surgery_type AS surgeryType,
+          s.surgery_date AS surgeryDate,
+          d.diagnosis_text AS latestDiagnosis,
+          r.pet_id AS petId,
+          CASE WHEN s.surgery_id IS NOT NULL THEN TRUE ELSE FALSE END AS hadSurgery
+        FROM record_info r
+        LEFT JOIN lab_info l ON r.lab_id = l.lab_id
+        LEFT JOIN surgery_info s ON r.surgery_id = s.surgery_id
+        LEFT JOIN diagnosis d ON r.diagnosis_id = d.diagnosis_id
+        WHERE r.record_id = ?
+      `
+  
+  
+      const [rows] = await db.query(query, [recordId])
+  
+  
+      if (rows.length === 0) {
+        return null
+      }
+  
+  
+      const record = {
+        ...rows[0],
+        hadSurgery: rows[0].hadSurgery === 1,       
+        surgeryDate: rows[0].surgeryDate || null,
+      }
+  
+  
+      return record
+    } catch (error) {
+      console.error("Error getting complete record:", error)
+      throw error
+    }
+  }
+  
  
  const getVisitRecords = async (req, res) => {
   try {
@@ -32,6 +85,10 @@ const {
   try {
     const { role } = req.user; // Assuming user role is available in req.user
     const { petId } = req.params;
+
+    console.log("Adding record for pet ID:", petId) // debug
+    console.log("Request body:", req.body) // debug
+    
     const {
       record_date,
       record_weight,
@@ -46,7 +103,12 @@ const {
       record_purchase,
       record_purpose,
     } = req.body;
- 
+    
+    const record_lab_file = req.file ? req.file.filename : null;
+
+    console.log("DEBUG: req.body:", req.body);
+    console.log("DEBUG: req.file:", req.file);
+
  
     // Validate required fields
     if (
@@ -73,7 +135,8 @@ const {
     if (lab_description) {
       lab_id = await getLabIdByDescription(lab_description);
       if (!lab_id) {
-        return res.status(400).json({ error: "Invalid lab description." });
+        // If lab description doesn't exist, create it
+        lab_id = await insertLabInfo(lab_description)
       }
     }
  
@@ -90,7 +153,8 @@ const {
     }
  
  
-    const recordId = await insertRecord(petId, {
+    const recordId = await insertRecord(
+      petId,
       record_date,
       record_weight,
       record_temp,
@@ -99,12 +163,13 @@ const {
       record_recent_visit,
       record_purchase,
       record_purpose,
+      record_lab_file,
       lab_id,
       diagnosis_id,
       surgery_id,
-      record_lab_file: null,
-    });
+    )
  
+    console.log(`Record created with ID: ${recordId}`)
  
     if (lab_id) {
       await insertMatchRecLab(recordId, lab_id);
@@ -112,11 +177,14 @@ const {
  
  
     // Fetch the newly added record
-    const newRecord = await getRecordById(recordId);
-    console.log("Newly added record:", newRecord);
- 
- 
-    res.status(201).json(newRecord); // Return the newly added record
+    const completeRecord = await getCompleteRecordById(recordId)
+
+
+    if (!completeRecord) {
+      return res.status(404).json({ error: "Failed to retrieve the newly created record." })
+    }
+    console.log("Complete newly added record:", completeRecord)
+    res.status(201).json(completeRecord)
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error while adding medical record." });
@@ -130,13 +198,14 @@ const {
  const updateRecord = async (req, res) => {
     try {
         const { role } = req.user;
-        const { recordId } = req.params;
+        const recordId = req.params.recordId || req.params.id
+        console.log("Received record update request for record ID:", recordId)
         const {
             record_date, record_weight, record_temp, record_condition, record_symptom,
             lab_description, diagnosis_text, surgery_type, surgery_date,
-            record_recent_visit, record_purchase, record_purpose, accessCode
+            record_recent_visit, record_purchase, record_purpose, accessCode, hadSurgery
         } = req.body;
- 
+        const record_lab_file = req.file ? req.file.filename : null;
  
         const currentRecord = await getRecordById(recordId);
         if (!currentRecord) {
@@ -174,11 +243,12 @@ const {
             lab_id: currentRecord.lab_id,
             diagnosis_id: currentRecord.diagnosis_id,
             surgery_id: currentRecord.surgery_id,
-            record_lab_file: currentRecord.record_lab_file
+            record_lab_file: record_lab_file || currentRecord.record_lab_file
         };
  
  
         console.log("DEBUG: Updated Record Data:", updatedRecordData);
+        console.log("DEBUG: req.file:", req.file);
  
  
         if (lab_description) {
@@ -191,30 +261,29 @@ const {
  
  
         if (diagnosis_text) {
-            if (role === "doctor") {
-                if (!currentRecord.diagnosis_id) {
-                    // Insert new diagnosis
-                    const newDiagnosisId = await insertDiagnosis(diagnosis_text);
-                    updatedRecordData.diagnosis_id = newDiagnosisId; // ✅ Use updatedRecordData
-                    console.log(`New diagnosis added with ID: ${newDiagnosisId} and linked to record ID: ${recordId}`);
-                } else {
-                    await updateDiagnosisText(currentRecord.diagnosis_id, diagnosis_text);
-                }
+          console.log("DEBUG: Diagnosis Text:", diagnosis_text); // Add this log
+          if (role === "doctor") {
+            if (!currentRecord.diagnosis_id) {
+              const newDiagnosisId = await insertDiagnosis(diagnosis_text);
+              updatedRecordData.diagnosis_id = newDiagnosisId;
             } else {
-                // Clinicians need an access code
-                if (req.session.diagnosisAccessCode && accessCode === req.session.diagnosisAccessCode) {
-                    if (!currentRecord.diagnosis_id) {
-                        const newDiagnosisId = await insertDiagnosis(diagnosis_text);
-                        console.log("Updating record_info...");
-                        updatedRecordData.diagnosis_id = newDiagnosisId; // ✅ Use updatedRecordData
-                        console.log(`New diagnosis added with ID: ${newDiagnosisId} and linked to record ID: ${recordId}`);
-                    } else {
-                        await updateDiagnosisText(currentRecord.diagnosis_id, diagnosis_text);
-                    }
-                } else {
-                    return res.status(403).json({ error: "Invalid or missing access code for diagnosis update." });
-                }
+                const diagnosisText = Array.isArray(diagnosis_text) ? diagnosis_text[0] : diagnosis_text;
+              await updateDiagnosisText(currentRecord.diagnosis_id, diagnosisText);
             }
+          } else {
+            // Clinicians need an access code
+            if (req.session.diagnosisAccessCode && accessCode === req.session.diagnosisAccessCode) {
+              if (!currentRecord.diagnosis_id) {
+                const newDiagnosisId = await insertDiagnosis(diagnosis_text);
+                updatedRecordData.diagnosis_id = newDiagnosisId; // ✅ Use updatedRecordData
+                console.log(`New diagnosis added with ID: ${newDiagnosisId} and linked to record ID: ${recordId}`);
+              } else {
+                await updateDiagnosisText(currentRecord.diagnosis_id, diagnosis_text); // Pass correct parameters
+              }
+            } else {
+              return res.status(403).json({ error: "Invalid or missing access code for diagnosis update." });
+            }
+          }
         }
        
         // ✅ Ensure diagnosis_id is preserved if not updated
@@ -222,28 +291,84 @@ const {
             updatedRecordData.diagnosis_id = currentRecord.diagnosis_id;
         }
        
-        // ✅ Now update the record correctly
-        await updateRecordInDB(recordId, updatedRecordData);
-        console.log("Final Update Executed!");
-       
-       
- 
- 
-        if (surgery_type && surgery_date) {
-            const surgery_id = await insertSurgeryInfo(surgery_type, surgery_date);
-            updatedRecordData.surgery_id = surgery_id;
+        
+
+    // Handle surgery updates
+    console.log("Surgery update - hadSurgery:", hadSurgery) // debug
+    console.log("Current surgery_id:", currentRecord.surgery_id)//debu
+
+
+// 13. ADDED THIS —------------------
+    if (hadSurgery === false) {
+      if (currentRecord.surgery_id) {
+        console.log(`Deleting surgery with ID: ${currentRecord.surgery_id}`)
+
+
+        try {
+          // set the surgery_id to NULL in the record_info table
+          await db.query("UPDATE record_info SET surgery_id = NULL WHERE record_id = ?", [recordId])
+          console.log(`Removed surgery_id reference from record ${recordId}`)
+
+
+          // delete the surgery record from surgery_info table
+          await db.query("DELETE FROM surgery_info WHERE surgery_id = ?", [currentRecord.surgery_id])
+          console.log(`Deleted surgery record with ID: ${currentRecord.surgery_id}`)
+
+
+          updatedRecordData.surgery_id = null
+        } catch (error) {
+          console.error("Error deleting surgery:", error)
         }
- 
- 
-        await updateRecordInDB(recordId, updatedRecordData);
- 
- 
-        if (updatedRecordData.lab_id !== currentRecord.lab_id) {
-            await updateMatchRecLab(recordId, updatedRecordData.lab_id);
+      }
+    } else if (surgery_type !== undefined || surgery_date !== undefined) {
+      if (surgery_type && surgery_date) {
+        if (currentRecord.surgery_id) {
+          // update existing surgery record
+          await updateSurgeryInfo(currentRecord.surgery_id, surgery_type, surgery_date)
+          // keep the same surgery_id
+          updatedRecordData.surgery_id = currentRecord.surgery_id
+        } else {
+          // create new surgery record only if one doesn't exist
+          const surgery_id = await insertSurgeryInfo(surgery_type, surgery_date)
+          updatedRecordData.surgery_id = surgery_id
         }
- 
- 
-        res.status(200).json({ message: "Medical record updated successfully!" });
+      }
+    }
+
+
+    // ✅ Now update the record correctly
+    console.log("Final record data to update:", updatedRecordData)
+
+
+    // ensure all fields are updated correctly
+    const updateFields = Object.keys(updatedRecordData)
+      .map((key) => `${key} = ?`)
+      .join(", ")
+
+
+    const updateValues = [...Object.values(updatedRecordData), recordId]
+
+
+    await db.query(`UPDATE record_info SET ${updateFields} WHERE record_id = ?`, updateValues)
+
+
+    console.log("Final Update Executed!")
+
+
+    if (updatedRecordData.lab_id !== currentRecord.lab_id) {
+      await updateMatchRecLab(recordId, updatedRecordData.lab_id)
+    }
+
+
+    const completeRecord = await getCompleteRecordById(recordId)
+
+
+    res.status(200).json({
+      message: "Medical record updated successfully!",
+      hadSurgery: updatedRecordData.surgery_id !== null,
+      ...completeRecord,
+    })
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error while updating medical record." });
