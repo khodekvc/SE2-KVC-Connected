@@ -107,11 +107,99 @@
     cursor: pointer;
   }
   
+  .file-upload-container {
+    width: 100%;
+  }
+  
+  .custom-file-input {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .hidden-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  
+  .file-input-ui {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #fff;
+  }
+  
+  .file-select-button {
+    background-color: white;
+    color: #6c757d;
+    padding: 8px 16px;
+    border: none;
+    border-right: 1px solid #ddd;
+    border-radius: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+  }
+  
+  .file-select-button:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .file-name-display {
+    padding: 8px 12px;
+    color: #6c757d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+  
   .file-input {
     flex: 1;
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+  }
+  
+  /* Custom styling for file input button */
+  input[type="file"]::-webkit-file-upload-button {
+    background-color: white;
+    color: #6c757d;
+    padding: 8px 16px;
+    border: 1px solid #6c757d;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: #f8f9fa;
+  }
+  
+  /* Support for Firefox */
+  input[type="file"]::file-selector-button {
+    background-color: white;
+    color: #6c757d;
+    padding: 8px 16px;
+    border: 1px solid #6c757d;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  input[type="file"]::file-selector-button:hover {
+    background-color: #f8f9fa;
   }
   
   textarea {
@@ -139,7 +227,15 @@
   }
   
   .file-name {
-    color: #ccc;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+    font-size: 0.9rem;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
   .unlock-diagnosis-btn {
@@ -196,39 +292,66 @@
   }
 
   .file-preview {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    margin-top: 15px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: #f9f9f9;
+    position: relative;
   }
-   .file-name {
-    margin-bottom: 10px;
-    font-weight: 500;
+  
+  .file-preview img {
+    border-radius: 6px;
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 250px;
+    object-fit: contain;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   }
-   .file-actions {
+  
+  .file-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 15px;
+    margin-top: 12px;
+    justify-content: flex-end;
+    padding-right: 18px;
   }
-   .file-actions a {
-    color: #007bff;
+  
+  .view-file-icon {
+    color: var(--blue-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .view-file-icon:hover {
+    color: #0056b3;
+  }
+  
+  .remove-file-icon {
+    background: none;
+    color: #dc3545;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s ease;
+  }
+  
+  .remove-file-icon:hover {
+    color: #c82333;
+  }
+  
+  .file-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
   }
-   .file-actions a:hover {
-    text-decoration: underline;
+  
+  .remove-file-btn {
+    display: none;
   }
-   .remove-file-btn {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-   .remove-file-btn:hover {
-    background-color: #c82333;
-  }
- 
+  
   
   

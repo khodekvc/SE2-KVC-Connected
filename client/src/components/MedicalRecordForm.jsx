@@ -3,6 +3,7 @@
 
 import { useEffect } from "react"
 import "../css/MedicalRecordForm.css"
+import { Eye, Trash2 } from "lucide-react"
 
 
 // Helper function to format dates as MM/DD/YYYY
@@ -98,66 +99,76 @@ const MedicalRecordForm = ({
       )
     } else if (type === "file") {
       input = (
-          <div>
+          <div className="file-upload-container">
               {isEditing && (
-                  <input
-                      type="file"
-                      id={name}
-                      name={name}
-                      onChange={onInputChange}
-                      className="file-input"
-                  />
+                  <div className="custom-file-input">
+                      <input
+                          type="file"
+                          id={name}
+                          name={name}
+                          onChange={onInputChange}
+                          className="file-input hidden-file-input"
+                          accept="image/png, image/jpeg, image/jpg"
+                      />
+                      <div className="file-input-ui">
+                          <button 
+                              type="button" 
+                              className="file-select-button"
+                              onClick={() => document.getElementById(name).click()}
+                          >
+                              Choose File
+                          </button>
+                          <span className="file-name-display">
+                              {value instanceof File ? value.name : "Select image (png, jpg)"}
+                          </span>
+                      </div>
+                  </div>
               )}
                {/* Show previous file if it exists */}
                {value instanceof File ? (
            <div className="file-preview">
-             <p className="file-name">{formData.laboratories} - {value.name}</p>
-             {/* Create preview URL only when rendering */}
              <img
                src={URL.createObjectURL(value)}
                alt={`${name} uploaded`}
-               style={{ maxWidth: "100%", maxHeight: "200px" }}
              />
              <div className="file-actions">
-               <a href={URL.createObjectURL(value)} target="_blank" rel="noopener noreferrer">
-                 View File
+               <a href={URL.createObjectURL(value)} target="_blank" rel="noopener noreferrer" className="view-file-icon">
+                 <Eye size={20} />
                </a>
                {isEditing && (
                  <button
                    type="button"
-                   className="remove-file-btn"
+                   className="remove-file-icon"
                    onClick={() => onInputChange({ target: { name, value: null } })}
                  >
-                   Remove File
+                   <Trash2 size={20} />
                  </button>
                )}
              </div>
            </div>
          ) : typeof value === "string" && value.trim() !== "" ? (
            <div className="file-preview">
-             <p className="file-name">{formData.laboratories} - {value.split('/').pop()}</p>
              <img
                src={value}
                alt={`${name} uploaded`}
-               style={{ maxWidth: "100%", maxHeight: "200px" }}
              />
              <div className="file-actions">
-               <a href={value} target="_blank" rel="noopener noreferrer">
-                 View File
+               <a href={value} target="_blank" rel="noopener noreferrer" className="view-file-icon">
+                 <Eye size={20} />
                </a>
                {isEditing && (
                  <button
                    type="button"
-                   className="remove-file-btn"
+                   className="remove-file-icon"
                    onClick={() => onInputChange({ target: { name, value: null } })}
                  >
-                   Remove File
+                   <Trash2 size={20} />
                  </button>
                )}
              </div>
            </div>
          ) : (
-           <span>No file available</span>
+           <span></span>
          )}
        </div>
      );

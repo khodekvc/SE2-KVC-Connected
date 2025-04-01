@@ -53,7 +53,7 @@
     font-size: 1.1rem;
   }
   
-  .filter-section label {
+  .filter-modal label {
     display: block;
     margin-bottom: 0.5rem;
     color: var(--orange-color);
@@ -61,6 +61,11 @@
 
   .sort-order label {
     color: black;
+  }
+  
+  /* Add spacing between radio buttons and labels */
+  .filter-modal input[type="radio"] {
+    margin-right: 0.5rem;
   }
   
   /*  for patient directory */
@@ -115,7 +120,9 @@
   .visit-filter .date-range {
     display: flex;
     gap: 1rem;
-    width: 48%
+    width: 100%;
+    margin-bottom: 0.5rem;
+    align-items: center;
   }
   
   .visit-filter .date-input-container {
@@ -130,6 +137,29 @@
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 0.5rem;
+  }
+
+  .date-input-container .date-placeholder {
+    position: absolute;
+    left: 0.75rem;
+    color: #666;
+    pointer-events: none;
+  }
+
+  /* Hide default placeholder when value exists */
+  .date-input-container input.date-input:not([value=""]) + .date-placeholder,
+  .date-input-container input.date-input:focus + .date-placeholder {
+    display: none;
+  }
+
+  /* Hide default date input text placeholder */
+  .date-input-container input.date-input::-webkit-datetime-edit-fields-wrapper {
+    opacity: 0;
+  }
+  
+  .date-input-container input.date-input:not([value=""])::-webkit-datetime-edit-fields-wrapper,
+  .date-input-container input.date-input:focus::-webkit-datetime-edit-fields-wrapper {
+    opacity: 1;
   }
   
   .filter-actions {

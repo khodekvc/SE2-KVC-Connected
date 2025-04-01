@@ -174,16 +174,16 @@ useEffect(() => {
    if (!editedRecord.date) newErrors.date = "Date is required"
    if (!editedRecord.weight) newErrors.weight = "Weight is required"
    if (!editedRecord.temperature) newErrors.temperature = "Temperature is required"
-   if (!editedRecord.conditions) newErrors.conditions = "Conditions are required"
-   if (!editedRecord.symptoms) newErrors.symptoms = "Symptoms are required"
+   if (!editedRecord.conditions) newErrors.conditions = "Conditions is required"
+   if (!editedRecord.symptoms) newErrors.symptoms = "Symptoms is required"
    if (!editedRecord.recentVisit) newErrors.recentVisit = "Recent visit date is required"
    if (!editedRecord.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
    if (!editedRecord.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
    // Validate surgery fields if hadSurgery is true
-   if (editedRecord.hadSurgery) {
-     if (!editedRecord.surgeryDate) newErrors.surgeryDate = "Surgery date is required when 'Had past surgeries' is Yes"
-     if (!editedRecord.surgeryType) newErrors.surgeryType = "Surgery type is required when 'Had past surgeries' is Yes"
+   if (editedRecord.hadSurgery === true) {
+     if (!editedRecord.surgeryDate) newErrors.surgeryDate = "Surgery date is required"
+     if (!editedRecord.surgeryType) newErrors.surgeryType = "Surgery type is required"
    }
 
    setErrors(newErrors)
@@ -202,6 +202,14 @@ useEffect(() => {
       ...prev,
       hadSurgery: boolValue,
       ...(boolValue === false ? { surgeryDate: "", surgeryType: "" } : {}),
+    }));
+    
+    // Clear any hadSurgery error when user makes a selection (either yes or no)
+    setErrors(prev => ({
+      ...prev,
+      hadSurgery: "",
+      // Also clear surgery related errors when setting to false
+      ...(boolValue === false ? { surgeryDate: "", surgeryType: "" } : {})
     }));
   } else if (type === "file") {
     const file = e.target.files[0];
@@ -226,7 +234,7 @@ useEffect(() => {
   }
 
   // Validate immediately if the field is empty
-  if (!value && name !== 'file' && name !== 'laboratories' && name !== 'latestDiagnosis') {
+  if (!value && name !== 'file' && name !== 'laboratories' && name !== 'latestDiagnosis' && name !== 'hadSurgery') {
     setErrors(prev => ({
       ...prev,
       [name]: `${name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1')} is required`

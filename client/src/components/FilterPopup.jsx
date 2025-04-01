@@ -99,7 +99,7 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
                   value={filters.idFrom}
                   onChange={(e) => setFilters({ ...filters, idFrom: e.target.value })}
                 />
-                <span>to</span>
+                <span>-</span>
                 <input
                   type="text"
                   placeholder="To"
@@ -217,15 +217,20 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
                     value={filters.dateFrom}
                     onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
                     placeholder="From"
+                    className="date-input"
                   />
+                  <span className="date-placeholder">From</span>
                 </div>
+                <span>-</span>
                 <div className="date-input-container">
                   <input
                     type="date"
                     value={filters.dateTo}
                     onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
                     placeholder="To"
+                    className="date-input"
                   />
+                  <span className="date-placeholder">To</span>
                 </div>
               </div>
             </div>
