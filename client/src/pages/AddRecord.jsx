@@ -62,15 +62,22 @@ const AddRecord = ({ onClose, onSubmit }) => {
 
  const validateForm = () => {
    const newErrors = {}
+   
+   // Required fields validation
    if (!formData.date) newErrors.date = "Date is required"
+   if (!formData.weight) newErrors.weight = "Weight is required"
+   if (!formData.temperature) newErrors.temperature = "Temperature is required"
+   if (!formData.conditions) newErrors.conditions = "Conditions are required"
+   if (!formData.symptoms) newErrors.symptoms = "Symptoms are required"
+   if (!formData.recentVisit) newErrors.recentVisit = "Recent visit date is required"
+   if (!formData.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
    if (!formData.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
    // Validate surgery fields if hadSurgery is true
    if (formData.hadSurgery) {
-    if (!formData.surgeryDate) newErrors.surgeryDate = "Surgery date is required when 'Had past surgeries' is Yes"
-    if (!formData.surgeryType) newErrors.surgeryType = "Surgery type is required when 'Had past surgeries' is Yes"
-  }
-
+     if (!formData.surgeryDate) newErrors.surgeryDate = "Surgery date is required"
+     if (!formData.surgeryType) newErrors.surgeryType = "Surgery type is required"
+   }
 
    setErrors(newErrors)
    return Object.keys(newErrors).length === 0

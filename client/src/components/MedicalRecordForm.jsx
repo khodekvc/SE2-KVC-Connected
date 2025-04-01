@@ -206,11 +206,13 @@ const MedicalRecordForm = ({
 
     return (
       <div className={`form-field ${isFullWidth ? "full-width" : ""}`}>
-        <label htmlFor={name}>
-          {label}
-          {isRequired && <span className="required">*</span>}
-        </label>
-        {isEditing || type === "radio" || type === "file" ? input : <span className="value-text">{value}</span>}
+        <div className="input-container">
+          <label htmlFor={name}>
+            {label}
+            {isRequired && <span className="required">*</span>}
+          </label>
+          {isEditing || type === "radio" || type === "file" ? input : <span className="value-text">{value}</span>}
+        </div>
         {errors && errors[name] && <span className="error-message">{errors[name]}</span>}
         {name === "latestDiagnosis" && isDiagnosisLocked && isEditing && !isAddRecord && (
           <button type="button" className="unlock-diagnosis-btn" onClick={onUnlockDiagnosis}>
@@ -228,12 +230,12 @@ const MedicalRecordForm = ({
       <section className="medical-info">
         <h2>Medical Information</h2>
         <div className="form-row">
-          {renderField("Weight", "weight")}
-          {renderField("Temperature", "temperature")}
+          {renderField("Weight", "weight", "text", { isRequired: true })}
+          {renderField("Temperature", "temperature", "text", { isRequired: true })}
         </div>
         <div className="form-row">
-          {renderField("Conditions", "conditions")}
-          {renderField("Symptoms", "symptoms")}
+          {renderField("Conditions", "conditions", "text", { isRequired: true })}
+          {renderField("Symptoms", "symptoms", "text", { isRequired: true })}
         </div>
         <div className="form-row">
           {renderField("Laboratories", "laboratories", "select", {
@@ -243,10 +245,10 @@ const MedicalRecordForm = ({
         </div>
         <div className="form-row">
           {renderField("Had past surgeries", "hadSurgery", "radio")}
-          {formData.hadSurgery && renderField("Date of Surgery", "surgeryDate", "date")}
+          {formData.hadSurgery && renderField("Date of Surgery", "surgeryDate", "date", { isRequired: true })}
         </div>
         {formData.hadSurgery && (
-          <div className="form-row">{renderField("Type of Surgery", "surgeryType", "text", { isFullWidth: true })}</div>
+          <div className="form-row">{renderField("Type of Surgery", "surgeryType", "text", { isFullWidth: true, isRequired: true })}</div>
         )}
         <div className="form-row">
           {renderField("Latest Diagnosis", "latestDiagnosis", "textarea", { isFullWidth: true })}
@@ -255,8 +257,8 @@ const MedicalRecordForm = ({
       <section className="visit-details">
         <h2>Visit Details</h2>
         <div className="form-row">
-          {renderField("Recent Visit", "recentVisit", "date")}
-          {renderField("Recent Purchase", "recentPurchase")}
+          {renderField("Recent Visit", "recentVisit", "date", { isRequired: true })}
+          {renderField("Recent Purchase", "recentPurchase", "text", { isRequired: true })}
         </div>
         <div className="form-row">
           {renderField("Purpose of Visit", "purposeOfVisit", "text", { isFullWidth: true, isRequired: true })}

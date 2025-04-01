@@ -21,7 +21,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
  const [isEditing, setIsEditing] = useState(false);
  const [editedRecord, setEditedRecord] = useState(record);
  const [loading, setLoading] = useState(true);
- const [error, setErrors] = useState({});
+ const [errors, setErrors] = useState({});
 
  const formatDateForDisplay = (dateString) => {
   if (!dateString) return ""
@@ -169,23 +169,24 @@ useEffect(() => {
 
  const validateForm = () => {
    const newErrors = {}
+   
+   // Required fields validation
+   if (!editedRecord.date) newErrors.date = "Date is required"
+   if (!editedRecord.weight) newErrors.weight = "Weight is required"
+   if (!editedRecord.temperature) newErrors.temperature = "Temperature is required"
+   if (!editedRecord.conditions) newErrors.conditions = "Conditions are required"
+   if (!editedRecord.symptoms) newErrors.symptoms = "Symptoms are required"
+   if (!editedRecord.recentVisit) newErrors.recentVisit = "Recent visit date is required"
+   if (!editedRecord.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
    if (!editedRecord.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
    // Validate surgery fields if hadSurgery is true
    if (editedRecord.hadSurgery) {
-    if (!editedRecord.surgeryDate) newErrors.surgeryDate = "Surgery date is required when 'Had past surgeries' is Yes"
-    if (!editedRecord.surgeryType) newErrors.surgeryType = "Surgery type is required when 'Had past surgeries' is Yes"
-  }
+     if (!editedRecord.surgeryDate) newErrors.surgeryDate = "Surgery date is required when 'Had past surgeries' is Yes"
+     if (!editedRecord.surgeryType) newErrors.surgeryType = "Surgery type is required when 'Had past surgeries' is Yes"
+   }
 
-  if (!editedRecord.date) newErrors.date = "Date is required";
-  if (!editedRecord.weight) newErrors.weight = "Weight is required";
-  if (!editedRecord.temperature) newErrors.temperature = "Temperature is required";
-  if (!editedRecord.conditions) newErrors.conditions = "Conditions are required";
-  if (!editedRecord.symptoms) newErrors.symptoms = "Symptoms are required";
-  if (!editedRecord.recentVisit) newErrors.recentVisit = "Recent visit date is required";
-  if (!editedRecord.recentPurchase) newErrors.recentPurchase = "Recent purchase date is required";
-
-   setErrors(newErrors) // Use setErrors to update the error state
+   setErrors(newErrors)
    return Object.keys(newErrors).length === 0
  }
 
@@ -194,48 +195,56 @@ useEffect(() => {
    const { name, value, type } = e.target;
    console.log("Input Change Triggered:", { name, value, type })
    if (name === "hadSurgery") {
-    // Convert string "true"/"false" to boolean
     const boolValue = value === "true" || value === true
     console.log("Setting hadSurgery to:", boolValue)
-
 
     setEditedRecord((prev) => ({
       ...prev,
       hadSurgery: boolValue,
-      // Clear surgery fields if hadSurgery is set to false
       ...(boolValue === false ? { surgeryDate: "", surgeryType: "" } : {}),
     }));
   } else if (type === "file") {
     const file = e.target.files[0];
     setEditedRecord((prev) => ({
         ...prev,
-        [name]: file || prev[name], // ✅ Keep existing file if no new file is selected
-        filePreview: file ? URL.createObjectURL(file) : prev.filePreview, // ✅ Maintain preview
+        [name]: file || prev[name],
+        filePreview: file ? URL.createObjectURL(file) : prev.filePreview,
     }));
-} else {
+  } else {
     setEditedRecord((prev) => ({
         ...prev,
-        [name]: e.target.value,
+        [name]: value,
     }));
+  }
+
+  // Clear error for the field if it exists
+  if (errors[name]) {
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  }
+
+  // Validate immediately if the field is empty
+  if (!value && name !== 'file' && name !== 'laboratories' && name !== 'latestDiagnosis') {
+    setErrors(prev => ({
+      ...prev,
+      [name]: `${name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1')} is required`
+    }));
+  }
 }
 
-
-  // Clear errors for the field if it exists
-    if (error[name]) {
-     setErrors((prev) => ({
-       ...prev,
-       [name]: "",
-     }))
-   }
- }
-
-  const handleSave = () => {
-   if (validateForm()) {
-     showConfirmDialog("Do you want to save your changes?", () => {
-       handleSubmit(); // Call handleSubmit to send the data to the backend
-     });
-   }
- };
+const handleSave = () => {
+  // Validate form first
+  if (!validateForm()) {
+    // Errors will be displayed through the errors state
+    return;
+  }
+  
+  showConfirmDialog("Do you want to save your changes?", () => {
+    handleSubmit();
+  });
+};
 
 
  // Function to request access code and open the modal
@@ -316,18 +325,20 @@ useEffect(() => {
  const handleSubmit = async (e) => {
    if (e) e.preventDefault();
 
+   // Validate form first
+   if (!validateForm()) {
+     return; // Stop submission if validation fails
+   }
 
    console.log("Record ID in handleSubmit:", record?.id);
    if (!record || !record.id) {
      console.error("Record ID is missing. Cannot update record.");
-     return
+     return;
    }
 
    console.log("Edited Record:", editedRecord);
 
-
    const formDataPayload = new FormData();
-
 
    const appendField = (key, value) => {
      if (value !== undefined && value !== null && value !== "") {
@@ -495,9 +506,9 @@ useEffect(() => {
              isEditing={isEditing}
              isDiagnosisLocked={!hasPermission("canAlwaysEditDiagnosis") && isDiagnosisLocked}
              onInputChange={handleInputChange}
-             onUnlockDiagnosis={handleRequestAccessCode} // Request access code
+             onUnlockDiagnosis={handleRequestAccessCode}
              isAddRecord={false}
-             error={error}
+             errors={errors}
            />
 
            
@@ -509,7 +520,7 @@ useEffect(() => {
      <UnlockModal
        isOpen={isModalOpen}
        onClose={() => setIsModalOpen(false)}
-       onUnlock={(accessCode) => handleUnlockDiagnosis(accessCode)} // Pass the access code
+       onUnlock={(accessCode) => handleUnlockDiagnosis(accessCode)}
        recordId={editedRecord.id}
        generatedAccessCode={editedRecord.accessCode}
      />
