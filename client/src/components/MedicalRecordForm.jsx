@@ -109,35 +109,58 @@ const MedicalRecordForm = ({
                   />
               )}
                {/* Show previous file if it exists */}
-              {value instanceof File ? (
-                  <div>
-                      <p className="file-name">{formData.laboratories} - {value.name}</p>
-                      <img
-                          src={URL.createObjectURL(value)} // ✅ Fix: Show file preview
-                          alt={`${name} uploaded`}
-                          style={{ maxWidth: "100%", maxHeight: "200px" }}
-                      />
-                      <a href={URL.createObjectURL(value)} target="_blank" rel="noopener noreferrer">
-                          View File
-                      </a>
-                  </div>
-              ) : typeof value === "string" && value.trim() !== "" ? (
-                  <div>
-                      <p className="file-name">{formData.laboratories} - {value.split('/').pop()}</p>
-                      <img
-                          src={value}
-                          alt={`${name} uploaded`}
-                          style={{ maxWidth: "100%", maxHeight: "200px" }}
-                      />
-                      <a href={value} target="_blank" rel="noopener noreferrer">
-                          View File
-                      </a>
-                  </div>
-              ) : (
-                  <span>No file available</span>
-              )}
-          </div>
-      );
+               {value instanceof File ? (
+           <div className="file-preview">
+             <p className="file-name">{formData.laboratories} - {value.name}</p>
+             {/* Create preview URL only when rendering */}
+             <img
+               src={URL.createObjectURL(value)}
+               alt={`${name} uploaded`}
+               style={{ maxWidth: "100%", maxHeight: "200px" }}
+             />
+             <div className="file-actions">
+               <a href={URL.createObjectURL(value)} target="_blank" rel="noopener noreferrer">
+                 View File
+               </a>
+               {isEditing && (
+                 <button
+                   type="button"
+                   className="remove-file-btn"
+                   onClick={() => onInputChange({ target: { name, value: null } })}
+                 >
+                   Remove File
+                 </button>
+               )}
+             </div>
+           </div>
+         ) : typeof value === "string" && value.trim() !== "" ? (
+           <div className="file-preview">
+             <p className="file-name">{formData.laboratories} - {value.split('/').pop()}</p>
+             <img
+               src={value}
+               alt={`${name} uploaded`}
+               style={{ maxWidth: "100%", maxHeight: "200px" }}
+             />
+             <div className="file-actions">
+               <a href={value} target="_blank" rel="noopener noreferrer">
+                 View File
+               </a>
+               {isEditing && (
+                 <button
+                   type="button"
+                   className="remove-file-btn"
+                   onClick={() => onInputChange({ target: { name, value: null } })}
+                 >
+                   Remove File
+                 </button>
+               )}
+             </div>
+           </div>
+         ) : (
+           <span>No file available</span>
+         )}
+       </div>
+     );
   }
   else if (type === "date") {
       const displayValue = isEditing ? value : formatDateForDisplay(value)

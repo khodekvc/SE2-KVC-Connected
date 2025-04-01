@@ -345,16 +345,23 @@ useEffect(() => {
    appendField("record_recent_visit", editedRecord.recentVisit ? formatDateForServer(editedRecord.recentVisit) : null);
    appendField("record_purchase", editedRecord.recentPurchase);
    appendField("record_purpose", editedRecord.purposeOfVisit);
-   appendField("diagnosis_text", editedRecord.latestDiagnosis);
    appendField("lab_description", editedRecord.laboratories);
    appendField("surgery_type", editedRecord.hadSurgery ? editedRecord.surgeryType : null);
    appendField("surgery_date", editedRecord.hadSurgery && editedRecord.surgeryDate ? formatDateForServer(editedRecord.surgeryDate) : null);
-   appendField("accessCode", editedRecord.accessCode); // Include access code for clinicians
    appendField("hadSurgery", editedRecord.hadSurgery);
 
-     
+  //Ensure Diagnosis Text and Access Code are Sent
+    if (hasPermission("canAlwaysEditDiagnosis") || !isDiagnosisLocked) {
+      appendField("diagnosis_text", editedRecord.latestDiagnosis);
+      if (!hasPermission("canAlwaysEditDiagnosis")) {
+        appendField("accessCode", editedRecord.accessCode);
+      }
+    }
+
     // ✅ Fix for File Handling
-    if (editedRecord.file instanceof File) {
+    if (editedRecord.file === null) {
+      appendField("removeFile", "true"); //ADDED THIS
+    } else if (editedRecord.file instanceof File) {
       formDataPayload.append("record_lab_file", editedRecord.file);
     } else if (typeof editedRecord.file === "string" && editedRecord.file.startsWith("http")) {
       formDataPayload.append("record_lab_file", editedRecord.file);
@@ -367,15 +374,6 @@ useEffect(() => {
     console.log("✅ Final FormData Entries:");
     for (let pair of formDataPayload.entries()) {
       console.log(pair[0] + ": ", pair[1]);
-    }
- 
- 
-    // ✅ Ensure Diagnosis Text and Access Code Are Sent
-    if (hasPermission("canAlwaysEditDiagnosis") || !isDiagnosisLocked) { 
-      formDataPayload.append("diagnosis_text", editedRecord.latestDiagnosis);
-      if (!hasPermission("canAlwaysEditDiagnosis")) { 
-        formDataPayload.append("accessCode", editedRecord.accessCode);
-      }
     }
     
      
@@ -428,8 +426,8 @@ useEffect(() => {
     }
 
 
-    // setEditedRecord(formattedRecord) // 10. ADDED THIS
-    // onUpdate(formattedRecord) // 11. EDITED THIS
+    // setEditedRecord(formattedRecord)
+    // onUpdate(formattedRecord)
 
      // Fetch the updated record immediately after saving
      const fetchUpdatedRecord = async () => {
