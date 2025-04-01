@@ -48,24 +48,54 @@
     font-size: 1.2rem;
   }
   
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .cancel-button,
   .update-button,
   .save-button {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    background-color: var(--orange-color);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 0;
     border-radius: 2rem;
     cursor: pointer;
     font-size: 1rem;
-    transition: background-color 0.3s ease;
+    min-width: 120px;
+    width: 120px;
+    height: 40px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    box-sizing: border-box;
+  }
+
+  .save-button,
+  .update-button {
+    background-color: var(--orange-color);
+    color: white;
+    border: none;
+    border: 2px solid var(--orange-color);
+  }
+
+  .cancel-button {
+    background-color: white;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+  }
+
+  .cancel-button:hover {
+    background-color: #f8f9fa;
   }
   
   .update-button:hover,
   .save-button:hover {
     background-color: var(--blue-color);
+    border-color: var(--blue-color);
+    box-shadow: 0 2px 5px rgba(0, 113, 188, 0.3);
   }
   
   .record-content {

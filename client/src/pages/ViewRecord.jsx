@@ -484,10 +484,18 @@ const handleSave = () => {
          {hasPermission("canUpdateRecord") && (
            <>
          {isEditing ? (
-           <button className="save-button" onClick={handleSave}>
-             <Save size={16} />
-             Save
-           </button>
+           <div className="button-group">
+             <button className="save-button" onClick={handleSave}>
+               Save
+             </button>
+             <button className="cancel-button" onClick={() => {
+               setIsEditing(false);
+               setEditedRecord(record); // Reset to original record data
+               setErrors({}); // Clear any errors
+             }}>
+               Cancel
+             </button>
+           </div>
          ) : (
            <button className="update-button" onClick={() => setIsEditing(true)}>
              <Pencil size={16} />

@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { X, Calendar } from "lucide-react"
+import { X  } from "lucide-react"
 import "../css/FilterModal.css"
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) => {
   const [filters, setFilters] = useState(
@@ -76,9 +77,10 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
   
   
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  return (
+  // Use React Portal to render the modal outside the normal DOM hierarchy
+  const modalContent = (
     <div className="filter-modal-overlay">
       <div className={`filter-modal ${type}-filter`}>
         <button className="close-button" onClick={onClose} aria-label="close">
@@ -216,7 +218,6 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
                     onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
                     placeholder="From"
                   />
-                  <Calendar size={20} />
                 </div>
                 <div className="date-input-container">
                   <input
@@ -225,7 +226,6 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
                     onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
                     placeholder="To"
                   />
-                  <Calendar size={20} />
                 </div>
               </div>
             </div>
@@ -242,7 +242,13 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
         </div>
       </div>
     </div>
-  )
+  );
+
+  // Use portal to render the modal at the end of the document body
+  return ReactDOM.createPortal(
+    modalContent,
+    document.body
+  );
 }
 
 export default FilterModal
