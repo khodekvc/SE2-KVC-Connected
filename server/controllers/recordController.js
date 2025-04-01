@@ -205,11 +205,7 @@ const getCompleteRecordById = async (recordId) => {
             lab_description, diagnosis_text, surgery_type, surgery_date,
             record_recent_visit, record_purchase, record_purpose, accessCode, hadSurgery, removeFile
         } = req.body;
-<<<<<<< HEAD
         const hadSurgeryBool = hadSurgery === "true" || hadSurgery === true //ADDED THIS
-=======
-        const hadSurgeryBool = hadSurgery === "true" || hadSurgery === true;
->>>>>>> 11e9f020efc84a4a660ac4e5bfdccf10dd7fb395
         const record_lab_file = req.file ? req.file.filename : null;
  
         const currentRecord = await getRecordById(recordId);
@@ -313,17 +309,10 @@ const getCompleteRecordById = async (recordId) => {
     console.log("Current surgery_id:", currentRecord.surgery_id)//debu
 
 
-<<<<<<< HEAD
 // CHANGED FROM HADSURGERY TO BOOL BOOL
 if (hadSurgeryBool === false) {
   if (currentRecord.surgery_id) {
     console.log(`Deleting surgery with ID: ${currentRecord.surgery_id}`)
-=======
-// 13. ADDED THIS —------------------
-    if (hadSurgeryBool === false) {
-      if (currentRecord.surgery_id) {
-        console.log(`Deleting surgery with ID: ${currentRecord.surgery_id}`)
->>>>>>> 11e9f020efc84a4a660ac4e5bfdccf10dd7fb395
 
     try {
       await db.query("UPDATE record_info SET surgery_id = NULL WHERE record_id = ?", [recordId])
@@ -333,37 +322,10 @@ if (hadSurgeryBool === false) {
       await db.query("DELETE FROM surgery_info WHERE surgery_id = ?", [currentRecord.surgery_id])
       console.log(`Deleted surgery record with ID: ${currentRecord.surgery_id}`)
 
-<<<<<<< HEAD
       updatedRecordData.surgery_id = null
     } catch (error) {
       console.error("Error deleting surgery:", error)
       throw error 
-=======
-
-          // delete the surgery record from surgery_info table
-          await db.query("DELETE FROM surgery_info WHERE surgery_id = ?", [currentRecord.surgery_id])
-          console.log(`Deleted surgery record with ID: ${currentRecord.surgery_id}`)
-
-
-          updatedRecordData.surgery_id = null
-        } catch (error) {
-          console.error("Error deleting surgery:", error)
-        }
-      }
-    } else if (hadSurgeryBool === true) {
-      if (surgery_type && surgery_date) {
-        if (currentRecord.surgery_id) {
-          // update existing surgery record
-          await updateSurgeryInfo(currentRecord.surgery_id, surgery_type, surgery_date)
-          // keep the same surgery_id
-          updatedRecordData.surgery_id = currentRecord.surgery_id
-        } else {
-          // create new surgery record only if one doesn't exist
-          const surgery_id = await insertSurgeryInfo(surgery_type, surgery_date)
-          updatedRecordData.surgery_id = surgery_id
-        }
-      }
->>>>>>> 11e9f020efc84a4a660ac4e5bfdccf10dd7fb395
     }
   }
 } else if (hadSurgeryBool === true) {
