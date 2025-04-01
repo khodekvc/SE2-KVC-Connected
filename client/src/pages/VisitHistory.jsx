@@ -183,11 +183,18 @@ const resetFilters = async () => {
    return (
      <ViewRecord
      record={selectedRecord}
-     onBack={() => setSelectedRecord(null)}
+     onBack={() => {
+      setSelectedRecord(null);
+      fetchVisitRecords();
+     }}
      onUpdate={(updatedRecord) => {
-       console.log("Calling updateRecord with:", updatedRecord.id, updatedRecord); // Debugging
-       updateRecord(updatedRecord.id, updatedRecord);
- }}
+      // Update the specific record in the state
+      setVisitRecords((prevRecords) =>
+        prevRecords.map((record) =>
+          record.id === updatedRecord.id ? updatedRecord : record
+        )
+      );
+    }}
 />
    );
  }
