@@ -141,6 +141,9 @@
     padding: 0.5rem;
     color: #666;
     transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .action-btn:hover {
@@ -185,6 +188,16 @@
   
     .action-column {
       width: 40px;
+    }
+  
+    .action-btn {
+      color: #666;
+      padding: 0.5rem 0;
+    }
+  
+    .action-btn svg {
+      width: 24px;
+      height: 24px;
     }
   }
   

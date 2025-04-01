@@ -247,6 +247,10 @@
     border-radius: 0.25rem;
     cursor: pointer;
     font-size: 0.875rem;
+    width: auto;
+    max-width: 160px;
+    align-self: flex-end;
+    margin-left: auto;
   }
   
   .required {
