@@ -301,6 +301,7 @@ exports.signupEmployeeComplete = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "Strict",
+            path: "/",
             maxAge: 15 * 60 * 1000
         });
 

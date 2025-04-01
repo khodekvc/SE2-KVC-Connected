@@ -22,6 +22,8 @@ const SignupEmployee = () => {
     const [captcha, setCaptcha] = useState({ image: "", captchaKey: "" });
     const [message, setMessage] = useState("");
 
+    const { setCurrentRole } = useUserRole();
+
     useEffect(() => {
         fetchCaptcha();
     }, []);
@@ -42,9 +44,6 @@ const SignupEmployee = () => {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
-
-    const { setCurrentRole } = useUserRole(); // Access the context to set the role
-  const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -79,13 +78,23 @@ const SignupEmployee = () => {
 
             // Handle successful signup
             console.log(data.message);
-            setCurrentRole(data.role); // Set the user's role in the context
-      navigate(data.redirectUrl); // Redirect to the landing page based on role
-            window.location.replace(data.redirectUrl);
+          window.location.replace(data.redirectUrl);
+      //     setCurrentRole(data.role); // Set the user's role in the context
+      // navigate(getLandingPage(data.role)); // Redirect to the landing page based on role
         } catch (error) {
             console.error("Error:", error.message);
             setMessage(error.message);
         }
+    };
+
+    const getLandingPage = (role) => {
+      switch (role) {   
+        case "clinician":
+          case "staff":
+          return "/patients";
+        default:
+          return "/login";
+      }
     };
 
     return (
@@ -201,16 +210,6 @@ const SignupEmployee = () => {
         </>
     );
 };
-
-function getLandingPage(role) {
-    switch (role) {
-      case "clinician":
-      case "staff":
-        return "/patients";      
-      default:
-        return "/login";
-    }
-  }
 
 
 export default SignupEmployee;

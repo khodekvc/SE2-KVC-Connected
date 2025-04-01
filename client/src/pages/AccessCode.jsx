@@ -31,14 +31,33 @@ const AccessCode = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Login failed");
 
-      // ✅ Get token from headers or body
-      const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
-      if (token) {
-        localStorage.setItem("jwt", token);
+      const userRole = data.role;
+
+      if (userRole) {
+        console.log("Role received from backend:", userRole);
+        // ***** REMOVE localStorage.setItem("jwt", token); *****
+        localStorage.setItem("userRole", userRole); // <-- STORE ONLY THE ROLE
+        console.log("User role saved to localStorage.");
+      } else {
+        console.error("Verification successful, but role missing in backend response:", data);
+        throw new Error("Login failed after verification (missing role). Please contact support.");
       }
 
+      // // ✅ Get token from headers or body
+      // const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
+      // if (token) {
+      //   localStorage.setItem("jwt", token);
+      // }
+
       setMessage(data.message);
-        window.location.replace(data.redirectUrl);
+      
+      if (data.redirectUrl) {
+        console.log("Redirecting to:", data.redirectUrl);
+        window.location.replace(data.redirectUrl); // Perform the redirect
+      } else {
+        console.error("No redirect URL received from backend after verification.");
+        setMessage("Verification successful, but failed to redirect.");
+      }
     } catch (error) {
       setMessage(error.message);
     }
