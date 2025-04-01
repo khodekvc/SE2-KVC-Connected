@@ -368,3 +368,21 @@
   }
 }
 
+.required-field::after {
+  content: "*";
+  color: #ff4444;
+  margin-left: 0.25rem;
+  font-weight: bold;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  text-align: left;
+  justify-self: start;
+  white-space: nowrap;
+  display: inline-block;
+}
+

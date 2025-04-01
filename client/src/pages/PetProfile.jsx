@@ -19,6 +19,7 @@ export default function PetProfile() {
   const [isEditing, setIsEditing] = useState(false)
   const [editedPetData, setEditedPetData] = useState({})
   const [petData, setPetData] = useState(null)
+  const [nameError, setNameError] = useState("")
 
 
   const fetchVaccinationRecords = useCallback(async (petId) => {
@@ -125,29 +126,61 @@ export default function PetProfile() {
  
 
 
+  const fetchUpdatedPetData = async () => {
+    try {
+      console.log("Fetching updated pet data after save...")
+      const response = await fetch(`http://localhost:5000/pets/${pet_id}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch updated pet data");
+      }
+
+      const data = await response.json();
+      console.log("Fetched updated pet data:", data);
+      console.log("Updated species from server:", data.species);
+      
+      // Calculate age
+      const age = calculateAge(data.birthday);
+      
+      // Reset the UI with data from server
+      setPetData({ ...data, age });
+      setEditedPetData({});
+    } catch (error) {
+      console.error("Error fetching updated pet data:", error);
+    }
+  };
+
+
   const handleSave = async () => {
     console.log("Save button clicked")
 
+    // Validate name field
+    if (!editedPetData.name || editedPetData.name.trim() === "") {
+      setNameError("Name is required")
+      return
+    }
 
     try {
-
-
       const updatedData = {
         ...petData,
         ...editedPetData,
       }
 
-
+      console.log("Original pet species:", petData.species)
+      console.log("Edited pet species:", editedPetData.species)
       console.log("Final data to save:", updatedData)
-
 
       const age = calculateAge(updatedData.birthday)
       updatedData.age_year = age.years
       updatedData.age_month = age.months
 
-
       const statusValue = updatedData.status === "Alive" ? 1 : 0
-
 
       // Map species description to spec_id
       const speciesMap = {
@@ -161,7 +194,23 @@ export default function PetProfile() {
         Others: 8,
       }
       const specId = speciesMap[updatedData.species] || 1
+      console.log("Species mapping - Description:", updatedData.species, "ID:", specId)
 
+      const requestBody = {
+        pet_name: updatedData.name,
+        // Send both speciesDescription and spec_id to ensure proper updating
+        speciesDescription: updatedData.species,
+        spec_id: specId,
+        pet_breed: updatedData.breed,
+        pet_gender: updatedData.gender,
+        pet_birthday: updatedData.birthday,
+        pet_age_month: updatedData.age_month,
+        pet_age_year: updatedData.age_year,
+        pet_color: updatedData.color,
+        pet_status: statusValue,
+      }
+      
+      console.log("Sending request body:", requestBody)
 
       const response = await fetch(`http://localhost:5000/pets/edit/${pet_id}`, {
         method: "PUT",
@@ -169,17 +218,7 @@ export default function PetProfile() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          pet_name: updatedData.name,
-          spec_id: specId,
-          pet_breed: updatedData.breed,
-          pet_gender: updatedData.gender,
-          pet_birthday: updatedData.birthday,
-          pet_age_month: updatedData.age_month,
-          pet_age_year: updatedData.age_year,
-          pet_color: updatedData.color,
-          pet_status: statusValue,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
 
@@ -190,43 +229,13 @@ export default function PetProfile() {
 
       const data = await response.json()
       console.log("Pet profile updated:", data)
-      const newAge = calculateAge(editedPetData.birthday)
-      const updatedPetData = {
-        ...editedPetData,
-        age: newAge,
-        status: editedPetData.status,
-      }
-      setPetData(updatedPetData)
-
-
-      const fetchUpdatedPetData = async () => {
-        try {
-          const response = await fetch(`http://localhost:5000/pets/${pet_id}`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch updated pet data")
-          }
-
-
-          const data = await response.json()
-          console.log("Fetched updated pet data:", data)
-          const age = calculateAge(data.birthday)
-          setPetData({ ...data, age })
-        } catch (error) {
-          console.error("Error fetching updated pet data:", error)
-        }
-      }
-      fetchUpdatedPetData()
-
-
-      setIsEditing(false)
+      
+      // Force a small delay to ensure DB updates are complete
+      //setTimeout(() => {
+        fetchUpdatedPetData()
+        setIsEditing(false)
+        setNameError("")
+      //}, 500)
     } catch (error) {
       console.error("Error updating pet profile:", error)
     }
@@ -236,11 +245,22 @@ export default function PetProfile() {
   const handleCancel = () => {
     setIsEditing(false)
     setEditedPetData({})
+    setNameError("")
   }
 
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target
+    
+    // Clear name error when typing in the name field
+    if (name === 'name') {
+      if (!value || value.trim() === "") {
+        setNameError("Name is required")
+      } else {
+        setNameError("")
+      }
+    }
+    
     setEditedPetData((prev) => {
       const updatedData = { ...prev, [name]: type === "radio" ? e.target.id : value }
       if (name === "birthday") {
@@ -284,15 +304,18 @@ export default function PetProfile() {
                   <span>{petData.pet_id}</span>
                 </div>
                 <div className="detail-item">
-                  <label>Name</label>
+                  <label className={isEditing ? "required-field" : ""}>Name</label>
                   {isEditing ? (
-                    <input type="text" name="name" value={editedPetData.name || ""} onChange={handleInputChange} />
+                    <>
+                      <input type="text" name="name" value={editedPetData.name || ""} onChange={handleInputChange} />
+                      {nameError && <div className="error-message">{nameError}</div>}
+                    </>
                   ) : (
                     <span>{petData.name}</span>
                   )}
                 </div>
                 <div className="detail-item">
-                  <label>Species</label>
+                  <label className={isEditing ? "required-field" : ""}>Species</label>
                   {isEditing ? (
                     <select name="species" value={editedPetData.species || ""} onChange={handleInputChange}>
                       <option value="Dog (Standard)">Dog (Standard)</option>
@@ -317,7 +340,7 @@ export default function PetProfile() {
                   )}
                 </div>
                 <div className="detail-item">
-                  <label>Gender</label>
+                  <label className={isEditing ? "required-field" : ""}>Gender</label>
                   {isEditing ? (
                     <div className="radio-group">
                       <label>
@@ -378,7 +401,7 @@ export default function PetProfile() {
                   )}
                 </div>
                 <div className="detail-item">
-                  <label>Status</label>
+                  <label className={isEditing ? "required-field" : ""}>Status</label>
                   {isEditing ? (
                     <div className="radio-group">
                       <label>
