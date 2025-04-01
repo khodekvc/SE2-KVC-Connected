@@ -209,7 +209,7 @@ const MedicalRecordForm = ({
         <div className="input-container">
           <label htmlFor={name}>
             {label}
-            {isRequired && <span className="required">*</span>}
+            {isRequired && (isEditing || isAddRecord) && <span className="required">*</span>}
           </label>
           {isEditing || type === "radio" || type === "file" ? input : <span className="value-text">{value}</span>}
         </div>
