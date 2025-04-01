@@ -359,7 +359,9 @@ useEffect(() => {
     }
 
     // ✅ Fix for File Handling
-    if (editedRecord.file instanceof File) {
+    if (editedRecord.file === null) {
+      appendField("removeFile", "true"); //ADDED THIS
+    } else if (editedRecord.file instanceof File) {
       formDataPayload.append("record_lab_file", editedRecord.file);
     } else if (typeof editedRecord.file === "string" && editedRecord.file.startsWith("http")) {
       formDataPayload.append("record_lab_file", editedRecord.file);
