@@ -168,6 +168,7 @@ const resetFilters = async () => {
        prevRecords.map((record) => (record.id === updatedRecord.id ? updatedRecord : record))
      );
      setSelectedRecord(updatedRecord); // Update the selected record
+     await fetchVisitRecords();
    } catch (error) {
      console.error("Error updating record:", error);
    }
@@ -180,18 +181,24 @@ const resetFilters = async () => {
 
 
  if (selectedRecord) {
-   return (
-     <ViewRecord
-     record={selectedRecord}
-     onBack={() => setSelectedRecord(null)}
-     onUpdate={(updatedRecord) => {
-       console.log("Calling updateRecord with:", updatedRecord.id, updatedRecord); // Debugging
-       updateRecord(updatedRecord.id, updatedRecord);
- }}
-/>
-   );
- }
-
+  return (
+    <ViewRecord
+      record={selectedRecord}
+      onBack={() => {
+        setSelectedRecord(null); // Clear the selected record
+        fetchVisitRecords(); // Fetch the latest records from the backend
+      }}
+      onUpdate={(updatedRecord) => {
+        // Update the specific record in the state
+        setVisitRecords((prevRecords) =>
+          prevRecords.map((record) =>
+            record.id === updatedRecord.id ? updatedRecord : record
+          )
+        );
+      }}
+    />
+  );
+}
 
  return (
    <div className="visit-history">

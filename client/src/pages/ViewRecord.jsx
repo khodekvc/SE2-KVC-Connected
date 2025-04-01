@@ -396,36 +396,36 @@ useEffect(() => {
      }
 
 
-    //  const responseData = await response.json();
-    //  console.log("Record updated successfully:", responseData);
+     const responseData = await response.json();
+     console.log("Record updated successfully:", responseData);
 
-    //  const updatedRecord = {
-    //   id: record.id,
-    //   date: responseData.date,
-    //   purposeOfVisit: responseData.purposeOfVisit,
-    //   weight: responseData.weight,
-    //   temperature: responseData.temperature,
-    //   conditions: responseData.conditions,
-    //   symptoms: responseData.symptoms,
-    //   recentVisit: responseData.recentVisit,
-    //   recentPurchase: responseData.recentPurchase,
-    //   lab_description: responseData.laboratories,
-    //   surgeryType: responseData.surgeryType,
-    //   surgeryDate: responseData.surgeryDate,
-    //   latestDiagnosis: responseData.latestDiagnosis,
-    //   hadSurgery: responseData.hadSurgery,
-    //   record_lab_file: responseData.file, // Add this line
-    // }
+     const updatedRecord = {
+      id: record.id,
+      date: responseData.date,
+      purposeOfVisit: responseData.purposeOfVisit,
+      weight: responseData.weight,
+      temperature: responseData.temperature,
+      conditions: responseData.conditions,
+      symptoms: responseData.symptoms,
+      recentVisit: responseData.recentVisit,
+      recentPurchase: responseData.recentPurchase,
+      lab_description: responseData.laboratories,
+      surgeryType: responseData.surgeryType,
+      surgeryDate: responseData.surgeryDate,
+      latestDiagnosis: responseData.latestDiagnosis,
+      hadSurgery: responseData.hadSurgery,
+      record_lab_file: responseData.file, // Add this line
+    }
 
 
-    // Format dates for display
-    // const formattedRecord = {
-    //   ...updatedRecord,
-    //   date: formatDateForDisplay(updatedRecord.date),
-    //   recentVisit: formatDateForDisplay(updatedRecord.recentVisit),
-    //   surgeryDate: formatDateForDisplay(updatedRecord.surgeryDate),
+    //Format dates for display
+    const formattedRecord = {
+      ...updatedRecord,
+      date: formatDateForDisplay(updatedRecord.date),
+      recentVisit: formatDateForDisplay(updatedRecord.recentVisit),
+      surgeryDate: formatDateForDisplay(updatedRecord.surgeryDate),
       
-    // }
+    }
 
 
     // setEditedRecord(formattedRecord) // 10. ADDED THIS
