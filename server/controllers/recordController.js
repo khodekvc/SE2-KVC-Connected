@@ -205,6 +205,7 @@ const getCompleteRecordById = async (recordId) => {
             lab_description, diagnosis_text, surgery_type, surgery_date,
             record_recent_visit, record_purchase, record_purpose, accessCode, hadSurgery, removeFile
         } = req.body;
+        const hadSurgeryBool = hadSurgery === "true" || hadSurgery === true;
         const record_lab_file = req.file ? req.file.filename : null;
  
         const currentRecord = await getRecordById(recordId);
@@ -309,7 +310,7 @@ const getCompleteRecordById = async (recordId) => {
 
 
 // 13. ADDED THIS —------------------
-    if (hadSurgery === false) {
+    if (hadSurgeryBool === false) {
       if (currentRecord.surgery_id) {
         console.log(`Deleting surgery with ID: ${currentRecord.surgery_id}`)
 
@@ -330,7 +331,7 @@ const getCompleteRecordById = async (recordId) => {
           console.error("Error deleting surgery:", error)
         }
       }
-    } else if (surgery_type !== undefined || surgery_date !== undefined) {
+    } else if (hadSurgeryBool === true) {
       if (surgery_type && surgery_date) {
         if (currentRecord.surgery_id) {
           // update existing surgery record
