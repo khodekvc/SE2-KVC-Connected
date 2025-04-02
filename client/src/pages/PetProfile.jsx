@@ -166,79 +166,82 @@ export default function PetProfile() {
       return
     }
 
-    try {
-      const updatedData = {
-        ...petData,
-        ...editedPetData,
+    // Show confirmation dialog before saving
+    showConfirmDialog("Do you want to save your changes?", async () => {
+      try {
+        const updatedData = {
+          ...petData,
+          ...editedPetData,
+        }
+
+        console.log("Original pet species:", petData.species)
+        console.log("Edited pet species:", editedPetData.species)
+        console.log("Final data to save:", updatedData)
+
+        const age = calculateAge(updatedData.birthday)
+        updatedData.age_year = age.years
+        updatedData.age_month = age.months
+
+        const statusValue = updatedData.status === "Alive" ? 1 : 0
+
+        // Map species description to spec_id
+        const speciesMap = {
+          "Dog (Standard)": 1,
+          "Cat (Standard)": 2,
+          "Snake (Exotic)": 3,
+          "Turtles (Exotic)": 4,
+          "Birds (Exotic)": 5,
+          "Rabbit (Exotic)": 6,
+          "Lab Rat (Exotic)": 7,
+          Others: 8,
+        }
+        const specId = speciesMap[updatedData.species] || 1
+        console.log("Species mapping - Description:", updatedData.species, "ID:", specId)
+
+        const requestBody = {
+          pet_name: updatedData.name,
+          // Send both speciesDescription and spec_id to ensure proper updating
+          speciesDescription: updatedData.species,
+          spec_id: specId,
+          pet_breed: updatedData.breed,
+          pet_gender: updatedData.gender,
+          pet_birthday: updatedData.birthday,
+          pet_age_month: updatedData.age_month,
+          pet_age_year: updatedData.age_year,
+          pet_color: updatedData.color,
+          pet_status: statusValue,
+        }
+        
+        console.log("Sending request body:", requestBody)
+
+        const response = await fetch(`http://localhost:5000/pets/edit/${pet_id}`, {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        })
+
+
+        if (!response.ok) {
+          throw new Error("Failed to update pet profile")
+        }
+
+
+        const data = await response.json()
+        console.log("Pet profile updated:", data)
+        
+        // Force a small delay to ensure DB updates are complete
+        //setTimeout(() => {
+          fetchUpdatedPetData()
+          setIsEditing(false)
+          setNameError("")
+        //}, 500)
+      } catch (error) {
+        console.error("Error updating pet profile:", error)
       }
-
-      console.log("Original pet species:", petData.species)
-      console.log("Edited pet species:", editedPetData.species)
-      console.log("Final data to save:", updatedData)
-
-      const age = calculateAge(updatedData.birthday)
-      updatedData.age_year = age.years
-      updatedData.age_month = age.months
-
-      const statusValue = updatedData.status === "Alive" ? 1 : 0
-
-      // Map species description to spec_id
-      const speciesMap = {
-        "Dog (Standard)": 1,
-        "Cat (Standard)": 2,
-        "Snake (Exotic)": 3,
-        "Turtles (Exotic)": 4,
-        "Birds (Exotic)": 5,
-        "Rabbit (Exotic)": 6,
-        "Lab Rat (Exotic)": 7,
-        Others: 8,
-      }
-      const specId = speciesMap[updatedData.species] || 1
-      console.log("Species mapping - Description:", updatedData.species, "ID:", specId)
-
-      const requestBody = {
-        pet_name: updatedData.name,
-        // Send both speciesDescription and spec_id to ensure proper updating
-        speciesDescription: updatedData.species,
-        spec_id: specId,
-        pet_breed: updatedData.breed,
-        pet_gender: updatedData.gender,
-        pet_birthday: updatedData.birthday,
-        pet_age_month: updatedData.age_month,
-        pet_age_year: updatedData.age_year,
-        pet_color: updatedData.color,
-        pet_status: statusValue,
-      }
-      
-      console.log("Sending request body:", requestBody)
-
-      const response = await fetch(`http://localhost:5000/pets/edit/${pet_id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      })
-
-
-      if (!response.ok) {
-        throw new Error("Failed to update pet profile")
-      }
-
-
-      const data = await response.json()
-      console.log("Pet profile updated:", data)
-      
-      // Force a small delay to ensure DB updates are complete
-      //setTimeout(() => {
-        fetchUpdatedPetData()
-        setIsEditing(false)
-        setNameError("")
-      //}, 500)
-    } catch (error) {
-      console.error("Error updating pet profile:", error)
-    }
+    })
   }
 
 
