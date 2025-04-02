@@ -119,7 +119,7 @@ const MedicalRecordForm = ({
                               Choose File
                           </button>
                           <span className="file-name-display">
-                              {value instanceof File ? value.name : "Select image (png, jpg)"}
+                              {value instanceof File ? value.name : "Supported formats: png, jpg, jpeg"}
                           </span>
                       </div>
                   </div>
@@ -222,7 +222,12 @@ const MedicalRecordForm = ({
             {label}
             {isRequired && (isEditing || isAddRecord) && <span className="required">*</span>}
           </label>
-          {isEditing || type === "radio" || type === "file" ? input : <span className="value-text">{value}</span>}
+          {isEditing || type === "file" ? 
+            input : 
+            <span className="value-text">
+              {type === "radio" ? (value === true ? "Yes" : "No") : value}
+            </span>
+          }
         </div>
         {errors && errors[name] && <span className="error-message">{errors[name]}</span>}
         {name === "latestDiagnosis" && isDiagnosisLocked && isEditing && !isAddRecord && (

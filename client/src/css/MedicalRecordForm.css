@@ -159,6 +159,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1;
+    font-size: 0.85rem;
+    font-style: italic;
   }
   
   .file-input {
