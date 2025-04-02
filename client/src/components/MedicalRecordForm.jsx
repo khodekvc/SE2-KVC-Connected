@@ -195,7 +195,7 @@ const MedicalRecordForm = ({
           name={name}
           value={value || ""}
           onChange={onInputChange}
-          rows={3}
+          rows={2}
           disabled={!isEditing || (name === "latestDiagnosis" && isDiagnosisLocked)}
           className={isEditing ? "editable-value" : ""}
         />
