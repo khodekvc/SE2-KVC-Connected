@@ -45,7 +45,7 @@ export default function AddNewPet() {
 
       const result = await response.json();
       console.log("Pet added successfully:", result);
-      alert("Pet added successfully!");
+      //alert("Pet added successfully!");
 
       // Redirect to MyPets page
       navigate("/MyPets");
@@ -127,13 +127,12 @@ export default function AddNewPet() {
               </div>
             </div>
             <div className="form-field">
-              <label>Breed</label>
+              <label>Breed (Optional)</label>
               <input
                 type="text"
                 name="breed"
                 value={petData.breed}
                 onChange={handleInputChange}
-                required
               />
             </div>
           </div>

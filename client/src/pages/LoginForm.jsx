@@ -21,6 +21,7 @@ function LoginForm() {
   })
   const [captcha, setCaptcha] = useState({ image: "", captchaKey: "" });
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchCaptcha();
@@ -36,6 +37,7 @@ function LoginForm() {
       setCaptcha({ image: data.image, captchaKey: data.captchaKey });
     } catch (error) {
       console.error("Failed to load CAPTCHA:", error);
+      setError("Failed to load CAPTCHA. Please refresh the page.");
     }
   };
 
@@ -44,7 +46,22 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear any previous errors
     console.log("Form Submitted");
+
+    // Validate empty fields
+   if (!formData.email.trim()) {
+    setError("Email is required");
+    return;
+  }
+  if (!formData.password.trim()) {
+    setError("Password is required");
+    return;
+  }
+  if (!formData.captchaInput?.trim()) {
+    setError("CAPTCHA is required");
+    return;
+  }
 
     try {
       const response = await fetch("http://localhost:5000/auth/login", {
@@ -63,8 +80,9 @@ function LoginForm() {
                 console.log("Refreshing CAPTCHA..."); // Debug log
                 setCaptcha({ image: data.newCaptcha.image, captchaKey: data.newCaptcha.captchaKey }); // Update CAPTCHA
             }
-throw new Error(data.error || "Login failed");
-}
+            setError(data.error || "Login failed");
+            throw new Error(data.error || "Login failed");
+      }
 
       const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
       if (token) {
@@ -104,6 +122,15 @@ console.error("Error:", error.message);
 
   const handleSendCode = async (e) => {
   e.preventDefault();
+  setError(""); // Clear any previous errors
+
+  // Validate email
+  if (!formData.email.trim()) {
+    setError("Email is required");
+    return;
+  }
+
+
     try {
       const response = await fetch("http://localhost:5000/auth/forgot-password", {
         method: "POST",
@@ -114,7 +141,10 @@ console.error("Error:", error.message);
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to send reset code");
+      if (!response.ok){
+        setError(data.error || "Failed to send reset code"); 
+        throw new Error(data.error || "Failed to send reset code");
+      }
 
       console.log(data.message); // "Reset code sent to your email."
       setMessage(data.message);
@@ -127,10 +157,18 @@ console.error("Error:", error.message);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    setError(""); // Clear any previous errors
     console.log("Reset Password button clicked"); // Debug log
     console.log("Email:", formData.email);
     console.log("Access Code:", formData.accessCode);
   
+    // Validate access code
+   if (!formData.accessCode.trim()) {
+    setError("Access code is required");
+    return;
+  }
+
+
     try {
       const response = await fetch("http://localhost:5000/auth/verify-reset-code", {
         method: "POST",
@@ -143,19 +181,23 @@ console.error("Error:", error.message);
       const data = await response.json();
       console.log("Response from server:", data); // Debug log
   
-      if (!response.ok) throw new Error(data.error || "Invalid or expired reset code");
+      if (!response.ok){
+        setError(data.error || "Invalid or expired reset code");
+        throw new Error(data.error || "Invalid or expired reset code");
+      }
   
       console.log(data.message); // "Code verified. Proceed to reset your password."
       setMessage(data.message);
       setCurrentStep("newPassword"); // Move to the next step
     } catch (error) {
       console.error("Error verifying reset code:", error);
-      setMessage(error.message);
+      setError(error.message);
     }
   };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
+    setError(""); // Clear any previous errors
     console.log("Change Password button clicked"); // Debug log
     console.log("Sending password reset request:", {
       email: formData.email,
@@ -164,6 +206,22 @@ console.error("Error:", error.message);
       confirmPassword: formData.confirmPassword,
     });
   
+
+    // Validate new password and confirm password
+   if (!formData.newPassword.trim()) {
+    setError("New password is required");
+    return;
+  }
+  if (!formData.confirmPassword.trim()) {
+    setError("Please confirm your new password");
+    return;
+  }
+  if (formData.newPassword !== formData.confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
+
     try {
       if (formData.newPassword !== formData.confirmPassword) {
         throw new Error("Passwords do not match");
@@ -185,14 +243,17 @@ console.error("Error:", error.message);
       const data = await response.json();
       console.log("Response from server:", data); // Debug log
   
-      if (!response.ok) throw new Error(data.error || "Failed to reset password");
-  
+      if (!response.ok) {
+        setError(data.error || "Failed to reset password");
+        throw new Error(data.error || "Failed to reset password");
+      }
+ 
       setMessage(data.message);
       console.log("Password reset successfully. Redirecting to login...");
       setCurrentStep("login"); // Redirect to login
     } catch (error) {
       console.error("Error resetting password:", error);
-      setMessage(error.message);
+      setError(error.message);
     }
   };
   
@@ -211,13 +272,17 @@ console.error("Error:", error.message);
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Failed to resend reset code");
 
+        if (!response.ok) {
+          setError(data.error || "Failed to resend reset code");
+          throw new Error(data.error || "Failed to resend reset code");
+        }
+ 
         console.log(data.message); // "A new reset code has been sent to your email."
         setMessage(data.message);
     } catch (error) {
         console.error("Error resending reset code:", error);
-        setMessage(error.message);
+        setError(error.message);
     }
 };
 
@@ -237,7 +302,7 @@ console.error("Error:", error.message);
                 onChange={handleChange}
                 required
               />
-              <Button buttonStyle='btn--secondary' onClick={() => setCurrentStep("login")} className="form-btn-3">BACK TO LOGIN</Button>
+              <Button buttonStyle='btn--secondary' onClick={() => setCurrentStep("login")} className="form-btn-3">BACK</Button>
               <Button
                 buttonStyle="btn--primary"
                 type="submit"
@@ -255,6 +320,7 @@ console.error("Error:", error.message);
           <>
             <h2>Forgot Password</h2>
             <p>Enter access code (6 digits) that was sent to your email</p>
+            {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleResetPassword}>
               <FormGroup
                 label="Access Code"
@@ -275,7 +341,7 @@ console.error("Error:", error.message);
                 className="form-btn-1"
                 onClick={handleResetPassword}
               >
-                RESET PASSWORD
+                RESET
               </Button>
             </form>
           </>
@@ -286,6 +352,7 @@ console.error("Error:", error.message);
           <>
             <h2>Forgot Password</h2>
             <p>Reset Password</p>
+            {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleChangePassword}>
               <FormGroup
                 label="New Password"
@@ -308,7 +375,7 @@ console.error("Error:", error.message);
                 type="submit"
                 className="form-btn-1"
               >
-                CHANGE PASSWORD
+                CHANGE
               </Button>
             </form>
           </>
@@ -319,6 +386,7 @@ console.error("Error:", error.message);
           <>
             <h2>Welcome Back!</h2>
             <p>Login to your account</p>
+            {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleSubmit}>
               <FormGroup
                 label="Email"
@@ -342,7 +410,7 @@ console.error("Error:", error.message);
                 </a>
               </div>
               <div className="forms-group captcha">
-                <label htmlFor="captcha">Enter Captcha</label>
+              <label htmlFor="captcha">Enter Captcha <span className="required-asterisk">*</span></label>
                 <div className="captcha-container">
                   <img src={`${captcha.image}`} className="generated" alt="CAPTCHA" />
                   <input

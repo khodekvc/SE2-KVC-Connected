@@ -94,7 +94,7 @@ router.post("/:pet_id/vaccines", authenticateToken, authenticate, authorize({ ro
     },
   )
 
-  router.put("/edit/:pet_id", authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
+  router.put("/edit/:pet_id", authenticateToken, authenticate, authorize({ roles: ["clinician", "doctor"] }), async (req, res) => {
     const { pet_id } = req.params;
     const updatedData = req.body;
 
