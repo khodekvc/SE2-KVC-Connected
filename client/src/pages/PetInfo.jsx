@@ -59,26 +59,32 @@ const PetInfo = () => {
    // Validate empty fields
    if (!formData.petname.trim()) {
     setError("Pet name is required");
+    fetchCaptcha(); // Refresh CAPTCHA
     return;
   }
   if (!formData.gender) {
     setError("Please select a gender");
+    fetchCaptcha(); // Refresh CAPTCHA
     return;
   }
   if (!formData.speciesDescription) {
     setError("Please select a species");
+    fetchCaptcha(); // Refresh CAPTCHA
     return;
   }
   if (!formData.altPerson1.trim()) {
     setError("Emergency contact person is required");
+    fetchCaptcha(); // Refresh CAPTCHA
     return;
   }
   if (!formData.altContact1.trim()) {
     setError("Emergency contact number is required");
+    fetchCaptcha(); // Refresh CAPTCHA
     return;
   }
   if (!formData.captchaInput?.trim()) {
     setError("CAPTCHA is required");
+    fetchCaptcha(); // Refresh CAPTCHA
     return;
   }
 
@@ -160,7 +166,6 @@ const getLandingPage = (role) => {
                   name="gender" 
                   value="male" 
                   onChange={handleChange} 
-                  required 
                 />
                 <label htmlFor="male">Male</label>
 
@@ -170,7 +175,6 @@ const getLandingPage = (role) => {
                   name="gender" 
                   value="female" 
                   onChange={handleChange} 
-                  required 
                 />
                 <label htmlFor="female">Female</label>
               </div>
@@ -242,7 +246,6 @@ const getLandingPage = (role) => {
                 name="captchaInput" 
                 value={formData.captchaInput} 
                 onChange={handleChange} 
-                required 
               />
               {isCaptchaIncorrect && <span className="captcha-error"></span>}
             </div>

@@ -58,26 +58,32 @@ const SignupEmployee = () => {
         // Validate empty fields
        if (!formData.fname.trim()) {
         setError("First name is required");
+        fetchCaptcha(); // Refresh CAPTCHA
         return;
     }
     if (!formData.lname.trim()) {
         setError("Last name is required");
+        fetchCaptcha(); // Refresh CAPTCHA
         return;
     }
     if (!formData.email.trim()) {
         setError("Email is required");
+        fetchCaptcha(); // Refresh CAPTCHA
         return;
     }
     if (!formData.role) {
         setError("Please select a role");
+        fetchCaptcha(); // Refresh CAPTCHA
         return;
     }
     if (!formData.password.trim()) {
         setError("Password is required");
+        fetchCaptcha(); // Refresh CAPTCHA
         return;
     }
     if (!formData.confirmPassword.trim()) {
         setError("Please confirm your password");
+        fetchCaptcha(); // Refresh CAPTCHA
         return;
     }
      // Check if passwords match
@@ -88,6 +94,7 @@ const SignupEmployee = () => {
     }
     if (!formData.captchaInput?.trim()) {
         setError("CAPTCHA is required");
+        fetchCaptcha(); // Refresh CAPTCHA
         return;
     }
 
@@ -194,7 +201,6 @@ const SignupEmployee = () => {
                                     name="role"
                                     value="clinician"
                                     onChange={handleChange}
-                                    required
                                 />
                                 <label htmlFor="clinicians">Clinician</label>
                                 <input
@@ -203,7 +209,6 @@ const SignupEmployee = () => {
                                     name="role"
                                     value="staff"
                                     onChange={handleChange}
-                                    required
                                 />
                                 <label htmlFor="staff">Front Desk Staff</label>
                             </div>
@@ -234,7 +239,6 @@ const SignupEmployee = () => {
                                     name="captchaInput"
                                     value={formData.captchaInput}
                                     onChange={handleChange}
-                                    required
                                 />
                                 {isCaptchaIncorrect && <span className="captcha-error"></span>}
                             </div>

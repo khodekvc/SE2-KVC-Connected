@@ -170,8 +170,8 @@ exports.getPetById = async (req, res) => {
 };
 
 exports.addPetForOwner = async (req, res) => {
-    const { name, speciesDescription, gender, breed, birthday } = req.body;
-
+    const { name, speciesDescription, gender, breed } = req.body;
+    let birthday = req.body.birthday;
     // --- Make sure userId is reliably obtained ---
     // Check if req.user and req.user.userId exist. Adjust if your auth middleware sets it differently.
     if (!req.user || typeof req.user.userId === 'undefined') {
