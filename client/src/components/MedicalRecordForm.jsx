@@ -1,9 +1,16 @@
 "use client"
 
 
+
+
 import { useEffect } from "react"
 import "../css/MedicalRecordForm.css"
 import { Eye, Trash2 } from "lucide-react"
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
 
 // Helper function to format dates as MM/DD/YYYY
@@ -11,14 +18,20 @@ const formatDateForDisplay = (dateString) => {
   if (!dateString) return ""
 
 
+
+
   try {
     const date = new Date(dateString)
     if (isNaN(date.getTime())) return dateString // Return original if invalid
 
 
+
+
     const month = String(date.getMonth() + 1).padStart(2, "0")
     const day = String(date.getDate()).padStart(2, "0")
     const year = date.getFullYear()
+
+
 
 
     return `${month}/${day}/${year}`
@@ -27,6 +40,8 @@ const formatDateForDisplay = (dateString) => {
     return dateString
   }
 }
+
+
 
 
 const MedicalRecordForm = ({
@@ -44,9 +59,13 @@ const MedicalRecordForm = ({
   }, [formData])
 
 
+
+
   const renderField = (label, name, type = "text", options = {}) => {
     const value = formData[name]
     const { isFullWidth, isRequired, selectOptions } = options
+
+
 
 
     let input
@@ -111,8 +130,13 @@ const MedicalRecordForm = ({
                           accept="image/png, image/jpeg, image/jpg"
                       />
                       <div className="file-input-ui">
+<<<<<<< HEAD
                           <button 
                               type="button" 
+=======
+                          <button
+                              type="button"
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
                               className="file-select-button"
                               onClick={() => document.getElementById(name).click()}
                           >
@@ -215,6 +239,8 @@ const MedicalRecordForm = ({
     }
 
 
+
+
     return (
       <div className={`form-field ${isFullWidth ? "full-width" : ""}`}>
         <div className="input-container">
@@ -222,8 +248,13 @@ const MedicalRecordForm = ({
             {label}
             {isRequired && (isEditing || isAddRecord) && <span className="required">*</span>}
           </label>
+<<<<<<< HEAD
           {isEditing || type === "file" ? 
             input : 
+=======
+          {isEditing || type === "file" ?
+            input :
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
             <span className="value-text">
               {type === "radio" ? (value === true ? "Yes" : "No") : value}
             </span>
@@ -236,9 +267,11 @@ const MedicalRecordForm = ({
           </button>
         )}
       </div>
-    ); 
+    );
  
   }
+
+
 
 
   return (
@@ -285,7 +318,19 @@ const MedicalRecordForm = ({
 }
 
 
+
+
 export default MedicalRecordForm
+
+
+
+
+
+
+
+
+
+
 
 
 

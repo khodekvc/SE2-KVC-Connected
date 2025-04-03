@@ -16,6 +16,7 @@ const SignupPetOwner = () => {
     confirmPassword: "",
   });
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,7 +24,43 @@ const SignupPetOwner = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear any previous errors
     console.log("Signing up pet owner:", formData);
+
+    // Validate empty fields
+   if (!formData.fname.trim()) {
+    setError("First name is required");
+    return;
+  }
+  if (!formData.lname.trim()) {
+    setError("Last name is required");
+    return;
+  }
+  if (!formData.email.trim()) {
+    setError("Email is required");
+    return;
+  }
+  if (!formData.contact.trim()) {
+    setError("Contact number is required");
+    return;
+  }
+  if (!formData.address.trim()) {
+    setError("Address is required");
+    return;
+  }
+  if (!formData.password.trim()) {
+    setError("Password is required");
+    return;
+  }
+  if (!formData.confirmPassword.trim()) {
+    setError("Please confirm your password");
+    return;
+  }
+  if (formData.password !== formData.confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
     try {
       const response = await fetch("http://localhost:5000/auth/signup/petowner-step1", {
         method: "POST",
@@ -35,8 +72,11 @@ const SignupPetOwner = () => {
       });
       
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Login failed");
-
+      if (!response.ok) {
+        setError(data.error || "Signup failed");
+        throw new Error(data.error || "Signup failed");
+      }
+ 
       const token = response.headers.get("Authorization")?.split(" ")[1] || data.token;
       if (token) {
         localStorage.setItem("jwt", token);
@@ -45,7 +85,8 @@ const SignupPetOwner = () => {
       setMessage(data.message);
       window.location.replace(data.redirectUrl)
     } catch (error) {
-      setMessage(error.message);
+      console.error("Error:", error.message);
+      setError(error.message);
     }
   };
 
@@ -65,6 +106,7 @@ const SignupPetOwner = () => {
       <div className="right-section">
         <h2>Create Account</h2>
         <p>Your pet's care starts here!</p>
+        {error && <div className="error-message">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="signup-form-row">
             <FormGroup 

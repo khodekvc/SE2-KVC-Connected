@@ -20,7 +20,9 @@ const PetInfo = () => {
   });
   const [captcha, setCaptcha] = useState({ image: "", captchaKey: "" });
   const [message, setMessage] = useState("");
-  
+  const [error, setError] = useState("");
+  const [isCaptchaIncorrect, setIsCaptchaIncorrect] = useState(false);
+
   useEffect(() => {
       fetchCaptcha();
     }, []);
@@ -33,8 +35,10 @@ const PetInfo = () => {
         const data = await response.json();
         console.log("CAPTCHA loaded:", data);  
         setCaptcha({ image: data.image, captchaKey: data.captchaKey });
+        setIsCaptchaIncorrect(false); // Reset CAPTCHA status when new one is loaded
       } catch (error) {
         console.error("Failed to load CAPTCHA:", error);
+        setError("Failed to load CAPTCHA. Please refresh the page.");
       }
   };
 
@@ -46,7 +50,37 @@ const PetInfo = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear any previous errors
+    setIsCaptchaIncorrect(false); // Reset CAPTCHA status
     console.log("Pet Info Submitted:", formData);
+
+    
+
+   // Validate empty fields
+   if (!formData.petname.trim()) {
+    setError("Pet name is required");
+    return;
+  }
+  if (!formData.gender) {
+    setError("Please select a gender");
+    return;
+  }
+  if (!formData.speciesDescription) {
+    setError("Please select a species");
+    return;
+  }
+  if (!formData.altPerson1.trim()) {
+    setError("Emergency contact person is required");
+    return;
+  }
+  if (!formData.altContact1.trim()) {
+    setError("Emergency contact number is required");
+    return;
+  }
+  if (!formData.captchaInput?.trim()) {
+    setError("CAPTCHA is required");
+    return;
+  }
 
     try {
         const response = await fetch("http://localhost:5000/auth/signup/petowner-step2", {
@@ -64,17 +98,19 @@ const PetInfo = () => {
             if (data.newCaptcha) {
                 // Update the CAPTCHA image
                 setCaptcha({ image: data.newCaptcha.image, captchaKey: data.newCaptcha.captchaKey });
+                setIsCaptchaIncorrect(true); // Show X emoji for incorrect CAPTCHA
             }
+            setError(data.error || "An error occurred during signup.");
             throw new Error(data.error || "An error occurred during signup.");
         }
 
         // Handle successful signup
-        setCurrentRole(data.role); // Set the user's role in the context
+      setCurrentRole(data.role); // Set the user's role in the context
       navigate(getLandingPage(data.role)); // Redirect to the landing page based on role
         
     } catch (error) {
         console.error("Error:", error.message);
-        setMessage(error.message);
+        setError(error.message);
     }
 };
 
@@ -103,6 +139,7 @@ const getLandingPage = (role) => {
       <div className="right-section">
         <h2>Create Account</h2>
         <p>Your pet's care starts here!</p>
+        {error && <div className="error-message">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="signup-form-row">
             <FormGroup 
@@ -115,7 +152,7 @@ const getLandingPage = (role) => {
             />
             
             <div className="radio">
-              <label>Gender*</label>
+            <label>Gender <span className="required-asterisk">*</span></label>
               <div className="radio-group">
                 <input 
                   type="radio" 
@@ -147,7 +184,6 @@ const getLandingPage = (role) => {
               name="speciesDescription" 
               value={formData.speciesDescription} 
               onChange={handleChange} 
-              required 
               selectOptions={[
                 "Dog (Standard)",
                 "Cat (Standard)",
@@ -157,7 +193,8 @@ const getLandingPage = (role) => {
                 "Rabbit (Exotic)",
                 "Lab Rat (Exotic)",
                 "Others"
-              ]} 
+              ]}
+              required 
             />
             <FormGroup 
               label="Pet Breed (Optional)" 
@@ -196,8 +233,8 @@ const getLandingPage = (role) => {
           </div>
 
           <div className="forms-group captcha">
-            <label htmlFor="captcha">Enter Captcha</label>
-            <div className="captcha-container">
+          <label htmlFor="captcha">Enter Captcha <span className="required-asterisk">*</span></label>
+          <div className="captcha-container">
               <img src={`${captcha.image}`} className="generated" alt="CAPTCHA" />
               <input 
                 type="text" 
@@ -207,13 +244,15 @@ const getLandingPage = (role) => {
                 onChange={handleChange} 
                 required 
               />
+              {isCaptchaIncorrect && <span className="captcha-error"></span>}
             </div>
           </div>
 
           <div className="button-group">
-            <Button buttonStyle='btn--secondary' onClick={() => window.history.back()} className="form-btn-3">BACK</Button>
-            <Button buttonStyle='btn--primary' type="submit" className="form-btn-1" >SIGN UP</Button>
-          </div>
+           <Button buttonStyle='btn--secondary' onClick={() => navigate('/signup-petowner')} className="form-btn-3">BACK</Button>
+           <Button buttonStyle='btn--primary' type="submit" className="form-btn-1" >SIGN UP</Button>
+         </div>
+
         </form>
       </div>
     </div>

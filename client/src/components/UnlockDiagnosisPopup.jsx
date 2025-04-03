@@ -4,10 +4,18 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import "../css/UnlockDiagnosis.css";
 import { Key } from "lucide-react";
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
 const UnlockModal = ({ isOpen, onClose, onUnlock, generatedAccessCode }) => {
  const [formData, setFormData] = useState({ accessCode: "" });
  const [error, setError] = useState("");
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
  const handleChange = (e) => {
    setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,6 +42,10 @@ const UnlockModal = ({ isOpen, onClose, onUnlock, generatedAccessCode }) => {
 
  if (!isOpen) return null;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
  // Use createPortal to render the modal at the end of the document body
  return createPortal(
    <div className="modal-overlay">
@@ -71,4 +83,10 @@ const UnlockModal = ({ isOpen, onClose, onUnlock, generatedAccessCode }) => {
  );
 };
 
+<<<<<<< HEAD
 export default UnlockModal;
+=======
+
+export default UnlockModal;
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371

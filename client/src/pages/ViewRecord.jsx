@@ -1,6 +1,8 @@
 "use client"
 
 
+
+
 import { useState, useEffect } from "react"
 import { ArrowLeft, Pencil, Save } from "lucide-react"
 import "../css/ViewRecord.css"
@@ -10,6 +12,8 @@ import { useConfirmDialog } from "../contexts/ConfirmDialogContext"
 import MedicalRecordForm from "../components/MedicalRecordForm"
 import { useUserRole } from "../contexts/UserRoleContext"
 import { useParams } from "react-router-dom"
+
+
 
 
 const ViewRecord = ({ record, onBack, onUpdate }) => {
@@ -22,9 +26,15 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
  const [editedRecord, setEditedRecord] = useState(record);
  const [loading, setLoading] = useState(true);
  const [errors, setErrors] = useState({});
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
  const formatDateForDisplay = (dateString) => {
   if (!dateString) return ""
+
+
 
 
   try {
@@ -32,9 +42,13 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
     if (isNaN(date.getTime())) return dateString // Return original if invalid
 
 
+
+
     const month = String(date.getMonth() + 1).padStart(2, "0")
     const day = String(date.getDate()).padStart(2, "0")
     const year = date.getFullYear()
+
+
 
 
     return `${month}/${day}/${year}`
@@ -45,9 +59,13 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
 }
 
 
+
+
 // to convert MM/DD/YYYY to YYYY-MM-DD for input fields
 const formatDateForInput = (dateString) => {
   if (!dateString) return ""
+
+
 
 
   try {
@@ -57,6 +75,8 @@ const formatDateForInput = (dateString) => {
     }
 
 
+
+
     // If in MM/DD/YYYY format, convert to YYYY-MM-DD
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
       const [month, day, year] = dateString.split("/")
@@ -64,14 +84,20 @@ const formatDateForInput = (dateString) => {
     }
 
 
+
+
     // Otherwise, try to parse as date and format
     const date = new Date(dateString)
     if (isNaN(date.getTime())) return "" // Return empty if invalid
 
 
+
+
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, "0")
     const day = String(date.getDate()).padStart(2, "0")
+
+
 
 
     return `${year}-${month}-${day}`
@@ -80,6 +106,8 @@ const formatDateForInput = (dateString) => {
     return ""
   }
 }
+
+
 
 
 // Format dates for display when record changes
@@ -94,6 +122,8 @@ useEffect(() => {
     setEditedRecord(formattedRecord)
   }
 }, [record])
+
+
 
 
 // Convert dates to YYYY-MM-DD format when entering edit mode
@@ -117,6 +147,8 @@ useEffect(() => {
 }, [isEditing])
 
 
+
+
  useEffect(() => {
    const fetchRecord = async () => {
      try {
@@ -130,9 +162,13 @@ useEffect(() => {
        });
 
 
+
+
        if (!response.ok) {
          throw new Error("Failed to fetch record");
        }
+
+
 
 
        const data = await response.json();
@@ -150,10 +186,15 @@ useEffect(() => {
        }
 
 
+
+
        console.log("Processed record data:", processedData) // Debugging
 
 
+
+
        setEditedRecord({ ...processedData, file: data.record_lab_file || "" }); // Set the fetched record data
+
 
      } catch (err) {
        setErrors(err.message);
@@ -163,8 +204,12 @@ useEffect(() => {
    };
 
 
+
+
    fetchRecord();
  }, [pet_id]);
+
+
 
 
  const validateForm = () => {
@@ -180,15 +225,22 @@ useEffect(() => {
    if (!editedRecord.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
    if (!editedRecord.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
+
    // Validate surgery fields if hadSurgery is true
    if (editedRecord.hadSurgery === true) {
      if (!editedRecord.surgeryDate) newErrors.surgeryDate = "Surgery date is required"
      if (!editedRecord.surgeryType) newErrors.surgeryType = "Surgery type is required"
    }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
    setErrors(newErrors)
    return Object.keys(newErrors).length === 0
  }
+
+
 
 
  const handleInputChange = (e) => {
@@ -203,7 +255,11 @@ useEffect(() => {
       hadSurgery: boolValue,
       ...(boolValue === false ? { surgeryDate: "", surgeryType: "" } : {}),
     }));
+<<<<<<< HEAD
     
+=======
+   
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
     // Clear any hadSurgery error when user makes a selection (either yes or no)
     setErrors(prev => ({
       ...prev,
@@ -225,6 +281,10 @@ useEffect(() => {
     }));
   }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   // Clear error for the field if it exists
   if (errors[name]) {
     setErrors((prev) => ({
@@ -233,6 +293,10 @@ useEffect(() => {
     }));
   }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   // Validate immediately if the field is empty
   if (!value && name !== 'file' && name !== 'laboratories' && name !== 'latestDiagnosis' && name !== 'hadSurgery') {
     setErrors(prev => ({
@@ -242,17 +306,30 @@ useEffect(() => {
   }
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 const handleSave = () => {
   // Validate form first
   if (!validateForm()) {
     // Errors will be displayed through the errors state
     return;
   }
+<<<<<<< HEAD
   
+=======
+ 
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   showConfirmDialog("Do you want to save your changes?", () => {
     handleSubmit();
   });
 };
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
 
  // Function to request access code and open the modal
@@ -267,12 +344,18 @@ const handleSave = () => {
      });
 
 
+
+
      if (!response.ok) {
        throw new Error("Failed to request access code");
      }
 
 
+
+
      const data = await response.json();
+
+
 
 
      // Store the access code in the state
@@ -282,11 +365,15 @@ const handleSave = () => {
      }));
 
 
+
+
      setIsModalOpen(true); // Open the modal after requesting the code
    } catch (error) {
      console.error("Error requesting access code:", error);
    }
  };
+
+
 
 
  const handleUnlockDiagnosis = (accessCode) => {
@@ -297,15 +384,20 @@ const handleSave = () => {
    }))
  }
 
+
  // Add this helper function to format dates for the server (YYYY-MM-DD)
  const formatDateForServer = (dateString) => {
   if (!dateString) return null
+
+
 
 
   // If already in YYYY-MM-DD format, return as is
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString
   }
+
+
 
 
   try {
@@ -317,9 +409,13 @@ const handleSave = () => {
     }
 
 
+
+
     // Otherwise, try to parse as date and format
     const date = new Date(dateString)
     if (isNaN(date.getTime())) return dateString // Return original if invalid
+
+
 
 
     return date.toISOString().split("T")[0]
@@ -330,6 +426,8 @@ const handleSave = () => {
 }
 
 
+
+
  const handleSubmit = async (e) => {
    if (e) e.preventDefault();
 
@@ -338,11 +436,18 @@ const handleSave = () => {
      return; // Stop submission if validation fails
    }
 
+   // Validate form first
+   if (!validateForm()) {
+     return; // Stop submission if validation fails
+   }
+
+
    console.log("Record ID in handleSubmit:", record?.id);
    if (!record || !record.id) {
      console.error("Record ID is missing. Cannot update record.");
      return;
    }
+
 
    console.log("Edited Record:", editedRecord);
 
@@ -355,6 +460,7 @@ const handleSave = () => {
        console.warn(`⚠️ Skipping empty field: ${key}`);
      }
    };
+
 
    appendField("record_date", editedRecord.date ? formatDateForServer(editedRecord.date) : null);
    appendField("record_weight", editedRecord.weight);
@@ -369,6 +475,7 @@ const handleSave = () => {
    appendField("surgery_date", editedRecord.hadSurgery && editedRecord.surgeryDate ? formatDateForServer(editedRecord.surgeryDate) : null);
    appendField("hadSurgery", editedRecord.hadSurgery);
 
+
   //Ensure Diagnosis Text and Access Code are Sent
     if (hasPermission("canAlwaysEditDiagnosis") || !isDiagnosisLocked) {
       appendField("diagnosis_text", editedRecord.latestDiagnosis);
@@ -376,6 +483,7 @@ const handleSave = () => {
         appendField("accessCode", editedRecord.accessCode);
       }
     }
+
 
     // ✅ Fix for File Handling
     if (editedRecord.file === null) {
@@ -394,7 +502,7 @@ const handleSave = () => {
     for (let pair of formDataPayload.entries()) {
       console.log(pair[0] + ": ", pair[1]);
     }
-    
+   
      
    console.log("Access Code Sent:", editedRecord.accessCode);
    
@@ -408,13 +516,18 @@ const handleSave = () => {
      });
 
 
+
+
      if (!response.ok) {
        throw new Error("Failed to update the record");
      }
 
 
+
+
      const responseData = await response.json();
      console.log("Record updated successfully:", responseData);
+
 
      const updatedRecord = {
       id: record.id,
@@ -435,24 +548,30 @@ const handleSave = () => {
     }
 
 
+
+
     //Format dates for display
     const formattedRecord = {
       ...updatedRecord,
       date: formatDateForDisplay(updatedRecord.date),
       recentVisit: formatDateForDisplay(updatedRecord.recentVisit),
       surgeryDate: formatDateForDisplay(updatedRecord.surgeryDate),
-      
+     
     }
+
+
 
 
     // setEditedRecord(formattedRecord)
     // onUpdate(formattedRecord)
+
 
      // Fetch the updated record immediately after saving
      const fetchUpdatedRecord = async () => {
       const updatedResponse = await fetch(`http://localhost:5000/recs/records/${record.id}`);
       if (!updatedResponse.ok) throw new Error("Failed to fetch updated record");
       const updatedData = await updatedResponse.json();
+
 
       setEditedRecord({
           ...updatedData,
@@ -462,19 +581,25 @@ const handleSave = () => {
           file: updatedData.record_lab_file || "",
       });
 
+
       onUpdate(updatedData); // Update parent component
   };
 
+
   fetchUpdatedRecord();
-    
+   
     lockDiagnosis()
     setIsEditing(false)
    // alert("Record updated successfully!")
-    
+   
    } catch (error) {
      console.error("Error updating record:", error);
    }
  }
+
+
+
+
 
 
 
@@ -515,6 +640,8 @@ const handleSave = () => {
        </div>
 
 
+
+
        <div className="record-content">
          <div className="scrollable-content">
            <MedicalRecordForm
@@ -527,10 +654,13 @@ const handleSave = () => {
              errors={errors}
            />
 
+
            
          </div>
        </div>
      </div>
+
+
 
 
      <UnlockModal
@@ -545,4 +675,9 @@ const handleSave = () => {
 }
 
 
+
+
 export default ViewRecord
+
+
+

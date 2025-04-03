@@ -21,7 +21,8 @@ const SignupEmployee = () => {
     });
     const [captcha, setCaptcha] = useState({ image: "", captchaKey: "" });
     const [message, setMessage] = useState("");
-
+    const [error, setError] = useState("");
+    const [isCaptchaIncorrect, setIsCaptchaIncorrect] = useState(false);
     const { setCurrentRole } = useUserRole();
 
     useEffect(() => {
@@ -36,25 +37,59 @@ const SignupEmployee = () => {
             const data = await response.json();
             console.log("CAPTCHA loaded:", data);
             setCaptcha({ image: data.image, captchaKey: data.captchaKey });
+            setIsCaptchaIncorrect(false); // Reset CAPTCHA status when new one is loaded
         } catch (error) {
             console.error("Failed to load CAPTCHA:", error);
+            setError("Failed to load CAPTCHA. Please refresh the page.");
         }
     };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        setError(""); // Clear error when user makes changes
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(""); // Clear any previous errors
+        setIsCaptchaIncorrect(false); // Reset CAPTCHA status
         console.log("Signing up employee:", formData);
 
-        // Check if passwords match before sending the request
-        if (formData.password !== formData.confirmPassword) {
-            setMessage("❌ Passwords do not match!");
-            fetchCaptcha(); // Refresh CAPTCHA
-            return;
-        }
+        // Validate empty fields
+       if (!formData.fname.trim()) {
+        setError("First name is required");
+        return;
+    }
+    if (!formData.lname.trim()) {
+        setError("Last name is required");
+        return;
+    }
+    if (!formData.email.trim()) {
+        setError("Email is required");
+        return;
+    }
+    if (!formData.role) {
+        setError("Please select a role");
+        return;
+    }
+    if (!formData.password.trim()) {
+        setError("Password is required");
+        return;
+    }
+    if (!formData.confirmPassword.trim()) {
+        setError("Please confirm your password");
+        return;
+    }
+     // Check if passwords match
+     if (formData.password !== formData.confirmPassword) {
+        setError("Passwords do not match");
+        fetchCaptcha(); // Refresh CAPTCHA
+        return;
+    }
+    if (!formData.captchaInput?.trim()) {
+        setError("CAPTCHA is required");
+        return;
+    }
 
         try {
             const response = await fetch("http://localhost:5000/auth/signup/employee", {
@@ -72,18 +107,18 @@ const SignupEmployee = () => {
                 if (data.newCaptcha) {
                     // Update the CAPTCHA image
                     setCaptcha({ image: data.newCaptcha.image, captchaKey: data.newCaptcha.captchaKey });
+                    setIsCaptchaIncorrect(true);
                 }
+                setError(data.error || "An error occurred during signup");
                 throw new Error(data.error || "An error occurred during signup.");
             }
 
             // Handle successful signup
             console.log(data.message);
-          window.location.replace(data.redirectUrl);
-      //     setCurrentRole(data.role); // Set the user's role in the context
-      // navigate(getLandingPage(data.role)); // Redirect to the landing page based on role
+            window.location.replace(data.redirectUrl);
         } catch (error) {
             console.error("Error:", error.message);
-            setMessage(error.message);
+            setError(error.message);
         }
     };
 
@@ -113,6 +148,7 @@ const SignupEmployee = () => {
                 <div className="right-section">
                     <h2>Create Account</h2>
                     <p>Become part of our team!</p>
+                    {error && <div className="error-message">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="signup-form-row">
                             <FormGroup
@@ -150,7 +186,7 @@ const SignupEmployee = () => {
                             />
                         </div>
                         <div className="radio">
-                            <label>Choose Role*</label>
+                        <label>Choose Role <span className="required-asterisk">*</span></label>
                             <div className="radio-group">
                                 <input
                                     type="radio"
@@ -189,7 +225,7 @@ const SignupEmployee = () => {
                             required
                         />
                         <div className="forms-group captcha">
-                            <label htmlFor="captcha">Enter Captcha</label>
+                          <label htmlFor="captcha">Enter CAPTCHA <span className="required-asterisk">*</span></label>
                             <div className="captcha-container">
                                 <img src={`${captcha.image}`} className="generated" alt="CAPTCHA" />
                                 <input
@@ -200,11 +236,11 @@ const SignupEmployee = () => {
                                     onChange={handleChange}
                                     required
                                 />
+                                {isCaptchaIncorrect && <span className="captcha-error"></span>}
                             </div>
                         </div>
                         <Button buttonStyle="btn--primary" type="submit" className="form-btn-1">SIGN UP</Button>
                     </form>
-                    {message && <p>{message}</p>}
                 </div>
             </div>
         </>
