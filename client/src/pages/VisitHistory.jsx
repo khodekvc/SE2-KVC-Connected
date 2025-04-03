@@ -21,7 +21,7 @@ const VisitHistory = () => {
  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
  const [visitRecords, setVisitRecords] = useState([])
 
- const useNavigate = useNavigate(); // Initialize useNavigate hook
+ const navigate = useNavigate(); // Initialize useNavigate hook
  const logout = useCallback(async () => {
   console.log("Attempting logout due to session issue...");
   try {

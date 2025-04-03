@@ -143,7 +143,7 @@ console.error("Error:", error.message);
       const data = await response.json();
       if (!response.ok){
         setError(data.error || "Failed to send reset code"); 
-        throw new Error(data.error || "Failed to send reset code");
+        //throw new Error(data.error || "Failed to send reset code");
       }
 
       console.log(data.message); // "Reset code sent to your email."
@@ -330,11 +330,14 @@ console.error("Error:", error.message);
                 onChange={handleChange}
                 required
               />
-              <div className="resend-code">
-                <a href="#" onClick={handleResendCode}>
-                  Resend code
-                </a>
-              </div>
+              <Button
+                buttonStyle="btn--primary"
+                type="submit"
+                className="form-btn-1"
+                onClick={handleResendCode}
+              >
+                Resend Code
+              </Button>
               <Button
                 buttonStyle="btn--primary"
                 type="submit"

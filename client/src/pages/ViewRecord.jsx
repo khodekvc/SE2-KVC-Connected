@@ -27,7 +27,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
  const [editedRecord, setEditedRecord] = useState(record);
  const [loading, setLoading] = useState(true);
  const [errors, setErrors] = useState({});
- const useNavigate = useNavigate();
+ const navigate = useNavigate();
 
 const logout = useCallback(async () => {
     console.log("Attempting logout due to session issue...");
