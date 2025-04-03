@@ -116,7 +116,7 @@ router.post("/:pet_id/vaccines", authenticateToken, authenticate, authorize({ ro
             spec_id
         } = updatedData;
 
-        // First update the pet_info table
+
         const result = await db.query(
             `UPDATE pet_info
              SET pet_name = ?, pet_breed = ?, pet_gender = ?, pet_birthday = ?, pet_age_month = ?, pet_age_year = ?, pet_color = ?, pet_status = ?
@@ -124,46 +124,7 @@ router.post("/:pet_id/vaccines", authenticateToken, authenticate, authorize({ ro
             [pet_name, pet_breed, pet_gender, pet_birthday, pet_age_month, pet_age_year, pet_color, pet_status, pet_id]
         );
 
-        let speciesUpdateResult = null;
-        
-        // Then update the match_pet_species table if spec_id is provided
-        if (spec_id) {
-            console.log("Updating species for pet:", pet_id, "to spec_id:", spec_id);
-            try {
-                speciesUpdateResult = await db.query(
-                    "UPDATE match_pet_species SET spec_id = ? WHERE pet_id = ?",
-                    [spec_id, pet_id]
-                );
-                console.log("Species update result:", speciesUpdateResult);
-                
-                // If no rows affected, the pet might not have a species entry, try to insert instead
-                if (speciesUpdateResult[0].affectedRows === 0) {
-                    console.log("No rows affected for UPDATE, attempting INSERT instead");
-                    speciesUpdateResult = await db.query(
-                        "INSERT INTO match_pet_species (pet_id, spec_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE spec_id = VALUES(spec_id)",
-                        [pet_id, spec_id]
-                    );
-                    console.log("Species insert result:", speciesUpdateResult);
-                }
-            } catch (speciesError) {
-                console.error("Error updating species:", speciesError);
-                // Continue with the response even if species update fails
-            }
-        }
 
-<<<<<<< HEAD
-        console.log("Database query results - Pet info:", result, "Species update:", speciesUpdateResult); 
-
-        // Even if no rows were affected in pet_info, the species might have been updated
-        const success = (result[0].affectedRows > 0) || 
-                       (speciesUpdateResult && (speciesUpdateResult[0].affectedRows > 0 || speciesUpdateResult[0].insertId > 0));
-        
-        if (!success) {
-            console.log("No rows affected in any table"); 
-            return res.status(404).json({ error: "Pet not found or no changes made" });
-        }
-
-=======
         let speciesUpdateResult = null;
        
         // Then update the match_pet_species table if spec_id is provided
@@ -205,7 +166,6 @@ router.post("/:pet_id/vaccines", authenticateToken, authenticate, authorize({ ro
         }
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         res.status(200).json({ message: "Pet profile updated successfully", speciesUpdated: speciesUpdateResult ? true : false });
     } catch (error) {
         console.error("Error updating pet profile:", error);

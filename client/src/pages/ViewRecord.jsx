@@ -26,10 +26,7 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
  const [editedRecord, setEditedRecord] = useState(record);
  const [loading, setLoading] = useState(true);
  const [errors, setErrors] = useState({});
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
  const formatDateForDisplay = (dateString) => {
   if (!dateString) return ""
@@ -232,10 +229,7 @@ useEffect(() => {
      if (!editedRecord.surgeryType) newErrors.surgeryType = "Surgery type is required"
    }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
    setErrors(newErrors)
    return Object.keys(newErrors).length === 0
  }
@@ -250,16 +244,13 @@ useEffect(() => {
     const boolValue = value === "true" || value === true
     console.log("Setting hadSurgery to:", boolValue)
 
+
     setEditedRecord((prev) => ({
       ...prev,
       hadSurgery: boolValue,
       ...(boolValue === false ? { surgeryDate: "", surgeryType: "" } : {}),
     }));
-<<<<<<< HEAD
-    
-=======
    
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
     // Clear any hadSurgery error when user makes a selection (either yes or no)
     setErrors(prev => ({
       ...prev,
@@ -281,10 +272,7 @@ useEffect(() => {
     }));
   }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   // Clear error for the field if it exists
   if (errors[name]) {
     setErrors((prev) => ({
@@ -293,10 +281,7 @@ useEffect(() => {
     }));
   }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   // Validate immediately if the field is empty
   if (!value && name !== 'file' && name !== 'laboratories' && name !== 'latestDiagnosis' && name !== 'hadSurgery') {
     setErrors(prev => ({
@@ -306,30 +291,20 @@ useEffect(() => {
   }
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 const handleSave = () => {
   // Validate form first
   if (!validateForm()) {
     // Errors will be displayed through the errors state
     return;
   }
-<<<<<<< HEAD
-  
-=======
  
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   showConfirmDialog("Do you want to save your changes?", () => {
     handleSubmit();
   });
 };
-<<<<<<< HEAD
-=======
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
 
  // Function to request access code and open the modal
@@ -431,10 +406,6 @@ const handleSave = () => {
  const handleSubmit = async (e) => {
    if (e) e.preventDefault();
 
-   // Validate form first
-   if (!validateForm()) {
-     return; // Stop submission if validation fails
-   }
 
    // Validate form first
    if (!validateForm()) {
@@ -451,7 +422,9 @@ const handleSave = () => {
 
    console.log("Edited Record:", editedRecord);
 
+
    const formDataPayload = new FormData();
+
 
    const appendField = (key, value) => {
      if (value !== undefined && value !== null && value !== "") {
@@ -678,6 +651,5 @@ const handleSave = () => {
 
 
 export default ViewRecord
-
 
 
