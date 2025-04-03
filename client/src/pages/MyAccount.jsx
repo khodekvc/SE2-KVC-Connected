@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import AccountPage from "./AccountPage"
+import { useNavigate } from "react-router-dom"
 
 const MyAccount = () => {
   const [displayData, setDisplayData] = useState(null);
@@ -9,6 +10,7 @@ const MyAccount = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const logout = useCallback(async () => {
     console.log("Attempting logout due to session issue...");
