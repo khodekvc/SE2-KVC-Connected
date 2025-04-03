@@ -22,11 +22,8 @@ export default function PetProfile() {
   const [editedPetData, setEditedPetData] = useState({})
   const [petData, setPetData] = useState(null)
   const [nameError, setNameError] = useState("")
-<<<<<<< HEAD
-=======
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
 
   const fetchVaccinationRecords = useCallback(async (petId) => {
@@ -151,11 +148,8 @@ export default function PetProfile() {
  
 
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   const fetchUpdatedPetData = async () => {
     try {
       console.log("Fetching updated pet data after save...")
@@ -167,23 +161,11 @@ export default function PetProfile() {
         },
       });
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
       if (!response.ok) {
         throw new Error("Failed to fetch updated pet data");
       }
 
-<<<<<<< HEAD
-      const data = await response.json();
-      console.log("Fetched updated pet data:", data);
-      console.log("Updated species from server:", data.species);
-      
-      // Calculate age
-      const age = calculateAge(data.birthday);
-      
-=======
 
       const data = await response.json();
       console.log("Fetched updated pet data:", data);
@@ -192,7 +174,6 @@ export default function PetProfile() {
       // Calculate age
       const age = calculateAge(data.birthday);
      
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
       // Reset the UI with data from server
       setPetData({ ...data, age });
       setEditedPetData({});
@@ -202,28 +183,19 @@ export default function PetProfile() {
   };
 
 
-<<<<<<< HEAD
-  const handleSave = async () => {
-    console.log("Save button clicked")
-
-=======
 
 
   const handleSave = async () => {
     console.log("Save button clicked")
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
     // Validate name field
     if (!editedPetData.name || editedPetData.name.trim() === "") {
       setNameError("Name is required")
       return
     }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
     // Show confirmation dialog before saving
     showConfirmDialog("Do you want to save your changes?", async () => {
       try {
@@ -232,31 +204,20 @@ export default function PetProfile() {
           ...editedPetData,
         }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         console.log("Original pet species:", petData.species)
         console.log("Edited pet species:", editedPetData.species)
         console.log("Final data to save:", updatedData)
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         const age = calculateAge(updatedData.birthday)
         updatedData.age_year = age.years
         updatedData.age_month = age.months
 
-<<<<<<< HEAD
-        const statusValue = updatedData.status === "Alive" ? 1 : 0
-
-=======
 
         const statusValue = updatedData.status === "Alive" ? 1 : 0
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         // Map species description to spec_id
         const speciesMap = {
           "Dog (Standard)": 1,
@@ -271,10 +232,7 @@ export default function PetProfile() {
         const specId = speciesMap[updatedData.species] || 1
         console.log("Species mapping - Description:", updatedData.species, "ID:", specId)
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         const requestBody = {
           pet_name: updatedData.name,
           // Send both speciesDescription and spec_id to ensure proper updating
@@ -288,16 +246,10 @@ export default function PetProfile() {
           pet_color: updatedData.color,
           pet_status: statusValue,
         }
-<<<<<<< HEAD
-        
-        console.log("Sending request body:", requestBody)
-
-=======
        
         console.log("Sending request body:", requestBody)
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         const response = await fetch(`http://localhost:5000/pets/edit/${pet_id}`, {
           method: "PUT",
           credentials: "include",
@@ -308,27 +260,18 @@ export default function PetProfile() {
         })
 
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         if (!response.ok) {
           throw new Error("Failed to update pet profile")
         }
 
 
-<<<<<<< HEAD
-        const data = await response.json()
-        console.log("Pet profile updated:", data)
-        
-=======
 
 
         const data = await response.json()
         console.log("Pet profile updated:", data)
        
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
         // Force a small delay to ensure DB updates are complete
         //setTimeout(() => {
           fetchUpdatedPetData()
@@ -355,11 +298,7 @@ export default function PetProfile() {
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target
-<<<<<<< HEAD
-    
-=======
    
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
     // Clear name error when typing in the name field
     if (name === 'name') {
       if (!value || value.trim() === "") {
@@ -368,11 +307,7 @@ export default function PetProfile() {
         setNameError("")
       }
     }
-<<<<<<< HEAD
-    
-=======
    
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
     setEditedPetData((prev) => {
       const updatedData = { ...prev, [name]: type === "radio" ? e.target.id : value }
       if (name === "birthday") {

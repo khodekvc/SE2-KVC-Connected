@@ -6,11 +6,8 @@
 import { useEffect } from "react"
 import "../css/MedicalRecordForm.css"
 import { Eye, Trash2 } from "lucide-react"
-<<<<<<< HEAD
-=======
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
 
 // Helper function to format dates as MM/DD/YYYY
@@ -130,13 +127,8 @@ const MedicalRecordForm = ({
                           accept="image/png, image/jpeg, image/jpg"
                       />
                       <div className="file-input-ui">
-<<<<<<< HEAD
-                          <button 
-                              type="button" 
-=======
                           <button
                               type="button"
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
                               className="file-select-button"
                               onClick={() => document.getElementById(name).click()}
                           >
@@ -248,13 +240,8 @@ const MedicalRecordForm = ({
             {label}
             {isRequired && (isEditing || isAddRecord) && <span className="required">*</span>}
           </label>
-<<<<<<< HEAD
-          {isEditing || type === "file" ? 
-            input : 
-=======
           {isEditing || type === "file" ?
             input :
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
             <span className="value-text">
               {type === "radio" ? (value === true ? "Yes" : "No") : value}
             </span>
@@ -321,7 +308,6 @@ const MedicalRecordForm = ({
 
 
 export default MedicalRecordForm
-
 
 
 

@@ -6,10 +6,7 @@ import { X  } from "lucide-react"
 import "../css/FilterModal.css"
 import React from 'react';
 import ReactDOM from 'react-dom';
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 
 const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) => {
   const [filters, setFilters] = useState(
@@ -84,15 +81,10 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
  
  
 
-<<<<<<< HEAD
-  if (!isOpen) return null;
-
-=======
 
   if (!isOpen) return null;
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   // Use React Portal to render the modal outside the normal DOM hierarchy
   const modalContent = (
     <div className="filter-modal-overlay">
@@ -269,10 +261,7 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
     </div>
   );
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
   // Use portal to render the modal at the end of the document body
   return ReactDOM.createPortal(
     modalContent,
@@ -282,4 +271,3 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
 
 
 export default FilterModal
-
