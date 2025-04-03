@@ -1,14 +1,14 @@
 "use client"
 
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Download, ArrowRight, Plus, Filter } from "lucide-react"
 import AddRecord from "./AddRecord"
 import ViewRecord from "./ViewRecord"
 import FilterModal from "../components/FilterPopup"
 import "../css/VisitHistory.css"
 import { useUserRole } from "../contexts/UserRoleContext"
-import { useParams } from "react-router-dom"; // Import useParams
+import { useParams, useNavigate } from "react-router-dom"; // Import useParams
 
 
 
@@ -21,6 +21,23 @@ const VisitHistory = () => {
  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
  const [visitRecords, setVisitRecords] = useState([])
 
+ const useNavigate = useNavigate(); // Initialize useNavigate hook
+ const logout = useCallback(async () => {
+  console.log("Attempting logout due to session issue...");
+  try {
+    // Optional: Inform the backend about the logout attempt
+    await fetch("http://localhost:5000/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (error) {
+    console.error("Error during server logout request:", error);
+    // Proceed with client-side logout even if server request fails
+  } finally {
+      console.log("Redirecting to /login");
+      navigate("/login", { replace: true }); // Use replace to prevent going back to the expired page
+  }
+}, [navigate]);
 
  const fetchVisitRecords = async () => {
   try {
@@ -32,6 +49,11 @@ const VisitHistory = () => {
       },
     });
 
+    if (response.status === 401) {
+      console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+      await logout(); // Call logout function
+      return; // Stop further processing in this function
+    }
 
     if (!response.ok) {
       throw new Error("Failed to fetch visit records");
@@ -49,7 +71,7 @@ const VisitHistory = () => {
 
   useEffect(() => {
     fetchVisitRecords();
-  }, [pet_id]);
+  }, [pet_id, logout]);
 
 
 
@@ -105,6 +127,12 @@ const VisitHistory = () => {
             },
         });
 
+        if (response.status === 401) {
+          console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+          await logout(); // Call logout function
+          return; // Stop further processing in this function
+        }
+
         if (!response.ok) {
             throw new Error("Failed to fetch filtered records");
         }
@@ -127,6 +155,12 @@ const resetFilters = async () => {
               "Content-Type": "application/json",
           },
       });
+
+      if (response.status === 401) {
+        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+        await logout(); // Call logout function
+        return; // Stop further processing in this function
+      }
 
       if (!response.ok) {
           throw new Error("Failed to reset filters");
@@ -153,6 +187,12 @@ const resetFilters = async () => {
        body: JSON.stringify(updatedData),
      });
 
+
+     if (response.status === 401) {
+      console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+      await logout(); // Call logout function
+      return; // Stop further processing in this function
+    }
 
      if (!response.ok) {
        throw new Error("Failed to update the record");

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import AccountPage from "./AccountPage"
 
 const MyAccount = () => {
@@ -9,6 +9,23 @@ const MyAccount = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const logout = useCallback(async () => {
+    console.log("Attempting logout due to session issue...");
+    try {
+      // Optional: Inform the backend about the logout attempt
+      await fetch("http://localhost:5000/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error during server logout request:", error);
+      // Proceed with client-side logout even if server request fails
+    } finally {
+        console.log("Redirecting to /login");
+        navigate("/login", { replace: true }); // Use replace to prevent going back to the expired page
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -20,6 +37,12 @@ const MyAccount = () => {
             "Content-Type": "application/json",
           },
         });
+
+        if (response.status === 401) {
+          console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+          await logout(); // Call logout function
+          return; // Stop further processing in this function
+        }
 
         if (!response.ok) {
           throw new Error("Failed to fetch user data");
@@ -51,7 +74,7 @@ const MyAccount = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [logout]);
 
   const handleSave = async (updatedData) => {
     try {
@@ -63,6 +86,12 @@ const MyAccount = () => {
         },
         body: JSON.stringify(updatedData),
       });
+
+      if (response.status === 401) {
+        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+        await logout(); // Call logout function
+        return; // Stop further processing in this function
+      }
 
       if (!response.ok) {
         throw new Error("Failed to save user data");

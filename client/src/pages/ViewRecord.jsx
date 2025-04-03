@@ -3,7 +3,7 @@
 
 
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { ArrowLeft, Pencil, Save } from "lucide-react"
 import "../css/ViewRecord.css"
 import { useDiagnosisLock } from "../contexts/DiagnosisLockContext"
@@ -12,6 +12,7 @@ import { useConfirmDialog } from "../contexts/ConfirmDialogContext"
 import MedicalRecordForm from "../components/MedicalRecordForm"
 import { useUserRole } from "../contexts/UserRoleContext"
 import { useParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 
 
@@ -26,14 +27,27 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
  const [editedRecord, setEditedRecord] = useState(record);
  const [loading, setLoading] = useState(true);
  const [errors, setErrors] = useState({});
+ const useNavigate = useNavigate();
 
+const logout = useCallback(async () => {
+    console.log("Attempting logout due to session issue...");
+    try {
+      // Optional: Inform the backend about the logout attempt
+      await fetch("http://localhost:5000/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error during server logout request:", error);
+      // Proceed with client-side logout even if server request fails
+    } finally {
+        console.log("Redirecting to /login");
+        navigate("/login", { replace: true }); // Use replace to prevent going back to the expired page
+    }
+  }, [navigate]);
 
  const formatDateForDisplay = (dateString) => {
   if (!dateString) return ""
-
-
-
-
   try {
     const date = new Date(dateString)
     if (isNaN(date.getTime())) return dateString // Return original if invalid
@@ -158,7 +172,11 @@ useEffect(() => {
          },
        });
 
-
+       if (response.status === 401) {
+        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+        await logout(); // Call logout function
+        return; // Stop further processing in this function
+      }
 
 
        if (!response.ok) {
@@ -204,7 +222,7 @@ useEffect(() => {
 
 
    fetchRecord();
- }, [pet_id]);
+ }, [pet_id, logout]);
 
 
 
@@ -318,7 +336,11 @@ const handleSave = () => {
        },
      });
 
-
+     if (response.status === 401) {
+      console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+      await logout(); // Call logout function
+      return; // Stop further processing in this function
+    }
 
 
      if (!response.ok) {
@@ -489,7 +511,11 @@ const handleSave = () => {
      });
 
 
-
+     if (response.status === 401) {
+      console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+      await logout(); // Call logout function
+      return; // Stop further processing in this function
+    }
 
      if (!response.ok) {
        throw new Error("Failed to update the record");
@@ -542,6 +568,11 @@ const handleSave = () => {
      // Fetch the updated record immediately after saving
      const fetchUpdatedRecord = async () => {
       const updatedResponse = await fetch(`http://localhost:5000/recs/records/${record.id}`);
+      if (updatedResponse.status === 401) {
+        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+        await logout(); // Call logout function
+        return; // Stop further processing in this function
+      }
       if (!updatedResponse.ok) throw new Error("Failed to fetch updated record");
       const updatedData = await updatedResponse.json();
 

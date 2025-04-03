@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "react-router-dom"
 import { Pencil } from "lucide-react"
 import "../css/PetProfile.css"
@@ -7,7 +7,7 @@ import VisitHistory from "./VisitHistory"
 import { useConfirmDialog } from "../contexts/ConfirmDialogContext"
 import { calculateAge } from "../components/DateCalculator"
 import { useUserRole } from "../contexts/UserRoleContext"
-import { useCallback } from "react"
+import { useNavigate } from "react-router-dom"
 import VaccinationRecord from "./VaccinationRecord"
 
 
@@ -23,7 +23,23 @@ export default function PetProfile() {
   const [petData, setPetData] = useState(null)
   const [nameError, setNameError] = useState("")
 
-
+  const navigate = useNavigate()
+  const logout = useCallback(async () => {
+    console.log("Attempting logout due to session issue...");
+    try {
+      // Optional: Inform the backend about the logout attempt
+      await fetch("http://localhost:5000/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error during server logout request:", error);
+      // Proceed with client-side logout even if server request fails
+    } finally {
+        console.log("Redirecting to /login");
+        navigate("/login", { replace: true }); // Use replace to prevent going back to the expired page
+    }
+  }, [navigate]);
 
 
   const fetchVaccinationRecords = useCallback(async (petId) => {
@@ -37,7 +53,11 @@ export default function PetProfile() {
       })
 
 
-
+      if (response.status === 401) {
+        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+        await logout(); // Call logout function
+        return; // Stop further processing in this function
+      }
 
       if (!response.ok) {
         throw new Error("Failed to fetch vaccination records")
@@ -52,7 +72,7 @@ export default function PetProfile() {
     } catch (error) {
       console.error("Error fetching vaccination records:", error)
     }
-  }, [])
+  }, [logout])
 
 
 
@@ -69,7 +89,11 @@ export default function PetProfile() {
           },
         })
 
-
+        if (response.status === 401) {
+          console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+          await logout(); // Call logout function
+          return; // Stop further processing in this function
+        }
 
 
         if (!response.ok) {
@@ -98,7 +122,7 @@ export default function PetProfile() {
 
     fetchPetData()
     fetchVaccinationRecords(pet_id)
-  }, [pet_id, fetchVaccinationRecords])
+  }, [pet_id, logout, fetchVaccinationRecords])
 
 
 
@@ -160,6 +184,12 @@ export default function PetProfile() {
           "Content-Type": "application/json",
         },
       });
+
+      if (response.status === 401) {
+        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+        await logout(); // Call logout function
+        return; // Stop further processing in this function
+      }
 
 
       if (!response.ok) {
@@ -260,7 +290,11 @@ export default function PetProfile() {
         })
 
 
-
+        if (response.status === 401) {
+          console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+          await logout(); // Call logout function
+          return; // Stop further processing in this function
+        }
 
         if (!response.ok) {
           throw new Error("Failed to update pet profile")
