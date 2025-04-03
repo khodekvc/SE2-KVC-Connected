@@ -306,4 +306,3 @@ exports.getPetsByOwner = async (req, res) => {
         res.status(500).json({ error: "Failed to fetch pets for owner" });
     }
 };
-

@@ -12,6 +12,11 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
   const [date, setDate] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({
+    vaccineType: "",
+    doses: "",
+    date: ""
+  });
 
 
   const vaccineTypes = [
@@ -179,11 +184,33 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     if (!hasPermission("canAddVaccination")) return
 
 
-    if (!vaccineType || !doses || !date) {
-      alert("Please fill in all fields.")
-      return
+    // Clear any previous errors
+    setErrors({
+      vaccineType: "",
+      doses: "",
+      date: ""
+    });
+
+    let hasErrors = false;
+    const newErrors = {};
+
+    if (!vaccineType) {
+      newErrors.vaccineType = "Vaccine type is required";
+      hasErrors = true;
+    }
+    if (!doses) {
+      newErrors.doses = "Doses quantity is required";
+      hasErrors = true;
+    }
+    if (!date) {
+      newErrors.date = "Date is required";
+      hasErrors = true;
     }
 
+    if (hasErrors) {
+      setErrors(newErrors);
+      return;
+    }
 
     // Format date to YYYY-MM-DD for the API
     const formattedDate = formatDateToYYYYMMDD(date)
@@ -286,12 +313,14 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
                 </option>
               ))}
             </select>
+            {errors.vaccineType && <span className="error-message">{errors.vaccineType}</span>}
           </div>
           <div className="form-group">
             <label>
               Doses (Qty.)<span className="required">*</span>
             </label>
             <input type="number" min="1" name="doses" value={doses} onChange={(e) => setDoses(e.target.value)} />
+            {errors.doses && <span className="error-message">{errors.doses}</span>}
           </div>
           <div className="form-group">
             <label>Date</label>
@@ -304,6 +333,7 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
                 onChange={(e) => setDate(e.target.value)}
               />
             </div>
+            {errors.date && <span className="error-message">{errors.date}</span>}
           </div>
           <button className="add-button" onClick={handleAddVaccination}>
             <Plus size={16} />
