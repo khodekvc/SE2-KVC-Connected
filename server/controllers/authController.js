@@ -166,6 +166,36 @@ exports.signupPetOwnerStep2 = async (req, res) => {
                 connection
             );
 
+            // Function to calculate pet age in years and months
+            const calculatePetAge = (birthdate) => {
+                const birth = new Date(birthdate);
+                const today = new Date();
+               
+                let years = today.getFullYear() - birth.getFullYear();
+                let months = today.getMonth() - birth.getMonth();
+
+
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+
+
+                return { years: years, months: months };
+            };
+
+
+            // Calculate pet age before creating a pet entry
+            let petAgeYear = null;
+            let petAgeMonth = null;
+
+
+            if (birthdate) {
+                const age = calculatePetAge(birthdate);
+                petAgeYear = age.years;
+                petAgeMonth = age.months;
+            }
+
             // Create pet
             const petId = await PetModel.createPet(
                 {
@@ -174,6 +204,8 @@ exports.signupPetOwnerStep2 = async (req, res) => {
                     speciesId,
                     breed: breed || null, // Handle nullable breed
                     birthdate: birthdate || null, // Handle nullable birthdate
+                    petAgeYear,
+                    petAgeMonth,
                     userId,
                 },
                 connection

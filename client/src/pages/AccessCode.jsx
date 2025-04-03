@@ -95,7 +95,7 @@ const AccessCode = () => {
      </div>
      <div className="right-section">
        <h2 className="code-h2">Access Code <br /> Verification</h2>
-       {error && <div className="error-message">{error}</div>}
+       {error && <div className="auth-error-message">{error}</div>}
        <form onSubmit={handleSubmit} className="code-formgroup">
          <FormGroup
            label="Please enter the access code sent to your email by the doctor to confirm your role"

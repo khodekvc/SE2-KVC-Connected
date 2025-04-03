@@ -225,6 +225,38 @@ exports.addPetForOwner = async (req, res) => {
         const speciesId = species.spec_id;
         console.log(`[addPetForOwner] Found speciesId ${speciesId} for description ${speciesDescription}`);
 
+         // Function to calculate pet age in years and months
+         const calculatePetAge = (birthdate) => {
+            const birth = new Date(birthdate);
+            const today = new Date();
+
+
+            let years = today.getFullYear() - birth.getFullYear();
+            let months = today.getMonth() - birth.getMonth();
+
+
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+
+            return { years, months };
+        };
+
+
+        // Calculate pet age before creating a pet entry
+        let petAgeYear = null;
+        let petAgeMonth = null;
+
+
+        if (birthday) {
+            const age = calculatePetAge(birthday);
+            petAgeYear = age.years;
+            petAgeMonth = age.months;
+        }
+
+
         // Prepare data object matching the model's expected parameters
         const petData = {
             petname: name,
@@ -232,6 +264,8 @@ exports.addPetForOwner = async (req, res) => {
             speciesId,
             breed: breed || null, // Handle optional breed
             birthdate: birthday || null, // Handle optional birthday
+            petAgeYear,
+            petAgeMonth,
             userId,
         };
 

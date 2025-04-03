@@ -320,7 +320,7 @@ console.error("Error:", error.message);
           <>
             <h2>Forgot Password</h2>
             <p>Enter access code (6 digits) that was sent to your email</p>
-            {error && <div className="error-message">{error}</div>}
+            {error && <div className="auth-error-message">{error}</div>}
             <form onSubmit={handleResetPassword}>
               <FormGroup
                 label="Access Code"
@@ -352,7 +352,7 @@ console.error("Error:", error.message);
           <>
             <h2>Forgot Password</h2>
             <p>Reset Password</p>
-            {error && <div className="error-message">{error}</div>}
+            {error && <div className="auth-error-message">{error}</div>}
             <form onSubmit={handleChangePassword}>
               <FormGroup
                 label="New Password"
@@ -386,7 +386,7 @@ console.error("Error:", error.message);
           <>
             <h2>Welcome Back!</h2>
             <p>Login to your account</p>
-            {error && <div className="error-message">{error}</div>}
+            {error && <div className="auth-error-message">{error}</div>}
             <form onSubmit={handleSubmit}>
               <FormGroup
                 label="Email"
@@ -419,7 +419,6 @@ console.error("Error:", error.message);
                     name="captchaInput"
                     value={formData.captchaInput}
                     onChange={handleChange}
-                    required
                   />
                 </div>
               </div>

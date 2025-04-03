@@ -155,7 +155,7 @@ const SignupEmployee = () => {
                 <div className="right-section">
                     <h2>Create Account</h2>
                     <p>Become part of our team!</p>
-                    {error && <div className="error-message">{error}</div>}
+                    {error && <div className="auth-error-message">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="signup-form-row">
                             <FormGroup
