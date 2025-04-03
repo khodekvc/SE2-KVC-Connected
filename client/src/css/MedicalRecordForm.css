@@ -1,7 +1,7 @@
 .medical-record-form {
   display: flex;
   flex-direction: column;
-
+  overflow-x: hidden; 
 }
 
 .medical-info,
@@ -21,7 +21,8 @@
 .form-row {
   display: flex;
   gap: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 4rem;
+  flex-wrap: wrap; 
 }
 
 .form-field {
@@ -29,6 +30,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  position: relative;
 }
 
 .form-field.full-width {
@@ -36,15 +38,20 @@
 }
 
 .input-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: 170px 1fr;
   align-items: center;
-  gap: 3rem;
+  gap: 2rem;
 }
 
 .form-field label {
-  min-width: 120px;
+  min-width: 170px;
+  width: 170px;
   font-weight: bold !important;
   color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .form-field input[type="text"],
@@ -54,9 +61,12 @@
 .date-input input {
   flex: 1;
   padding: 0.1rem;
-  border: 1px solid black;
+  border: 1px solid #ccc;
   border-radius: 0.5rem;
   font-size: 1rem;
+  min-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-field input[type="text"]:focus,
@@ -81,7 +91,6 @@
   padding-right: 2.5rem;
 }
 
-/* Hide default calendar icon and use custom styling */
 input[type="date"]::-webkit-calendar-picker-indicator {
   position: absolute;
   right: 10px;
@@ -90,11 +99,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
-.error-message {
+.error-message-record {
   color: #ff4444;
   font-size: 0.8rem;
   margin-top: 0.2rem;
-  margin-left: calc(120px + 1rem); /* Align with input, accounting for label width and gap */
+  font-style: italic;
+  margin-bottom: 0.25rem;
+  margin-left: 200px;
+  grid-column: 1 / span 2;
+  text-align: left;
 }
 
 .radio-group {
@@ -112,11 +125,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .file-upload-container {
   width: 100%;
+  flex: 1;
 }
 
 .custom-file-input {
   width: 100%;
   margin-bottom: 0.5rem;
+  flex: 1;
 }
 
 .hidden-file-input {
@@ -175,7 +190,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   width: 100%;
 }
 
-/* Custom styling for file input button */
 input[type="file"]::-webkit-file-upload-button {
   background-color: white;
   color: #6c757d;
@@ -191,7 +205,6 @@ input[type="file"]::-webkit-file-upload-button:hover {
   background-color: #f8f9fa;
 }
 
-/* Support for Firefox */
 input[type="file"]::file-selector-button {
   background-color: white;
   color: #6c757d;
@@ -261,16 +274,28 @@ textarea {
 .required {
   color: #ff4444;
   margin-left: 0.25rem;
+  display: inline-block;
 }
 
 @media (max-width: 1024px) {
+  .error-message-record {
+      margin-bottom: 0.25rem;
+      margin-left: 190px;
+      grid-column: 1 / span 2;
+  }
+
   .form-field input[type="text"],
   .form-field input[type="date"],
   .form-field select,
   .form-field textarea,
   .date-input,
-  .file-input {
+  .file-input,
+  .custom-file-input,
+  .file-upload-container,
+  .file-input-ui {
     width: 100%;
+    min-width: 100%;
+    box-sizing: border-box;
   }
 
   .form-row {
@@ -281,19 +306,20 @@ textarea {
   .form-field {
     flex-direction: column;
     align-items: flex-start;
+    width: 100%;
   }
 
   .input-container {
     width: 100%;
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 170px 1fr;
     align-items: center;
     gap: 1rem;
   }
  
   .form-field label {
-    min-width: 120px;
-    width: 120px;
+    min-width: 170px;
+    width: 170px;
   }
  
   .value-text {
@@ -302,10 +328,6 @@ textarea {
 
   .radio-group {
     margin-top: 0.5rem;
-  }
- 
-  .error-message {
-    margin-left: 120px;
   }
 }
 
@@ -327,8 +349,9 @@ textarea {
     margin-bottom: 0.25rem;
   }
  
-  .error-message {
+  .error-message-record {
     margin-left: 0;
+    grid-column: 1;
   }
  
   .radio-group {

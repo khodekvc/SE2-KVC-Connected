@@ -5,6 +5,7 @@
     background-color: white;
     border-radius: 1rem;
     width: 100%;
+    overflow-x: hidden;
   }
   
   .form-header {
@@ -44,6 +45,31 @@
     margin: 0 1rem;
   }
   
+  .header-center .date-input {
+    width: 100%;
+  }
+  
+  .header-center .date-input input[type="date"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    height: 38px;
+    box-sizing: border-box;
+  }
+  
+  .header-center .error-message-record {
+    color: #ff4444;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+    font-style: italic;
+    margin-bottom: 0.25rem;
+    margin-left: 0;
+    grid-column: 1 / span 2;
+    text-align: left;
+  }
+  
   .submit-button {
     background-color: var(--orange-color);
     color: white;
@@ -62,10 +88,11 @@
   .form-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding-top: 1rem;
     padding-left: 3rem;
     padding-right: 3rem;
-    padding-bottom: 7rem;
+    padding-bottom: 10rem;
   }
   
   section {
@@ -107,6 +134,7 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
   
     .form-header {
@@ -129,6 +157,7 @@
     .form-content {
       flex: 1;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 1rem;
       padding-bottom: 7rem;
     }

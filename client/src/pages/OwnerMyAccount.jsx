@@ -2,13 +2,53 @@
 
 import { useState, useEffect } from "react"
 import AccountPage from "./AccountPage"
+import "../css/AccountPage.css"
+import "../css/AddNewPet.css" 
+import { useConfirmDialog } from "../contexts/ConfirmDialogContext" 
 
 const OwnerMyAccount = () => {
-  const [displayData, setDisplayData] = useState(null); // Initially null
-  const [editData, setEditData] = useState(null); // Initially null
-  const [isEditing, setIsEditing] = useState(false) // Track edit mode
+  const [displayData, setDisplayData] = useState(null); 
+  const [editData, setEditData] = useState(null); 
+  const [isEditing, setIsEditing] = useState(false) 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { showConfirmDialog } = useConfirmDialog() 
+  const [validationErrors, setValidationErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    contactNumber: "",
+    address: "",
+    emergencyPerson1: "",
+    emergencyNumber1: ""
+  })
+
+  // Custom function to clear validation errors
+  const clearValidationErrors = () => {
+    setValidationErrors({
+      firstName: "",
+      lastName: "",
+      email: "",
+      contactNumber: "",
+      address: "",
+      emergencyPerson1: "",
+      emergencyNumber1: ""
+    });
+  }
+
+  // Function to handle when editing is canceled
+  const handleCancelEdit = () => {
+    // Reset edit data to match display data
+    setEditData({
+      ...displayData
+    });
+    
+    // Clear all validation errors
+    clearValidationErrors();
+    
+    // Exit edit mode
+    setIsEditing(false);
+  }
 
   useEffect(() => {
     const fetchOwnerData = async () => {
@@ -99,10 +139,71 @@ const OwnerMyAccount = () => {
     return processedData
   }
 
+  const validateFields = (data) => {
+    const errors = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      contactNumber: "",
+      address: "",
+      emergencyPerson1: "",
+      emergencyNumber1: ""
+    };
+    let isValid = true;
+
+    if (!data.firstName || data.firstName.trim() === "") {
+      errors.firstName = "First Name is required";
+      isValid = false;
+    }
+
+    if (!data.lastName || data.lastName.trim() === "") {
+      errors.lastName = "Last Name is required";
+      isValid = false;
+    }
+
+    if (!data.email || data.email.trim() === "") {
+      errors.email = "Email is required";
+      isValid = false;
+    }
+
+    if (!data.contactNumber || data.contactNumber.trim() === "") {
+      errors.contactNumber = "Contact Number is required";
+      isValid = false;
+    }
+
+    if (!data.address || data.address.trim() === "") {
+      errors.address = "Address is required";
+      isValid = false;
+    }
+
+    if (!data.emergencyContact1.person || data.emergencyContact1.person.trim() === "") {
+      errors.emergencyPerson1 = "Emergency Contact Person 1 is required";
+      isValid = false;
+    }
+
+    if (!data.emergencyContact1.number || data.emergencyContact1.number.trim() === "") {
+      errors.emergencyNumber1 = "Emergency Contact Number 1 is required";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   const handleSave = async (updatedData) => {
     // Validate input fields
     const processedData = processEmergencyContacts(updatedData);
+    
+    // Validate all required fields
+    if (!validateFields(processedData)) {
+      return; // Stop submission if validation fails
+    }
 
+    // Show confirmation dialog
+    showConfirmDialog("Do you want to save your changes?", () => saveChanges(processedData));
+  }
+
+  const saveChanges = async (processedData) => {
     // Check for empty or whitespace-only fields (except Emergency Contact 2 and Person 2)
     const requiredFields = [
       processedData.firstName,
@@ -153,6 +254,17 @@ const OwnerMyAccount = () => {
       const result = await response.json();
       console.log("Profile updated successfully:", result);
 
+      // Clear validation errors
+      setValidationErrors({
+        firstName: "",
+        lastName: "",
+        email: "",
+        contactNumber: "",
+        address: "",
+        emergencyPerson1: "",
+        emergencyNumber1: ""
+      });
+
       setDisplayData(processedData); // Update the display data
       setEditData(processedData); // Update the edit data
       setIsEditing(false); // Exit edit mode
@@ -177,6 +289,14 @@ const OwnerMyAccount = () => {
       }
       return { ...prevData, [name]: value }
     })
+
+    // Clear validation error when field is being edited
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
   }
 
   if (isLoading) {
@@ -195,33 +315,50 @@ const OwnerMyAccount = () => {
       isEditing={isEditing}
       setIsEditing={setIsEditing}
       onSave={handleSave}
+      onCancelEdit={handleCancelEdit}
     >
       {({ isEditing, userData, handleInputChange }) => (
         <div className="info-grid">
           <div className="info-column">
             <div className="info-group">
-              <label>First Name</label>
+              <label>First Name{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.firstName && <span className="error-message-pet">{validationErrors.firstName}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="firstName"
                   value={userData.firstName}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.firstName) {
+                      setValidationErrors(prev => ({...prev, firstName: ""}));
+                    }
+                  }}
+                  className={validationErrors.firstName ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.firstName}</div>
               )}
             </div>
             <div className="info-group">
-              <label>Last Name</label>
+              <label>Last Name{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.lastName && <span className="error-message-pet">{validationErrors.lastName}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="lastName"
                   value={userData.lastName}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.lastName) {
+                      setValidationErrors(prev => ({...prev, lastName: ""}));
+                    }
+                  }}
+                  className={validationErrors.lastName ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.lastName}</div>
@@ -231,28 +368,44 @@ const OwnerMyAccount = () => {
 
           <div className="info-column">
             <div className="info-group">
-              <label>Email</label>
+              <label>Email{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.email && <span className="error-message-pet">{validationErrors.email}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="email"
                   name="email"
                   value={userData.email}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.email) {
+                      setValidationErrors(prev => ({...prev, email: ""}));
+                    }
+                  }}
+                  className={validationErrors.email ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.email}</div>
               )}
             </div>
             <div className="info-group">
-              <label>Contact Number</label>
+              <label>Contact Number{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.contactNumber && <span className="error-message-pet">{validationErrors.contactNumber}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="tel"
                   name="contactNumber"
                   value={userData.contactNumber}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.contactNumber) {
+                      setValidationErrors(prev => ({...prev, contactNumber: ""}));
+                    }
+                  }}
+                  className={validationErrors.contactNumber ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.contactNumber}</div>
@@ -262,14 +415,22 @@ const OwnerMyAccount = () => {
 
           <div className="info-column">
             <div className="info-group">
-              <label>Address</label>
+              <label>Address{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.address && <span className="error-message-pet">{validationErrors.address}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="address"
                   value={userData.address}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.address) {
+                      setValidationErrors(prev => ({...prev, address: ""}));
+                    }
+                  }}
+                  className={validationErrors.address ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.address}</div>
@@ -279,42 +440,54 @@ const OwnerMyAccount = () => {
 
           <div className="info-column">
             <div className="info-group">
-              <label>Emergency Contact Person 1</label>
+              <label>Emergency Contact Person 1{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.emergencyPerson1 && <span className="error-message-pet">{validationErrors.emergencyPerson1}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="emergencyContact1.person"
                   value={userData.emergencyContact1.person}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     handleInputChange({
                       target: {
                         name: "emergencyContact1",
                         value: { ...userData.emergencyContact1, person: e.target.value },
                       },
-                    })
-                  }
-                  className="info-input"
+                    });
+                    // Clear validation error
+                    if (validationErrors.emergencyPerson1) {
+                      setValidationErrors(prev => ({...prev, emergencyPerson1: ""}));
+                    }
+                  }}
+                  className={validationErrors.emergencyPerson1 ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.emergencyContact1.person || "Not provided"}</div>
               )}
             </div>
             <div className="info-group">
-              <label>Emergency Contact Number 1</label>
+              <label>Emergency Contact Number 1{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.emergencyNumber1 && <span className="error-message-pet">{validationErrors.emergencyNumber1}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="tel"
                   name="emergencyContact1.number"
                   value={userData.emergencyContact1.number}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     handleInputChange({
                       target: {
                         name: "emergencyContact1",
                         value: { ...userData.emergencyContact1, number: e.target.value },
                       },
-                    })
-                  }
-                  className="info-input"
+                    });
+                    // Clear validation error
+                    if (validationErrors.emergencyNumber1) {
+                      setValidationErrors(prev => ({...prev, emergencyNumber1: ""}));
+                    }
+                  }}
+                  className={validationErrors.emergencyNumber1 ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.emergencyContact1.number || "Not provided"}</div>

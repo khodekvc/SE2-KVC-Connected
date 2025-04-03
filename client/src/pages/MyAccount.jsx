@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import AccountPage from "./AccountPage"
+import "../css/AddNewPet.css" // Import for error message styling
+import { useConfirmDialog } from "../contexts/ConfirmDialogContext"
 
 const MyAccount = () => {
   const [displayData, setDisplayData] = useState(null);
@@ -9,6 +11,13 @@ const MyAccount = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { showConfirmDialog } = useConfirmDialog();
+  const [validationErrors, setValidationErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    contact: ""
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -53,32 +62,89 @@ const MyAccount = () => {
     fetchUserData();
   }, []);
 
-  const handleSave = async (updatedData) => {
-    try {
-      const response = await fetch("http://localhost:5000/user/update-employee-profile", {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      });
+  // Function to validate fields
+  const validateFields = (data) => {
+    const errors = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      contact: ""
+    };
+    let isValid = true;
 
-      if (!response.ok) {
-        throw new Error("Failed to save user data");
-      }
-
-      const data = await response.json();
-      console.log("Backend user data:", data);
-
-      setDisplayData(data);
-      setEditData(data);
-      setIsEditing(false);
-      console.log("Edit mode exited");
-    } catch (error) {
-      console.error("Error saving user data:", error);
-      alert("Failed to save user data. Please try again.");
+    if (!data.firstName || data.firstName.trim() === "") {
+      errors.firstName = "First Name is required";
+      isValid = false;
     }
+
+    if (!data.lastName || data.lastName.trim() === "") {
+      errors.lastName = "Last Name is required";
+      isValid = false;
+    }
+
+    if (!data.email || data.email.trim() === "") {
+      errors.email = "Email is required";
+      isValid = false;
+    }
+
+    if (!data.contact || data.contact.trim() === "") {
+      errors.contact = "Contact Number is required";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  const handleSave = async (updatedData) => {
+    // Validate all required fields
+    if (!validateFields(updatedData)) {
+      return; // Stop submission if validation fails
+    }
+
+    showConfirmDialog("Do you want to save your changes?", async () => {
+      try {
+        const backendData = {
+          firstname: updatedData.firstName,
+          lastname: updatedData.lastName,
+          email: updatedData.email,
+          contact: updatedData.contact,
+          role: updatedData.role
+        };
+
+        const response = await fetch("http://localhost:5000/user/update-employee-profile", {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(backendData),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to save user data");
+        }
+
+        const data = await response.json();
+        console.log("Backend user data:", data);
+
+        const frontendData = {
+          firstName: data.firstname || updatedData.firstName,
+          lastName: data.lastname || updatedData.lastName,
+          role: data.role || updatedData.role,
+          email: data.email || updatedData.email,
+          contact: data.contact || updatedData.contact,
+        };
+
+        setDisplayData(frontendData);
+        setEditData(frontendData);
+        setIsEditing(false);
+        console.log("Edit mode exited");
+      } catch (error) {
+        console.error("Error saving user data:", error);
+        alert("Failed to save user data. Please try again.");
+      }
+    });
   };
 
   if (isLoading) {
@@ -101,28 +167,44 @@ const MyAccount = () => {
         <div className="info-grid clinician-grid">
           <div className="info-column">
             <div className="info-group">
-              <label>First Name</label>
+              <label>First Name{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.firstName && <span className="error-message-pet">{validationErrors.firstName}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="firstName"
                   value={userData.firstName}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.firstName) {
+                      setValidationErrors(prev => ({...prev, firstName: ""}));
+                    }
+                  }}
+                  className={validationErrors.firstName ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.firstName}</div>
               )}
             </div>
             <div className="info-group">
-              <label>Last Name</label>
+              <label>Last Name{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.lastName && <span className="error-message-pet">{validationErrors.lastName}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="lastName"
                   value={userData.lastName}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.lastName) {
+                      setValidationErrors(prev => ({...prev, lastName: ""}));
+                    }
+                  }}
+                  className={validationErrors.lastName ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.lastName}</div>
@@ -132,28 +214,44 @@ const MyAccount = () => {
 
           <div className="info-column">
             <div className="info-group">
-              <label>Email</label>
+              <label>Email{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.email && <span className="error-message-pet">{validationErrors.email}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="email"
                   name="email"
                   value={userData.email}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.email) {
+                      setValidationErrors(prev => ({...prev, email: ""}));
+                    }
+                  }}
+                  className={validationErrors.email ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.email}</div>
               )}
             </div>
             <div className="info-group">
-              <label>Contact Number</label>
+              <label>Contact Number{isEditing && <span className="required">*</span>}
+                {isEditing && validationErrors.contact && <span className="error-message-pet">{validationErrors.contact}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="tel"
                   name="contact"
                   value={userData.contact}
-                  onChange={handleInputChange}
-                  className="info-input"
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Clear validation error
+                    if (validationErrors.contact) {
+                      setValidationErrors(prev => ({...prev, contact: ""}));
+                    }
+                  }}
+                  className={validationErrors.contact ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.contact}</div>

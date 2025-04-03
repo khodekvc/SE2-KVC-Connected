@@ -23,6 +23,14 @@ export default function PetProfile() {
   const [petData, setPetData] = useState(null)
   const [nameError, setNameError] = useState("")
 
+  useEffect(() => {
+    if (activeTab !== "profile" && isEditing) {
+      setIsEditing(false)
+      setEditedPetData({})
+      setNameError("")
+    }
+  }, [activeTab, isEditing])
+
 
 
 
@@ -361,11 +369,11 @@ export default function PetProfile() {
                   {isEditing ? (
                     <>
                       <input type="text" name="name" value={editedPetData.name || ""} onChange={handleInputChange} />
-                      {nameError && <div className="error-message">{nameError}</div>}
                     </>
                   ) : (
                     <span>{petData.name}</span>
                   )}
+                  {isEditing && nameError && <div className="error-message-profile">{nameError}</div>}
                 </div>
                 <div className="detail-item">
                   <label className={isEditing ? "required-field" : ""}>Species</label>

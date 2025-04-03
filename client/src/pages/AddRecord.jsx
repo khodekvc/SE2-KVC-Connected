@@ -62,15 +62,22 @@ const AddRecord = ({ onClose, onSubmit }) => {
 
  const validateForm = () => {
    const newErrors = {}
+   
+   // Required fields validation - expand this to match ViewRecord validation
    if (!formData.date) newErrors.date = "Date is required"
+   if (!formData.weight) newErrors.weight = "Weight is required"
+   if (!formData.temperature) newErrors.temperature = "Temperature is required"
+   if (!formData.conditions) newErrors.conditions = "Conditions is required"
+   if (!formData.symptoms) newErrors.symptoms = "Symptoms is required"
+   if (!formData.recentVisit) newErrors.recentVisit = "Recent visit date is required"
+   if (!formData.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
    if (!formData.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
    // Validate surgery fields if hadSurgery is true
    if (formData.hadSurgery) {
-    if (!formData.surgeryDate) newErrors.surgeryDate = "Surgery date is required when 'Had past surgeries' is Yes"
-    if (!formData.surgeryType) newErrors.surgeryType = "Surgery type is required when 'Had past surgeries' is Yes"
-  }
-
+    if (!formData.surgeryDate) newErrors.surgeryDate = "Surgery date is required"
+    if (!formData.surgeryType) newErrors.surgeryType = "Surgery type is required"
+   }
 
    setErrors(newErrors)
    return Object.keys(newErrors).length === 0
@@ -79,8 +86,13 @@ const AddRecord = ({ onClose, onSubmit }) => {
 
  const handleSubmit = async (e) => {
    e.preventDefault();
-   if (validateForm()) {
-     showConfirmDialog("Are you sure you want to add this record?", async () => {
+   if (!validateForm()) {
+     // Stop submission but show errors
+     console.log("Form validation failed", errors);
+     return;
+   }
+   
+   showConfirmDialog("Are you sure you want to add this record?", async () => {
        try {
         const formattedDate = formData.date ? new Date(formData.date).toISOString().split("T")[0] : ""
           const formattedRecentVisit = formData.recentVisit
@@ -144,8 +156,7 @@ const AddRecord = ({ onClose, onSubmit }) => {
          alert("Error adding record: " + error.message)
         }
       })
-    }
-  }
+ }
 
 
 
@@ -162,6 +173,19 @@ const AddRecord = ({ onClose, onSubmit }) => {
       // Clear surgery fields if hadSurgery is set to false
       ...(boolValue === false ? { surgeryDate: "", surgeryType: "" } : {}),
     }))
+    
+    // Clear related errors when changing this field
+    if (errors.hadSurgery || errors.surgeryDate || errors.surgeryType) {
+      setErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors.hadSurgery;
+        if (boolValue === false) {
+          delete newErrors.surgeryDate;
+          delete newErrors.surgeryType;
+        }
+        return newErrors;
+      });
+    }
   }
    else if (type === "file") {
     const file = e.target.files[0];
@@ -177,11 +201,13 @@ const AddRecord = ({ onClose, onSubmit }) => {
        [name]: value,
      }))
    }
+   
    if (errors[name]) {
-     setErrors((prev) => ({
-       ...prev,
-       [name]: "",
-     }))
+     setErrors((prev) => {
+       const newErrors = {...prev};
+       delete newErrors[name];
+       return newErrors;
+     })
    }
  }
 
@@ -205,7 +231,7 @@ const AddRecord = ({ onClose, onSubmit }) => {
              className={errors.date ? "error" : ""}
            />
          </div>
-         {errors.date && <span className="error-message">{errors.date}</span>}
+         {errors.date && <span className="error-message-record">{errors.date}</span>}
        </div>
        <button className="submit-button" onClick={handleSubmit}>
          Add Record

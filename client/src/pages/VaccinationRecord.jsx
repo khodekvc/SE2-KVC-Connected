@@ -84,13 +84,11 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
 
 
     try {
-      // Create a Date object from the string
       const date = new Date(dateString)
 
 
       // Check if the date is valid
       if (isNaN(date.getTime())) {
-        // If it's not a valid date object, try parsing it manually
         if (dateString.includes("-")) {
           const [year, month, day] = dateString.split("-")
           return `${month}/${day}/${year}`
@@ -169,8 +167,6 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
       }
     } catch (error) {
       console.error("Error updating vaccination record:", error)
-      // Revert the UI change if the API call fails
-      // You could fetch the data again here to ensure UI is in sync with database
     }
   }
 
@@ -294,7 +290,7 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
             <input type="number" min="1" name="doses" value={doses} onChange={(e) => setDoses(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>Date</label>
+            <label>Date<span className="required">*</span></label>
             <div className="date-input">
               <input
                 type="date"
