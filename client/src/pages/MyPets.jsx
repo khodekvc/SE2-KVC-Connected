@@ -28,6 +28,27 @@ export default function MyPets() {
   }, [navigate]);
 
   useEffect(() => {
+    const handleBackButton = () => {
+      if (
+        window.location.pathname === "/login" ||
+        window.location.pathname === "/signup-petowner-petinfo" ||
+        window.location.pathname === "/signup-petowner"
+      ) {
+        logout();
+      }
+    };
+
+
+    window.onpopstate = handleBackButton;
+
+
+    return () => {
+      window.onpopstate = null;
+    };
+  }, [logout]);
+
+
+  useEffect(() => {
     const fetchMyPets = async () => {
       try {
         const response = await fetch("http://localhost:5000/pets/mypets", {

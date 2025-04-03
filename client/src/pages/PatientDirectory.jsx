@@ -33,6 +33,29 @@ export default function PatientDirectory() {
   }, [navigate]);
 
   useEffect(() => {
+    const handleBackButton = () => {
+      if (
+        window.location.pathname === "/login" ||
+        window.location.pathname === "/signup-employee" ||
+        window.location.pathname === "/signup-employee-accesscode"
+
+
+      ) {
+        logout();
+      }
+    };
+
+
+    window.onpopstate = handleBackButton;
+
+
+    return () => {
+      window.onpopstate = null;
+    };
+  }, [logout]);
+
+
+  useEffect(() => {
     const fetchActivePets = async () => {
       try {
         const response = await fetch("http://localhost:5000/pets/active", {
