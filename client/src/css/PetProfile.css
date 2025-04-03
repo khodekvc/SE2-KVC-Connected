@@ -420,10 +420,7 @@
   }
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 .required-field::after {
   content: "*";
   color: #ff4444;
@@ -431,10 +428,7 @@
   font-weight: bold;
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 .error-message {
   color: #ff4444;
   font-size: 0.8rem;
@@ -447,20 +441,14 @@
 }
 
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 .detail-item input[type="date"] {
   position: relative;
   width: 100%;
 }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371
 .detail-item input[type="date"]::-webkit-calendar-picker-indicator {
   position: absolute;
   right: 0px;
@@ -469,10 +457,7 @@
   cursor: pointer;
 }
 
-<<<<<<< HEAD
-=======
 
 
 
 
->>>>>>> b96878c8cae6dd9bf72366f6f6fbc75045373371

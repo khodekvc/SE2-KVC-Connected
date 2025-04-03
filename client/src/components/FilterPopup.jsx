@@ -271,3 +271,4 @@ const FilterModal = ({ isOpen, onClose, onApply, onReset, type = "patient" }) =>
 
 
 export default FilterModal
+
