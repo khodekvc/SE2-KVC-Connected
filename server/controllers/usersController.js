@@ -144,6 +144,17 @@ exports.changePassword = [
             return res.status(400).json({ error: "❌ New passwords do not match!" });
         }
 
+            // Password validation regex
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({
+                error: "❌ Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character."
+            });
+        }
+
+
         try {
             const storedPassword = await UserModel.getPasswordById(userId);
 

@@ -18,6 +18,7 @@ const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEdit
     new: false,
     confirm: false,
   });
+  const [passwordError, setPasswordError] = useState("");
 
   const navigate = useNavigate()
 
@@ -79,6 +80,7 @@ const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEdit
   }
 
   const handleSavePassword = async () => {
+    setPasswordError("");
     try {
       console.log("Password Data:", passwordData);
 
@@ -113,11 +115,12 @@ const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEdit
         newPassword: "",
         confirmPassword: "",
       });
+      setPasswordError("");
 
       alert("Password changed successfully!");
     } catch (error) {
       console.error("Error changing password:", error);
-      alert(error.message || "Failed to change password. Please try again.");
+      setPasswordError(error.message || "Failed to change password. Please try again.");
     }
   };
 
@@ -238,6 +241,7 @@ const AccountPage = ({ title, displayData, initialUserData, isEditing, setIsEdit
                       </div>
                     </div>
 
+                    {passwordError && <div className="password-error-message">{passwordError}</div>} {/* Add this line */}
                     <div className="password-actions">
                       <button className="save-changes-btn" onClick={handleSavePassword}>
                         Save Changes
