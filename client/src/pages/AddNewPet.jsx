@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "../css/AddNewPet.css";
+import { useConfirmDialog } from "../contexts/ConfirmDialogContext";
 
 export default function AddNewPet() {
   const [petData, setPetData] = useState({
@@ -13,7 +14,15 @@ export default function AddNewPet() {
     birthday: "",
   });
 
+  const [errors, setErrors] = useState({
+    name: "",
+    speciesDescription: "",
+    gender: "",
+  });
+
+
   const navigate = useNavigate(); // Initialize navigate
+  const { showConfirmDialog } = useConfirmDialog();
 
   const logout = useCallback(async () => {
     console.log("Attempting logout due to session issue...");
@@ -38,11 +47,51 @@ export default function AddNewPet() {
       ...prev,
       [name]: value,
     }));
+     // Clear error for this field when user types
+     if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+  };
+
+
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = { name: "", speciesDescription: "", gender: "" };
+   
+    if (!petData.name.trim()) {
+      newErrors.name = "Name is required";
+      valid = false;
+    }
+   
+    if (!petData.speciesDescription) {
+      newErrors.speciesDescription = "Species is required";
+      valid = false;
+    }
+   
+    if (!petData.gender) {
+      newErrors.gender = "Gender is required";
+      valid = false;
+    }
+   
+    setErrors(newErrors);
+    return valid;
+
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!validateForm()) {
+      return; 
+    }
+
+
+    showConfirmDialog("Do you want to add this pet?", submitPet);
+  };
+  const submitPet = async () => {
     try {
       const response = await fetch("http://localhost:5000/pets/add", {
         method: "POST",
@@ -93,22 +142,27 @@ export default function AddNewPet() {
         <form onSubmit={handleSubmit} className="pet-form">
           <div className="form-row">
             <div className="form-field">
-              <label>Name</label>
+            <label>Name<span className="required">*</span>
+                {errors.name && <span className="error-message-pet">{errors.name}</span>}
+              </label>
               <input
                 type="text"
                 name="name"
                 value={petData.name}
                 onChange={handleInputChange}
-                required
+                className={errors.name ? "input-error-pet" : ""}
               />
             </div>
             <div className="form-field">
-              <label>Species</label>
+            <label>Species<span className="required">*</span>
+                {errors.speciesDescription && <span className="error-message-pet">{errors.speciesDescription}</span>}
+              </label>
               <select
                 name="speciesDescription"
                 value={petData.speciesDescription}
                 onChange={handleInputChange}
-                required
+                className={errors.speciesDescription ? "input-error-pet" : ""}
+
               >
                 <option value="">Select species</option>
                 <option value="Dog (Standard)">Dog</option>
@@ -125,7 +179,9 @@ export default function AddNewPet() {
 
           <div className="form-row">
             <div className="form-field">
-              <label>Gender</label>
+            <label>Gender<span className="required">*</span>
+                {errors.gender && <span className="error-message-pet">{errors.gender}</span>}
+              </label>
               <div className="radio-group">
                 <label className="radio-label">
                   <input

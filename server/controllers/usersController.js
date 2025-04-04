@@ -49,7 +49,7 @@ exports.updateEmployeeProfile = [
                 firstname: firstname || currentProfile.user_firstname,
                 lastname: lastname || currentProfile.user_lastname,
                 email: email || currentProfile.user_email,
-                contact: contact || currentProfile.user_contact
+                contact: (contact !== undefined) ? contact : currentProfile.user_contact
             };
 
             const updatedUser = await UserModel.updateEmployeeProfile(userId, updatedProfile.firstname, updatedProfile.lastname, updatedProfile.email, updatedProfile.contact);
