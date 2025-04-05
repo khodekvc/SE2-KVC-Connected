@@ -40,7 +40,9 @@ const OwnerMyAccount = () => {
     contactNumber: "",
     address: "",
     emergencyPerson1: "",
-    emergencyNumber1: ""
+    emergencyNumber1: "",
+    emergencyPerson2: "",
+    emergencyNumber2: ""
   })
 
 
@@ -53,7 +55,9 @@ const OwnerMyAccount = () => {
       contactNumber: "",
       address: "",
       emergencyPerson1: "",
-      emergencyNumber1: ""
+      emergencyNumber1: "",
+      emergencyPerson2: "",
+      emergencyNumber2: ""
     });
   }
 
@@ -221,6 +225,23 @@ const OwnerMyAccount = () => {
       isValid = false;
     }
 
+    // Emergency Contact 2 validation
+    const hasPerson2 = data.emergencyContact2.person && data.emergencyContact2.person.trim() !== "";
+    const hasNumber2 = data.emergencyContact2.number && data.emergencyContact2.number.trim() !== "";
+
+
+    if (hasPerson2 && !hasNumber2) {
+      errors.emergencyNumber2 = "Emergency Contact Number 2 is required if Person 2 is provided";
+      isValid = false;
+    }
+
+
+    if (!hasPerson2 && hasNumber2) {
+      errors.emergencyPerson2 = "Emergency Contact Person 2 is required if Number 2 is provided";
+      isValid = false;
+    }
+
+
 
     setValidationErrors(errors);
     return isValid;
@@ -260,10 +281,6 @@ const OwnerMyAccount = () => {
 
     // Validate Emergency Contact 2 and Person 2
     const { person: person2, number: contact2 } = processedData.emergencyContact2;
-    if ((person2 && !contact2) || (!person2 && contact2)) {
-      alert("If Emergency Contact Person 2 is provided, Emergency Contact Number 2 must also be provided, and vice versa.");
-      return;
-    }
 
     try {
       const response = await fetch("http://localhost:5000/user/update-petowner-profile", {
@@ -306,7 +323,9 @@ const OwnerMyAccount = () => {
         contactNumber: "",
         address: "",
         emergencyPerson1: "",
-        emergencyNumber1: ""
+        emergencyNumber1: "",
+        emergencyPerson2: "",
+        emergencyNumber2: ""
       });
 
       setDisplayData(processedData); // Update the display data
@@ -542,42 +561,54 @@ const OwnerMyAccount = () => {
 
           <div className="info-column">
             <div className="info-group">
-              <label>Emergency Contact Person 2</label>
+            <label>Emergency Contact Person 2
+                {isEditing && validationErrors.emergencyPerson2 && <span className="error-message-pet">{validationErrors.emergencyPerson2}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="emergencyContact2.person"
                   value={userData.emergencyContact2.person}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     handleInputChange({
                       target: {
                         name: "emergencyContact2",
                         value: { ...userData.emergencyContact2, person: e.target.value },
                       },
-                    })
-                  }
-                  className="info-input"
+                    });
+                    // Clear validation error
+                    if (validationErrors.emergencyPerson2) {
+                      setValidationErrors(prev => ({...prev, emergencyPerson2: ""}));
+                    }
+                  }}
+                  className={validationErrors.emergencyPerson2 ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.emergencyContact2.person || "Not provided"}</div>
               )}
             </div>
             <div className="info-group">
-              <label>Emergency Contact Number 2</label>
+            <label>Emergency Contact Number 2
+                {isEditing && validationErrors.emergencyNumber2 && <span className="error-message-pet">{validationErrors.emergencyNumber2}</span>}
+              </label>
               {isEditing ? (
                 <input
                   type="tel"
                   name="emergencyContact2.number"
                   value={userData.emergencyContact2.number}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     handleInputChange({
                       target: {
                         name: "emergencyContact2",
                         value: { ...userData.emergencyContact2, number: e.target.value },
                       },
-                    })
-                  }
-                  className="info-input"
+                    });
+                    // Clear validation error
+                    if (validationErrors.emergencyNumber2) {
+                      setValidationErrors(prev => ({...prev, emergencyNumber2: ""}));
+                    }
+                  }}
+                  className={validationErrors.emergencyNumber2 ? "input-error-pet" : "info-input"}
                 />
               ) : (
                 <div className="info-value">{userData.emergencyContact2.number || "Not provided"}</div>
