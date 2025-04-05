@@ -32,6 +32,23 @@ const formatDateForDisplay = (dateString) => {
   }
 }
 
+const validateDate = (dateString) => {
+  if (!dateString) return "";
+ 
+  const selectedDate = new Date(dateString);
+  const currentDate = new Date();
+ 
+  // Reset the time portion to compare just the dates
+  selectedDate.setHours(0, 0, 0, 0);
+  currentDate.setHours(0, 0, 0, 0);
+ 
+  if (selectedDate > currentDate) {
+    return "Future dates not allowed";
+  }
+  return "";
+}
+
+
 
 const AddRecord = ({ onClose, onSubmit }) => {
  const { pet_id } = useParams()
@@ -80,13 +97,28 @@ const AddRecord = ({ onClose, onSubmit }) => {
  const validateForm = () => {
    const newErrors = {}
      // Required fields validation
-     if (!formData.date) newErrors.date = "Date is required"
+     if (!formData.date) {
+      newErrors.date = "Date is required"
+    } else {
+      const dateError = validateDate(formData.date);
+      if (dateError) {
+        newErrors.date = dateError;
+      }
+    }
      if (!formData.weight) newErrors.weight = "Weight is required"
      if (!formData.temperature) newErrors.temperature = "Temperature is required"
      if (!formData.conditions) newErrors.conditions = "Conditions are required"
      if (!formData.symptoms) newErrors.symptoms = "Symptoms are required"
-     if (!formData.recentVisit) newErrors.recentVisit = "Recent visit date is required"
-     if (!formData.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
+      // Validate recent visit date
+      if (!formData.recentVisit) {
+        newErrors.recentVisit = "Recent visit date is required"
+      } else {
+        const dateError = validateDate(formData.recentVisit);
+        if (dateError) {
+          newErrors.recentVisit = dateError;
+        }
+      }
+  if (!formData.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
      if (!formData.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
   
   
@@ -223,6 +255,25 @@ const AddRecord = ({ onClose, onSubmit }) => {
        ...prev,
        [name]: value,
      }))
+     // Validate dates for future dates immediately
+     if (name === "date" && value) {
+      const dateError = validateDate(value);
+      if (dateError) {
+        setErrors(prev => ({
+          ...prev,
+          date: dateError
+        }));
+      }
+    }
+     if (name === "recentVisit" && value) {
+      const dateError = validateDate(value);
+      if (dateError) {
+        setErrors(prev => ({
+          ...prev,
+          recentVisit: dateError
+        }));
+      }
+    }
    }
    if (errors[name]) {
      setErrors((prev) => {
