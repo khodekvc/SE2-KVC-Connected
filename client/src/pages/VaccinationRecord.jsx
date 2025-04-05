@@ -175,6 +175,22 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     }
   }
 
+  const validateDate = (dateString) => {
+    if (!dateString) return "";
+    
+    const selectedDate = new Date(dateString);
+    const currentDate = new Date();
+    
+    // Reset the time portion to compare just the dates
+    selectedDate.setHours(0, 0, 0, 0);
+    currentDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate > currentDate) {
+      return "Future dates not allowed";
+    }
+    return "";
+  }
+
   const validateForm = () => {
     const newErrors = {
       vaccineType: "",
@@ -196,6 +212,13 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     if (!date) {
       newErrors.date = "Date is required";
       isValid = false;
+    } else {
+      // Check for future date
+      const dateError = validateDate(date);
+      if (dateError) {
+        newErrors.date = dateError;
+        isValid = false;
+      }
     }
 
     setErrors(newErrors);
@@ -209,6 +232,17 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
         ...prev,
         [field]: ""
       }));
+    }
+
+    // Validate date if the field is date
+    if (field === "date" && value) {
+      const dateError = validateDate(value);
+      if (dateError) {
+        setErrors(prev => ({
+          ...prev,
+          date: dateError
+        }));
+      }
     }
 
     // Update the field value

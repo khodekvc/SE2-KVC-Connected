@@ -32,6 +32,21 @@ const formatDateForDisplay = (dateString) => {
   }
 }
 
+const validateDate = (dateString) => {
+  if (!dateString) return "";
+  
+  const selectedDate = new Date(dateString);
+  const currentDate = new Date();
+  
+  // Reset the time portion to compare just the dates
+  selectedDate.setHours(0, 0, 0, 0);
+  currentDate.setHours(0, 0, 0, 0);
+  
+  if (selectedDate > currentDate) {
+    return "Future dates not allowed";
+  }
+  return "";
+}
 
 const AddRecord = ({ onClose, onSubmit }) => {
  const { pet_id } = useParams()
@@ -69,7 +84,17 @@ const AddRecord = ({ onClose, onSubmit }) => {
    if (!formData.temperature) newErrors.temperature = "Temperature is required"
    if (!formData.conditions) newErrors.conditions = "Conditions is required"
    if (!formData.symptoms) newErrors.symptoms = "Symptoms is required"
-   if (!formData.recentVisit) newErrors.recentVisit = "Recent visit date is required"
+   
+   // Validate recent visit date
+   if (!formData.recentVisit) {
+     newErrors.recentVisit = "Recent visit date is required"
+   } else {
+     const dateError = validateDate(formData.recentVisit);
+     if (dateError) {
+       newErrors.recentVisit = dateError;
+     }
+   }
+   
    if (!formData.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
    if (!formData.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
@@ -200,6 +225,17 @@ const AddRecord = ({ onClose, onSubmit }) => {
        ...prev,
        [name]: value,
      }))
+     
+     // Validate dates for future dates immediately
+     if (name === "recentVisit" && value) {
+       const dateError = validateDate(value);
+       if (dateError) {
+         setErrors(prev => ({
+           ...prev,
+           recentVisit: dateError
+         }));
+       }
+     }
    }
    
    if (errors[name]) {

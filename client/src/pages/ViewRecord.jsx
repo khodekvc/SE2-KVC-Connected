@@ -55,6 +55,23 @@ const ViewRecord = ({ record, onBack, onUpdate }) => {
   }
 }
 
+// Validate dates to prevent future dates
+const validateDate = (dateString) => {
+  if (!dateString) return "";
+  
+  const selectedDate = new Date(dateString);
+  const currentDate = new Date();
+  
+  // Reset the time portion to compare just the dates
+  selectedDate.setHours(0, 0, 0, 0);
+  currentDate.setHours(0, 0, 0, 0);
+  
+  if (selectedDate > currentDate) {
+    return "Future dates not allowed";
+  }
+  return "";
+}
+
 
 
 
@@ -218,7 +235,17 @@ useEffect(() => {
    if (!editedRecord.temperature) newErrors.temperature = "Temperature is required"
    if (!editedRecord.conditions) newErrors.conditions = "Conditions is required"
    if (!editedRecord.symptoms) newErrors.symptoms = "Symptoms is required"
-   if (!editedRecord.recentVisit) newErrors.recentVisit = "Recent visit date is required"
+   
+   // Validate recent visit date
+   if (!editedRecord.recentVisit) {
+     newErrors.recentVisit = "Recent visit date is required"
+   } else {
+     const dateError = validateDate(editedRecord.recentVisit);
+     if (dateError) {
+       newErrors.recentVisit = dateError;
+     }
+   }
+   
    if (!editedRecord.recentPurchase) newErrors.recentPurchase = "Recent purchase is required"
    if (!editedRecord.purposeOfVisit) newErrors.purposeOfVisit = "Purpose of visit is required"
 
@@ -270,6 +297,17 @@ useEffect(() => {
         ...prev,
         [name]: value,
     }));
+    
+    // Validate dates for future dates immediately
+    if (name === "recentVisit" && value) {
+      const dateError = validateDate(value);
+      if (dateError) {
+        setErrors(prev => ({
+          ...prev,
+          recentVisit: dateError
+        }));
+      }
+    }
   }
 
 
