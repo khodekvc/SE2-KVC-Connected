@@ -329,7 +329,7 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
             <input type="number" min="1" name="doses" value={doses} onChange={(e) => setDoses(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>Date</label>
+          <label>Date<span className="required">*</span></label>
             <div className="date-input">
               <input
                 type="date"
