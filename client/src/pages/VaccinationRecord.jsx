@@ -12,6 +12,11 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
   const [date, setDate] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({
+    vaccineType: "",
+    doses: "",
+    date: ""
+  })
 
 
   const vaccineTypes = [
@@ -170,16 +175,63 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     }
   }
 
+  const validateForm = () => {
+    const newErrors = {
+      vaccineType: "",
+      doses: "",
+      date: ""
+    };
+    let isValid = true;
+
+    if (!vaccineType) {
+      newErrors.vaccineType = "Vaccine type is required";
+      isValid = false;
+    }
+
+    if (!doses) {
+      newErrors.doses = "Doses is required";
+      isValid = false;
+    }
+
+    if (!date) {
+      newErrors.date = "Date is required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  }
+
+  const handleInputChange = (field, value) => {
+    // Clear the error for this field when the user types
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ""
+      }));
+    }
+
+    // Update the field value
+    switch (field) {
+      case "vaccineType":
+        setVaccineType(value);
+        break;
+      case "doses":
+        setDoses(value);
+        break;
+      case "date":
+        setDate(value);
+        break;
+    }
+  }
 
   const handleAddVaccination = async () => {
     if (!hasPermission("canAddVaccination")) return
 
-
-    if (!vaccineType || !doses || !date) {
-      alert("Please fill in all fields.")
-      return
+    // Validate the form
+    if (!validateForm()) {
+      return; // Stop if validation fails
     }
-
 
     // Format date to YYYY-MM-DD for the API
     const formattedDate = formatDateToYYYYMMDD(date)
@@ -201,6 +253,11 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
       setVaccineType("")
       setDoses("")
       setDate("")
+      setErrors({
+        vaccineType: "",
+        doses: "",
+        date: ""
+      })
 
 
       // Then send to API
@@ -272,8 +329,8 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
             <select
               name="vaccineType"
               value={vaccineType}
-              onChange={(e) => setVaccineType(e.target.value)}
-              className="vaccine-select"
+              onChange={(e) => handleInputChange("vaccineType", e.target.value)}
+              className={errors.vaccineType ? "input-error-pet" : ""}
             >
               <option value="">Select vaccine type</option>
               {vaccineTypes.map((type) => (
@@ -282,12 +339,21 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
                 </option>
               ))}
             </select>
+            {errors.vaccineType && <span className="error-message-profile">{errors.vaccineType}</span>}
           </div>
           <div className="form-group">
             <label>
               Doses (Qty.)<span className="required">*</span>
             </label>
-            <input type="number" min="1" name="doses" value={doses} onChange={(e) => setDoses(e.target.value)} />
+            <input 
+              type="number" 
+              min="1" 
+              name="doses" 
+              value={doses} 
+              onChange={(e) => handleInputChange("doses", e.target.value)} 
+              className={errors.doses ? "input-error-pet" : ""}
+            />
+            {errors.doses && <span className="error-message-profile">{errors.doses}</span>}
           </div>
           <div className="form-group">
             <label>Date<span className="required">*</span></label>
@@ -297,9 +363,11 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
                 placeholder="Select date"
                 name="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => handleInputChange("date", e.target.value)}
+                className={errors.date ? "input-error-pet" : ""}
               />
             </div>
+            {errors.date && <span className="error-message-profile">{errors.date}</span>}
           </div>
           <button className="add-button" onClick={handleAddVaccination}>
             <Plus size={16} />
