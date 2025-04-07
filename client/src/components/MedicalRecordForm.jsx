@@ -112,7 +112,7 @@ const MedicalRecordForm = ({
             No
           </label>
         </div>
-      )
+      );
     } else if (type === "file") {
       input = (
           <div className="file-upload-container">
@@ -216,6 +216,38 @@ const MedicalRecordForm = ({
           className={isEditing ? "editable-value" : ""}
         />
       )
+    } else if (name === "weight") {
+      // "kg" text
+      input = (
+        <div className="input-with-unit">
+          <input
+            type={type}
+            id={name}
+            name={name}
+            value={value || ""}
+            onChange={onInputChange}
+            disabled={!isEditing}
+            className={isEditing ? "editable-value" : ""}
+          />
+          <span className="unit-text">kg</span>
+        </div>
+      )
+    } else if (name === "temperature") {
+      //"°C" text
+      input = (
+        <div className="input-with-unit">
+          <input
+            type={type}
+            id={name}
+            name={name}
+            value={value || ""}
+            onChange={onInputChange}
+            disabled={!isEditing}
+            className={isEditing ? "editable-value" : ""}
+          />
+          <span className="unit-text">°C</span>
+        </div>
+      )
     } else {
       input = (
         <input
@@ -246,6 +278,9 @@ const MedicalRecordForm = ({
               {type === "radio" ? (value === true ? "Yes" : "No") :
                !value || value === "" ?
                  <em>{`No ${label.toLowerCase()} provided`}</em> :
+                 // added this two below sumama beside
+                 name === "weight" ? `${value} kg` :
+                 name === "temperature" ? `${value} °C` :
                  value
               }
             </span>

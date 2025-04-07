@@ -42,12 +42,13 @@
   width: 100%;
 }
 
-
+/* changed  for kgs/temp */
 .input-container {
   display: grid;
   grid-template-columns: 170px 1fr;
-  align-items: center;
   gap: 2rem;
+  margin-bottom: 1.5rem;
+  align-items: start;
 }
 
 
@@ -528,4 +529,24 @@ textarea {
 textarea[name="latestDiagnosis"] {
   min-height: 50px;
   height: 50px;
+}
+
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-unit input {
+  width: 100%;
+  padding-right: 40px; 
+}
+
+.unit-text {
+  position: absolute;
+  right: 10px;
+  color: #666;
+  font-size: 1rem;
+  pointer-events: none; 
+  font-weight: bold;
 }

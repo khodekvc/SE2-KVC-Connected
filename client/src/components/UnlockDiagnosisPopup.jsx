@@ -66,7 +66,7 @@ const UnlockModal = ({ isOpen, onClose, onUnlock, generatedAccessCode }) => {
          </div>
          {error && <div className="error-message">{error}</div>}
          <div className="modal-buttons">
-           <button type="button" onClick={onClose} className="cancel-button">
+           <button type="button" onClick={onClose} className="cancel-diagnosis-button">
              Cancel
            </button>
            <button type="submit" className="unlock-button">
