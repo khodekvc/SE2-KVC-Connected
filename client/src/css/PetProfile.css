@@ -550,14 +550,13 @@
   margin-bottom: 0;
 }
 
-
+.input-error-pet {
   border: 1px solid #ff4444 !important;
   height: 38px !important;
   min-height: 38px !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
-
 
 .date-input .input-error-pet {
   border: 1px solid #ff4444 !important;

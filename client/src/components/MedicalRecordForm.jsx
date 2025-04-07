@@ -216,6 +216,38 @@ const MedicalRecordForm = ({
           className={isEditing ? "editable-value" : ""}
         />
       )
+    } else if (name === "weight") {
+      // Special case for weight field to add "kg" text
+      input = (
+        <div className="input-with-unit">
+          <input
+            type={type}
+            id={name}
+            name={name}
+            value={value || ""}
+            onChange={onInputChange}
+            disabled={!isEditing}
+            className={isEditing ? "editable-value" : ""}
+          />
+          <span className="unit-text">kg</span>
+        </div>
+      )
+    } else if (name === "temperature") {
+      // Special case for temperature field to add "°C" text
+      input = (
+        <div className="input-with-unit">
+          <input
+            type={type}
+            id={name}
+            name={name}
+            value={value || ""}
+            onChange={onInputChange}
+            disabled={!isEditing}
+            className={isEditing ? "editable-value" : ""}
+          />
+          <span className="unit-text">°C</span>
+        </div>
+      )
     } else {
       input = (
         <input

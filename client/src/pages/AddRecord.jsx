@@ -80,6 +80,12 @@ const AddRecord = ({ onClose, onSubmit }) => {
    
    // Required fields validation - expand this to match ViewRecord validation
    if (!formData.date) newErrors.date = "Date is required"
+   else {
+     const dateError = validateDate(formData.date);
+     if (dateError) {
+       newErrors.date = dateError;
+     }
+   }
    if (!formData.weight) newErrors.weight = "Weight is required"
    if (!formData.temperature) newErrors.temperature = "Temperature is required"
    if (!formData.conditions) newErrors.conditions = "Conditions is required"
@@ -227,12 +233,12 @@ const AddRecord = ({ onClose, onSubmit }) => {
      }))
      
      // Validate dates for future dates immediately
-     if (name === "recentVisit" && value) {
+     if ((name === "recentVisit" || name === "date") && value) {
        const dateError = validateDate(value);
        if (dateError) {
          setErrors(prev => ({
            ...prev,
-           recentVisit: dateError
+           [name]: dateError
          }));
        }
      }

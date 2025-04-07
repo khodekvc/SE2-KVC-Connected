@@ -7,26 +7,37 @@ import "../css/Forms.css";
 import { useUserRole } from "../contexts/UserRoleContext";
 import { useNavigate } from "react-router-dom";
 
+
 const PetInfo = () => {
-  const [formData, setFormData] = useState({
-    petname: "",
-    gender: "",
-    speciesDescription: "",
-    breed: "",
-    birthdate: "",
-    altPerson1: "",
-    altContact1: "",
-    captchaInput: "",
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState(() => {
+    // Retrieve stored form data from sessionStorage
+    const storedData = sessionStorage.getItem("signupStep2");
+    return storedData
+      ? JSON.parse(storedData)
+      : {
+          petname: "",
+          gender: "",
+          speciesDescription: "",
+          breed: "",
+          birthdate: "",
+          altPerson1: "",
+          altContact1: "",
+          captchaInput: "",
+        };
   });
+
+
   const [captcha, setCaptcha] = useState({ image: "", captchaKey: "" });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isCaptchaIncorrect, setIsCaptchaIncorrect] = useState(false);
 
+
   useEffect(() => {
       fetchCaptcha();
     }, []);
-  
+ 
     const fetchCaptcha = async () => {
       try {
         const response = await fetch("http://localhost:5000/auth/captcha", {
@@ -42,11 +53,43 @@ const PetInfo = () => {
       }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Validate birthday to prevent future dates
+  const validateBirthday = (dateString) => {
+    if (!dateString) return true; // Birthday is optional
+    
+    const selectedDate = new Date(dateString);
+    const currentDate = new Date();
+    
+    // Reset the time portion to compare just the dates
+    selectedDate.setHours(0, 0, 0, 0);
+    currentDate.setHours(0, 0, 0, 0);
+    
+    return selectedDate <= currentDate;
   };
+
+  const handleChange = (e) => {
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
+    sessionStorage.setItem("signupStep2", JSON.stringify(newFormData)); // Save to sessionStorage
+    
+    // Clear error if a new value is entered
+    if (error) setError("");
+  };
+
+
+
+
+  const handleBack = () => {
+    sessionStorage.setItem("signupStep2", JSON.stringify(formData));
+    navigate("/signup-petowner"); // Navigate back to page 1
+  };
+
+
+
+
   const { setCurrentRole } = useUserRole(); // Access the context to set the role
-  const navigate = useNavigate();
+  ///const navigate = useNavigate();
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,7 +97,6 @@ const PetInfo = () => {
     setIsCaptchaIncorrect(false); // Reset CAPTCHA status
     console.log("Pet Info Submitted:", formData);
 
-    
 
    // Validate empty fields
    if (!formData.petname.trim()) {
@@ -87,6 +129,14 @@ const PetInfo = () => {
     fetchCaptcha(); // Refresh CAPTCHA
     return;
   }
+  
+  // Validate birthday if it's provided
+  if (formData.birthdate && !validateBirthday(formData.birthdate)) {
+    setError("Future dates not allowed");
+    fetchCaptcha(); // Refresh CAPTCHA
+    return;
+  }
+
 
     try {
         const response = await fetch("http://localhost:5000/auth/signup/petowner-step2", {
@@ -98,7 +148,9 @@ const PetInfo = () => {
             body: JSON.stringify(formData),
         });
 
+
         const data = await response.json();
+
 
         if (!response.ok) {
             if (data.newCaptcha) {
@@ -110,24 +162,32 @@ const PetInfo = () => {
             throw new Error(data.error || "An error occurred during signup.");
         }
 
+
+        // Clear sessionStorage for both signup steps
+      sessionStorage.removeItem("signupStep1");
+      sessionStorage.removeItem("signupStep2");
+
+
         // Handle successful signup
       setCurrentRole(data.role); // Set the user's role in the context
       navigate(getLandingPage(data.role)); // Redirect to the landing page based on role
-        
+       
     } catch (error) {
         console.error("Error:", error.message);
         setError(error.message);
     }
 };
 
+
 const getLandingPage = (role) => {
-  switch (role) {   
+  switch (role) {  
     case "owner":
       return "/mypets";
     default:
       return "/login";
   }
 };
+
 
   return (
     <>
@@ -145,49 +205,55 @@ const getLandingPage = (role) => {
       <div className="right-section">
         <h2>Create Account</h2>
         <p>Your pet's care starts here!</p>
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className={`auth-error-message ${error === "Future dates not allowed" ? "future-date-error" : ""}`}>
+            {error}
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="signup-form-row">
-            <FormGroup 
-              label="Pet Name" 
-              type="text" 
-              name="petname" 
-              value={formData.petname} 
-              onChange={handleChange} 
-              required 
+            <FormGroup
+              label="Pet Name"
+              type="text"
+              name="petname"
+              value={formData.petname}
+              onChange={handleChange}
+              required
             />
-            
+           
             <div className="radio">
             <label>Gender <span className="required-asterisk">*</span></label>
               <div className="radio-group">
-                <input 
-                  type="radio" 
-                  id="male" 
-                  name="gender" 
-                  value="male" 
-                  onChange={handleChange} 
+                <input
+                  type="radio"
+                  id="male"
+                  name="gender"
+                  value="male"
+                  onChange={handleChange}
                 />
                 <label htmlFor="male">Male</label>
 
-                <input 
-                  type="radio" 
-                  id="female" 
-                  name="gender" 
-                  value="female" 
-                  onChange={handleChange} 
+
+                <input
+                  type="radio"
+                  id="female"
+                  name="gender"
+                  value="female"
+                  onChange={handleChange}
                 />
                 <label htmlFor="female">Female</label>
               </div>
             </div>
           </div>
 
+
           <div className="signup-form-row">
-          <FormGroup 
-              label="Pet Species" 
-              type="select" 
-              name="speciesDescription" 
-              value={formData.speciesDescription} 
-              onChange={handleChange} 
+          <FormGroup
+              label="Pet Species"
+              type="select"
+              name="speciesDescription"
+              value={formData.speciesDescription}
+              onChange={handleChange}
               selectOptions={[
                 "Dog (Standard)",
                 "Cat (Standard)",
@@ -198,63 +264,76 @@ const getLandingPage = (role) => {
                 "Lab Rat (Exotic)",
                 "Others"
               ]}
-              required 
+              required
             />
-            <FormGroup 
-              label="Pet Breed (Optional)" 
-              type="text" 
-              name="breed" 
-              value={formData.breed} 
-              onChange={handleChange} 
+            <FormGroup
+              label="Pet Breed (Optional)"
+              type="text"
+              name="breed"
+              value={formData.breed}
+              onChange={handleChange}
             />
           </div>
 
-          <FormGroup 
-            label="Birthday (Optional)" 
-            type="date" 
-            name="birthdate" 
-            value={formData.birthdate} 
-            onChange={handleChange} 
+
+          <FormGroup
+            label="Birthday (Optional)"
+            type="date"
+            name="birthdate"
+            value={formData.birthdate}
+            onChange={(e) => {
+              // Call handleChange to update state
+              handleChange(e);
+              
+              // Check if it's a future date and set an error
+              if (e.target.value && !validateBirthday(e.target.value)) {
+                setError("Future dates not allowed");
+              }
+            }}
           />
+
 
           <div className="signup-form-row">
-          <FormGroup 
-            label="Emergency Contact Person" 
-            type="text" 
-            name="altPerson1" 
-            value={formData.altPerson1} 
-            onChange={handleChange} 
+          <FormGroup
+            label="Emergency Contact Person"
+            type="text"
+            name="altPerson1"
+            value={formData.altPerson1}
+            onChange={handleChange}
             required
           />
-          <FormGroup 
-            label="Emergency Contact Number" 
-            type="text" 
-            name="altContact1" 
-            value={formData.altContact1} 
+          <FormGroup
+            label="Emergency Contact Number"
+            type="text"
+            name="altContact1"
+            value={formData.altContact1}
             onChange={handleChange}
-            required 
+            required
           />
           </div>
+
 
           <div className="forms-group captcha">
           <label htmlFor="captcha">Enter Captcha <span className="required-asterisk">*</span></label>
           <div className="captcha-container">
               <img src={`${captcha.image}`} className="generated" alt="CAPTCHA" />
-              <input 
-                type="text" 
-                id="captcha" 
-                name="captchaInput" 
-                value={formData.captchaInput} 
-                onChange={handleChange} 
+              <input
+                type="text"
+                id="captcha"
+                name="captchaInput"
+                value={formData.captchaInput}
+                onChange={handleChange}
               />
               {isCaptchaIncorrect && <span className="captcha-error"></span>}
             </div>
           </div>
 
+
           <div className="button-group">
-           <Button buttonStyle='btn--secondary' onClick={() => navigate('/signup-petowner')} className="form-btn-3">BACK</Button>
+           <Button buttonStyle='btn--secondary' type="button" onClick={handleBack} className="form-btn-3">BACK</Button>
            <Button buttonStyle='btn--primary' type="submit" className="form-btn-1" >SIGN UP</Button>
          </div>
+
 
         </form>
       </div>
@@ -263,4 +342,7 @@ const getLandingPage = (role) => {
   );
 };
 
+
 export default PetInfo;
+
+
