@@ -34,8 +34,8 @@ const OwnerMyAccount = () => {
 
   const { showConfirmDialog } = useConfirmDialog()
   const [validationErrors, setValidationErrors] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
     contactNumber: "",
     address: "",
@@ -49,8 +49,8 @@ const OwnerMyAccount = () => {
   // Custom function to clear validation errors
   const clearValidationErrors = () => {
     setValidationErrors({
-      firstName: "",
-      lastName: "",
+      firstname: "",
+      lastname: "",
       email: "",
       contactNumber: "",
       address: "",
@@ -102,8 +102,8 @@ const OwnerMyAccount = () => {
 
         // Populate the display and edit states
         setDisplayData({
-          firstName: data.firstname,
-          lastName: data.lastname,
+          firstname: data.firstname,
+          lastname: data.lastname,
           role: "Pet Owner",
           email: data.email,
           contactNumber: data.contact,
@@ -119,8 +119,8 @@ const OwnerMyAccount = () => {
         })
 
         setEditData({
-          firstName: data.firstname,
-          lastName: data.lastname,
+          firstname: data.firstname,
+          lastname: data.lastname,
           role: "Pet Owner",
           email: data.email,
           contactNumber: data.contact,
@@ -173,8 +173,8 @@ const OwnerMyAccount = () => {
 
   const validateFields = (data) => {
     const errors = {
-      firstName: "",
-      lastName: "",
+      firstname: "",
+      lastname: "",
       email: "",
       contactNumber: "",
       address: "",
@@ -184,14 +184,14 @@ const OwnerMyAccount = () => {
     let isValid = true;
 
 
-    if (!data.firstName || data.firstName.trim() === "") {
-      errors.firstName = "First Name is required";
+    if (!data.firstname || data.firstname.trim() === "") {
+      errors.firstname = "First Name is required";
       isValid = false;
     }
 
 
-    if (!data.lastName || data.lastName.trim() === "") {
-      errors.lastName = "Last Name is required";
+    if (!data.lastname || data.lastname.trim() === "") {
+      errors.lastname = "Last Name is required";
       isValid = false;
     }
 
@@ -265,8 +265,8 @@ const OwnerMyAccount = () => {
 
     // Check for empty or whitespace-only fields (except Emergency Contact 2 and Person 2)
     const requiredFields = [
-      processedData.firstName,
-      processedData.lastName,
+      processedData.firstname,
+      processedData.lastname,
       processedData.email,
       processedData.contactNumber,
       processedData.address,
@@ -290,8 +290,8 @@ const OwnerMyAccount = () => {
         },
         credentials: "include", // Include cookies for authentication
         body: JSON.stringify({
-          firstname: processedData.firstName,
-          lastname: processedData.lastName,
+          firstname: processedData.firstname,
+          lastname: processedData.lastname,
           email: processedData.email,
           contact: processedData.contactNumber,
           address: processedData.address,
@@ -317,8 +317,8 @@ const OwnerMyAccount = () => {
 
       // Clear validation errors
       setValidationErrors({
-        firstName: "",
-        lastName: "",
+        firstname: "",
+        lastname: "",
         email: "",
         contactNumber: "",
         address: "",
@@ -385,46 +385,46 @@ const OwnerMyAccount = () => {
           <div className="info-column">
             <div className="info-group">
             <label>First Name{isEditing && <span className="required">*</span>}
-                {isEditing && validationErrors.firstName && <span className="error-message-pet">{validationErrors.firstName}</span>}
+                {isEditing && validationErrors.firstname && <span className="error-message-pet">{validationErrors.firstname}</span>}
               </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="firstName"
-                  value={userData.firstName}
+                  value={userData.firstname}
                   onChange={(e) => {
                     handleInputChange(e);
                     // Clear validation error
-                    if (validationErrors.firstName) {
-                      setValidationErrors(prev => ({...prev, firstName: ""}));
+                    if (validationErrors.firstname) {
+                      setValidationErrors(prev => ({...prev, firstname: ""}));
                     }
                   }}
-                  className={validationErrors.firstName ? "input-error-pet" : "info-input"}
+                  className={validationErrors.firstname ? "input-error-pet" : "info-input"}
                 />
               ) : (
-                <div className="info-value">{userData.firstName}</div>
+                <div className="info-value">{userData.firstname}</div>
               )}
             </div>
             <div className="info-group">
             <label>Last Name{isEditing && <span className="required">*</span>}
-                {isEditing && validationErrors.lastName && <span className="error-message-pet">{validationErrors.lastName}</span>}
+                {isEditing && validationErrors.lastname && <span className="error-message-pet">{validationErrors.lastname}</span>}
               </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="lastName"
-                  value={userData.lastName}
+                  value={userData.lastname}
                   onChange={(e) => {
                     handleInputChange(e);
                     // Clear validation error
-                    if (validationErrors.lastName) {
-                      setValidationErrors(prev => ({...prev, lastName: ""}));
+                    if (validationErrors.lastname) {
+                      setValidationErrors(prev => ({...prev, lastname: ""}));
                     }
                   }}
-                  className={validationErrors.lastName ? "input-error-pet" : "info-input"}
+                  className={validationErrors.lastname ? "input-error-pet" : "info-input"}
                 />
               ) : (
-                <div className="info-value">{userData.lastName}</div>
+                <div className="info-value">{userData.lastname}</div>
               )}
             </div>
           </div>

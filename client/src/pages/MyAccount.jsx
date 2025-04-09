@@ -15,8 +15,8 @@ const MyAccount = () => {
   const navigate = useNavigate();
   const { showConfirmDialog } = useConfirmDialog();
   const [validationErrors, setValidationErrors] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
     contact: ""
   });
@@ -64,15 +64,15 @@ const MyAccount = () => {
         console.log("Fetched user data:", data);
 
         setDisplayData({
-          firstName: data.firstname,
-          lastName: data.lastname,
+          firstname: data.firstname,
+          lastname: data.lastname,
           role: data.role,
           email: data.email,
           contact: data.contact,
         });
         setEditData({
-          firstName: data.firstname,
-          lastName: data.lastname,
+          firstname: data.firstname,
+          lastname: data.lastname,
           role: data.role,
           email: data.email,
           contact: data.contact,
@@ -90,22 +90,22 @@ const MyAccount = () => {
 
   const validateFields = (data) => {
     const errors = {
-      firstName: "",
-      lastName: "",
+      firstname: "",
+      lastname: "",
       email: "",
       contact: ""
     };
     let isValid = true;
 
 
-    if (!data.firstName || data.firstName.trim() === "") {
-      errors.firstName = "First Name is required";
+    if (!data.firstname || data.firstname.trim() === "") {
+      errors.firstname = "First Name is required";
       isValid = false;
     }
 
 
-    if (!data.lastName || data.lastName.trim() === "") {
-      errors.lastName = "Last Name is required";
+    if (!data.lastname || data.lastname.trim() === "") {
+      errors.lastname = "Last Name is required";
       isValid = false;
     }
 
@@ -128,8 +128,8 @@ const MyAccount = () => {
     showConfirmDialog("Do you want to save your changes?", async () => {
       try {
         const backendData = {
-          firstname: updatedData.firstName,
-          lastname: updatedData.lastName,
+          firstname: updatedData.firstname,
+          lastname: updatedData.lastname,
           email: updatedData.email,
           contact: updatedData.contact,
           role: updatedData.role
@@ -159,8 +159,8 @@ const MyAccount = () => {
       
 
       const frontendData = {
-        firstName: data.firstname || updatedData.firstName,
-        lastName: data.lastname || updatedData.lastName,
+        firstname: data.firstname || updatedData.firstname,
+        lastname: data.lastname || updatedData.lastname,
         role: data.role || updatedData.role,
         email: data.email || updatedData.email,
         contact: updatedData.contact,
@@ -199,47 +199,47 @@ const MyAccount = () => {
           <div className="info-column">
             <div className="info-group">
             <label>First Name{isEditing && <span className="required">*</span>}
-                {isEditing && validationErrors.firstName && <span className="error-message-pet">{validationErrors.firstName}</span>}
+                {isEditing && validationErrors.firstname && <span className="error-message-pet">{validationErrors.firstname}</span>}
               </label>
               {isEditing ? (
                 <input
                   type="text"
-                  name="firstName"
-                  value={userData.firstName}
+                  name="firstname"
+                  value={userData.firstname}
                   onChange={(e) => {
                     handleInputChange(e);
                     // Clear validation error
-                    if (validationErrors.firstName) {
-                      setValidationErrors(prev => ({...prev, firstName: ""}));
+                    if (validationErrors.firstname) {
+                      setValidationErrors(prev => ({...prev, firstname: ""}));
                     }
                   }}
-                  className={validationErrors.firstName ? "input-error-pet" : "info-input"}
+                  className={validationErrors.firstname ? "input-error-pet" : "info-input"}
 
                 />
               ) : (
-                <div className="info-value">{userData.firstName}</div>
+                <div className="info-value">{userData.firstname}</div>
               )}
             </div>
             <div className="info-group">
             <label>Last Name{isEditing && <span className="required">*</span>}
-                {isEditing && validationErrors.lastName && <span className="error-message-pet">{validationErrors.lastName}</span>}
+                {isEditing && validationErrors.lastname && <span className="error-message-pet">{validationErrors.lastname}</span>}
               </label>
               {isEditing ? (
                 <input
                   type="text"
                   name="lastName"
-                  value={userData.lastName}
+                  value={userData.lastname}
                   onChange={(e) => {
                     handleInputChange(e);
                     // Clear validation error
-                    if (validationErrors.lastName) {
-                      setValidationErrors(prev => ({...prev, lastName: ""}));
+                    if (validationErrors.lastname) {
+                      setValidationErrors(prev => ({...prev, lastname: ""}));
                     }
                   }}
-                  className={validationErrors.lastName ? "input-error-pet" : "info-input"}
+                  className={validationErrors.lastname ? "input-error-pet" : "info-input"}
                 />
               ) : (
-                <div className="info-value">{userData.lastName}</div>
+                <div className="info-value">{userData.lastname}</div>
               )}
             </div>
           </div>

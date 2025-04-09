@@ -52,14 +52,17 @@ function LoginForm() {
     // Validate empty fields
    if (!formData.email.trim()) {
     setError("Email is required");
+    fetchCaptcha();
     return;
   }
   if (!formData.password.trim()) {
     setError("Password is required");
+    fetchCaptcha();
     return;
   }
   if (!formData.captchaInput?.trim()) {
     setError("CAPTCHA is required");
+    fetchCaptcha();
     return;
   }
 

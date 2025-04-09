@@ -91,7 +91,7 @@ export default function PatientDirectory() {
   }, [logout]);
 
   const handleArchive = (petId) => {
-  showConfirmDialog("Are you sure you want to archive this record?", async () => {
+  showConfirmDialog("Are you sure you want to archive this pet?", async () => {
     try {
       const response = await fetch(`http://localhost:5000/pets/archive/${petId}`, {
         method: "PUT",

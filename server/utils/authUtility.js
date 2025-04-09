@@ -4,7 +4,7 @@ exports.generateToken = (userId, role) => {
     return jwt.sign(
         { userId, role },
         process.env.JWT_SECRET,
-        { expiresIn: "15m" } // Token expires in 15 minutes
+        { expiresIn: "30m" } // Token expires in 15 minutes
     );
 };
 
