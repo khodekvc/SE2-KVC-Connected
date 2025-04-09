@@ -8,7 +8,6 @@ async function generatePdf(petId, recordId) {
     try {
         console.log("Generating PDF for pet ID:", petId);
     
-        // First, fetch the pet data to get the record date
         const dateQuery = `
             SELECT p.pet_id, p.pet_name, r.record_date
             FROM pet_info p
@@ -66,7 +65,10 @@ async function generatePdf(petId, recordId) {
         });
         
         // Rest of your PDF generation code remains the same...
-        
+        const pageMargins = doc.page.margins;
+        const pageHeight = doc.page.height;
+        const usableWidth = doc.page.width - pageMargins.left - pageMargins.right;
+
         const stream = fs.createWriteStream(pdfPath);
         doc.pipe(stream);
 
@@ -342,23 +344,76 @@ async function generatePdf(petId, recordId) {
             // Add header to new page - using the function for consistency
             addHeader(doc);
         }
-        
-        // Attached Lab File section with left-aligned header
-        addSectionHeader('Attached Lab File');
-
-        //if deployed on cloud, get the stored image in cloud
-        // const imageUrl = rows[0].record_lab_file;  // Assuming it's stored as a URL
-        // doc.image(imageUrl, { width: 300, height: 200 });
 
         //testing in local for now
         const imageFilename = petData.record_lab_file.toString();  
         const imagePath = path.join(__dirname, "../uploads", imageFilename); // Adjust your storage path
 
         if (fs.existsSync(imagePath)) {
+            addSectionHeader('Attached Lab File');
             doc.image(imagePath, { width: 400, height: 200 });
-        } else {
-            doc.text("⚠️ Image file not found.");
         }
+
+        doc.moveDown(1.5);
+
+        const signatureLineLength = 150; // Or 120, 180 - How long the actual line should be.
+        // *** NEW: Define how far the CENTER of the signature block should be from the right margin ***
+        const signatureBlockCenterOffset = 5; // Adjust this: smaller value moves it further right, larger moves it left. Try values like 80, 100, 120.
+        const signatureYPosition = pageHeight - pageMargins.bottom - 60; // Y position for the line (60pt from bottom margin)
+        const signatureTextOffset = 5; // Space between line and text
+        const disclaimerYPosition = pageHeight - pageMargins.bottom - 20; // Y position for disclaimer (20pt from bottom margin)
+
+        // --- Calculate Signature X Coordinates (REVISED LOGIC) ---
+        // 1. Calculate the desired center X coordinate for the signature block
+        const signatureCenterX = pageWidth - pageMargins.right - signatureBlockCenterOffset;
+        // 2. Calculate Start and End X based on the desired center and length
+        const signatureLineStartX = signatureCenterX - (signatureLineLength / 2);
+        const signatureLineEndX = signatureCenterX + (signatureLineLength / 2);
+
+        // ++ MORE DEBUGGING ++
+        console.log(`Signature Center X: ${signatureCenterX}`); // Check the calculated center
+        console.log(`Signature Line Y: ${signatureYPosition}`);
+        console.log(`Signature Line Start X: ${signatureLineStartX}`); // Based on new center calc
+        console.log(`Signature Line End X: ${signatureLineEndX}`);   // Based on new center calc
+        console.log(`Signature Text Y: ${signatureYPosition + signatureTextOffset}`);
+        console.log(`Disclaimer Y: ${disclaimerYPosition}`);
+        // ++ END MORE DEBUGGING ++
+
+
+        // Check if the current Y position is too close (same logic as before)
+        const requiredBottomSpace = pageHeight - disclaimerYPosition + 30;
+        if (doc.y > pageHeight - requiredBottomSpace ) {
+            console.log("Adding new page for signature/disclaimer");
+            doc.addPage();
+            addHeader(doc);
+        }
+
+        // --- Signature Line and Text ---
+        // Use the newly calculated StartX and EndX based on the desired center
+        doc.moveTo(signatureLineStartX, signatureYPosition)
+           .lineTo(signatureLineEndX, signatureYPosition)
+           .lineWidth(0.75)
+           .strokeColor('black')
+           .stroke();
+
+        // Position text starting at the line's calculated start, centered within the line's length
+        doc.font('Helvetica').fontSize(8)
+           .fillColor('black')
+           .text('Signature over printed name', signatureLineStartX, signatureYPosition + signatureTextOffset, {
+               width: signatureLineLength, // Width for centering is the line length
+               align: 'center'
+           });
+
+        // --- Disclaimer ---
+        const disclaimerText = "This medical record is confidential and intended for the designated recipient only. Unauthorized use or distribution is prohibited.";
+        doc.font('Helvetica-BoldOblique').fontSize(8)
+           .fillColor('black')
+           .text(disclaimerText, pageMargins.left, disclaimerYPosition, {
+               width: usableWidth,
+               align: 'center'
+           });
+
+
         
         doc.end();
 
