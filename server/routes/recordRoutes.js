@@ -72,14 +72,30 @@ router.get("/search-records", authenticateToken, async (req, res) => {
         }
 
         let query = `
-            SELECT record_info.record_date AS date, 
-                   record_info.record_purpose AS purposeOfVisit, 
-                   pet_info.pet_name, 
-                   users.user_firstname AS owner_firstname, 
-                   users.user_lastname AS owner_lastname
+            SELECT
+              record_info.record_id AS id,
+              record_info.record_date AS date,
+              record_info.record_purpose AS purposeOfVisit,
+              record_info.record_weight AS weight,          -- Added
+              record_info.record_temp AS temperature,      -- Added
+              record_info.record_condition AS conditions,  -- Added
+              record_info.record_symptom AS symptoms,      -- Added
+              record_info.record_recent_visit AS recentVisit, -- Added
+              record_info.record_purchase AS recentPurchase, -- Added
+              record_info.record_lab_file AS file,         -- Added
+              p.pet_name,                      -- Already present
+              l.lab_description AS laboratories,   -- Added
+              s.surgery_type AS surgeryType,       -- Added
+              s.surgery_date AS surgeryDate,       -- Added
+              d.diagnosis_text AS latestDiagnosis, -- Added
+              record_info.pet_id AS petId,                 -- Added (or ensure if needed)
+              CASE WHEN s.surgery_id IS NOT NULL THEN TRUE ELSE FALSE END AS hadSurgery -- Added
             FROM record_info
-            JOIN pet_info ON record_info.pet_id = pet_info.pet_id
-            JOIN users ON pet_info.user_id = users.user_id
+            LEFT JOIN pet_info p ON record_info.pet_id = p.pet_id           -- Keep JOIN
+            LEFT JOIN users u ON p.user_id = u.user_id             -- Changed alias from users to u
+            LEFT JOIN lab_info l ON record_info.lab_id = l.lab_id           -- Added JOIN
+            LEFT JOIN surgery_info s ON record_info.surgery_id = s.surgery_id -- Added JOIN
+            LEFT JOIN diagnosis d ON record_info.diagnosis_id = d.diagnosis_id -- Added JOIN
             WHERE record_info.pet_id = ?
         `;
         let queryParams = [pet_id];

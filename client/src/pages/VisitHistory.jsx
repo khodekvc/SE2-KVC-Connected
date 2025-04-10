@@ -20,6 +20,8 @@ const VisitHistory = () => {
  const [selectedRecord, setSelectedRecord] = useState(null)
  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
  const [visitRecords, setVisitRecords] = useState([])
+ const [filteredRecords, setFilteredRecords] = useState([]);
+
 
  const navigate = useNavigate(); // Initialize useNavigate hook
  const logout = useCallback(async () => {
@@ -102,48 +104,51 @@ const VisitHistory = () => {
  }
 
 
- const applyFilters = async (filters) => {
-    try {
-        const queryParams = new URLSearchParams();
+ const applyFilters = async (filters) => { 
+  try {
+    const queryParams = new URLSearchParams();
 
-        if (filters.dateFrom) {
-            queryParams.append("start_date", filters.dateFrom);
-        }
-        if (filters.dateTo) {
-            queryParams.append("end_date", filters.dateTo);
-        }
-        if (filters.sortOrder) {
-            queryParams.append("sort_order", filters.sortOrder);
-        }
-        queryParams.append("pet_id", pet_id); // Include pet_id in the query
-
-        console.log("Query Params:", queryParams.toString()); // Debugging line
-
-        const response = await fetch(`http://localhost:5000/recs/search-records?${queryParams.toString()}`, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-        if (response.status === 401) {
-          console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
-          await logout(); // Call logout function
-          return; // Stop further processing in this function
-        }
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch filtered records");
-        }
-
-        const data = await response.json();
-        console.log("Filtered and sorted records:", data); // Debugging line
-        setVisitRecords(data); // Update the records in the state
-    } catch (error) {
-        console.error("Error applying filters:", error);
+    if (filters.dateFrom) {
+      queryParams.append("start_date", filters.dateFrom);
     }
+    if (filters.dateTo) {
+      queryParams.append("end_date", filters.dateTo);
+    }
+    if (filters.sortOrder) {
+      queryParams.append("sort_order", filters.sortOrder);
+    }
+    queryParams.append("pet_id", pet_id);
+
+    console.log("Query Params:", queryParams.toString());
+
+    const response = await fetch(`http://localhost:5000/recs/search-records?${queryParams.toString()}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 401) {
+      console.warn("Session expired (401 Unauthorized) during filter search. Logging out...");
+      await logout();
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch filtered records");
+    }
+
+    const data = await response.json();
+    console.log("Filtered and sorted records:", data);
+
+    setVisitRecords(data);
+    setFilteredRecords(data);
+  } catch (error) {
+    console.error("Error applying filters:", error);
+  }
 };
+
 
 
 const resetFilters = async () => {
