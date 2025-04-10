@@ -1,10 +1,9 @@
 "use client"
 
-
 import { useState, useEffect, useCallback } from "react"
 import { Plus } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-
+import { useConfirmDialog } from "../contexts/ConfirmDialogContext" 
 
 export default function VaccinationRecord({ pet_id, hasPermission }) {
   const [vaccinations, setVaccinations] = useState([])
@@ -19,7 +18,7 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     date: ""
   })
 
-
+  const { showConfirmDialog } = useConfirmDialog() // added this
 
   const vaccineTypes = [
     "3 in 1 (for Cats' 1st Vaccine)",
@@ -33,27 +32,23 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
   const navigate = useNavigate()
 
   const logout = useCallback(async () => {
-      console.log("Attempting logout due to session issue...");
-      try {
-        // Optional: Inform the backend about the logout attempt
-        await fetch("http://localhost:5000/auth/logout", {
-          method: "POST",
-          credentials: "include",
-        });
-      } catch (error) {
-        console.error("Error during server logout request:", error);
-        // Proceed with client-side logout even if server request fails
-      } finally {
-          console.log("Redirecting to /login");
-          navigate("/login", { replace: true }); // Use replace to prevent going back to the expired page
-      }
-    }, [navigate]);
+    console.log("Attempting logout due to session issue...");
+    try {
+      await fetch("http://localhost:5000/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error during server logout request:", error);
+    } finally {
+      console.log("Redirecting to /login");
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
 
-  // Fetch vaccination records when component mounts
   useEffect(() => {
     const fetchVaccinations = async () => {
       if (!pet_id) return
-
 
       setIsLoading(true)
       try {
@@ -62,20 +57,17 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
         })
 
         if (response.status === 401) {
-            console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
-            await logout(); // Call logout function
-            return; // Stop further processing in this function
-          }
+          console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
+          await logout();
+          return;
+        }
 
         if (!response.ok) {
           throw new Error("Failed to fetch vaccination records")
         }
 
-
         const data = await response.json()
 
-
-        // Map the API data to match the expected structure in the table
         const formattedData = data.map((record) => ({
           id: record.id,
           vax_id: record.vax_id,
@@ -83,7 +75,6 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
           doses: record.imm_rec_quantity,
           date: formatDateToMMDDYYYY(record.imm_rec_date),
         }))
-
 
         setVaccinations(formattedData)
         setError(null)
@@ -95,10 +86,8 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
       }
     }
 
-
     fetchVaccinations()
   }, [pet_id, logout])
-
 
   const getCurrentDate = () => {
     const today = new Date()
@@ -108,124 +97,104 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     return `${month}/${day}/${year}`
   }
 
-
   const formatDateToMMDDYYYY = (dateString) => {
     if (!dateString) return ""
 
-
     try {
-      // Create a Date object from the string
       const date = new Date(dateString)
 
-
-      // Check if the date is valid
       if (isNaN(date.getTime())) {
-        // If it's not a valid date object, try parsing it manually
         if (dateString.includes("-")) {
           const [year, month, day] = dateString.split("-")
           return `${month}/${day}/${year}`
         }
-        return dateString // Return as is if we can't parse it
+        return dateString
       }
 
-
-      // Format the date as MM/DD/YYYY
       const month = String(date.getMonth() + 1).padStart(2, "0")
       const day = String(date.getDate()).padStart(2, "0")
       const year = date.getFullYear()
 
-
       return `${month}/${day}/${year}`
     } catch (error) {
       console.error("Error formatting date:", error)
-      return dateString // Return the original string if there's an error
+      return dateString
     }
   }
-
 
   const formatDateToYYYYMMDD = (dateString) => {
     if (!dateString) return ""
 
-
-    // If it's already in YYYY-MM-DD format
     if (dateString.includes("-") && dateString.split("-")[0].length === 4) {
       return dateString
     }
 
-
-    // If it's in MM/DD/YYYY format
     if (dateString.includes("/")) {
       const [month, day, year] = dateString.split("/")
       return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
     }
 
-
     return dateString
   }
 
-
   const handleUpdateDose = async (index) => {
-    if (!hasPermission("canAddVaccination")) return
+    if (!hasPermission("canAddVaccination")) return;
 
+    const vaccination = vaccinations[index];
+    const updatedDoses = Number(vaccination.doses) + 1;
+    const today = new Date().toISOString().split("T")[0];
 
-    const vaccination = vaccinations[index]
-    const updatedDoses = Number(vaccination.doses) + 1
-    const today = new Date().toISOString().split("T")[0] // Format date to YYYY-MM-DD
+    
+    showConfirmDialog("Are you sure you want to add another dose?", async () => {
+      try {
+        setVaccinations((prevVaccinations) =>
+          prevVaccinations.map((vax, i) =>
+            i === index ? { ...vax, doses: updatedDoses, date: getCurrentDate() } : vax
+          )
+        );
 
+        // Send the update to the server
+        const response = await fetch(`http://localhost:5000/pets/${pet_id}/vaccines/${vaccination.vax_id}`, {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            imm_rec_quantity: updatedDoses,
+            imm_rec_date: today,
+          }),
+        });
 
-    try {
-      // Update UI first for better user experience
-      setVaccinations((prevVaccinations) =>
-        prevVaccinations.map((vax, i) => (i === index ? { ...vax, doses: updatedDoses, date: getCurrentDate() } : vax)),
-      )
+        if (response.status === 401) {
+          console.warn("Session expired (401 Unauthorized). Logging out...");
+          await logout();
+          return;
+        }
 
-
-      // Then update the database
-      const response = await fetch(`http://localhost:5000/pets/${pet_id}/vaccines/${vaccination.vax_id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          imm_rec_quantity: updatedDoses,
-          imm_rec_date: today,
-        }),
-      })
-
-      if (response.status === 401) {
-        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
-        await logout(); // Call logout function
-        return; // Stop further processing in this function
+        if (!response.ok) {
+          throw new Error("Failed to update vaccination record");
+        }
+      } catch (error) {
+        console.error("Error updating vaccination record:", error);
       }
-
-
-      if (!response.ok) {
-        throw new Error("Failed to update vaccination record")
-      }
-    } catch (error) {
-      console.error("Error updating vaccination record:", error)
-      // Revert the UI change if the API call fails
-      // You could fetch the data again here to ensure UI is in sync with database
-    }
-  }
+    });
+  };
 
   const validateDate = (dateString) => {
     if (!dateString) return "";
-   
+
     const selectedDate = new Date(dateString);
     const currentDate = new Date();
-   
-    // Reset the time portion to compare just the dates
+
     selectedDate.setHours(0, 0, 0, 0);
     currentDate.setHours(0, 0, 0, 0);
-   
+
     if (selectedDate > currentDate) {
       return "Future dates not allowed";
     }
     return "";
   }
-
 
   const validateForm = () => {
     const newErrors = {
@@ -235,31 +204,26 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     };
     let isValid = true;
 
-
     if (!vaccineType) {
       newErrors.vaccineType = "Vaccine type is required";
       isValid = false;
     }
-
 
     if (!doses) {
       newErrors.doses = "Doses is required";
       isValid = false;
     }
 
-
     if (!date) {
       newErrors.date = "Date is required";
       isValid = false;
     } else {
-      // Checks future date
       const dateError = validateDate(date);
       if (dateError) {
         newErrors.date = dateError;
         isValid = false;
       }
     }
-
 
     setErrors(newErrors);
     return isValid;
@@ -273,7 +237,6 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
       }));
     }
 
-    // Validate date if the field is date
     if (field === "date" && value) {
       const dateError = validateDate(value);
       if (dateError) {
@@ -283,7 +246,6 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
         }));
       }
     }
-
 
     switch (field) {
       case "vaccineType":
@@ -298,110 +260,91 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     }
   }
 
-
   const handleAddVaccination = async () => {
-    if (!hasPermission("canAddVaccination")) return
+    if (!hasPermission("canAddVaccination")) return;
 
-
-    // Validate the form
     if (!validateForm()) {
-      return; // Stop if validation fails
+      return;
     }
 
+    showConfirmDialog("Do you want to add this vaccination record?", async () => {
+      const formattedDate = formatDateToYYYYMMDD(date);
 
-    // Format date to YYYY-MM-DD for the API
-    const formattedDate = formatDateToYYYYMMDD(date)
+      try {
+        const newVaccination = {
+          type: vaccineType,
+          doses: Number(doses),
+          date: formatDateToMMDDYYYY(date),
+        };
 
+        setVaccinations([...vaccinations, newVaccination]);
 
-    try {
-      // First update UI for better user experience
-      const newVaccination = {
-        type: vaccineType,
-        doses: Number(doses),
-        date: formatDateToMMDDYYYY(date),
+        setVaccineType("");
+        setDoses("");
+        setDate("");
+
+        setErrors({
+          vaccineType: "",
+          doses: "",
+          date: "",
+        });
+
+        const response = await fetch(`http://localhost:5000/pets/${pet_id}/vaccines`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            vax_type: vaccineType,
+            imm_rec_quantity: Number(doses),
+            imm_rec_date: formattedDate,
+          }),
+        });
+
+        if (response.status === 401) {
+          console.warn("Session expired (401 Unauthorized). Logging out...");
+          await logout();
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Failed to add vaccination record");
+        }
+
+        const newRecord = await response.json();
+        console.log("Added vaccination record:", newRecord);
+
+        setVaccinations((prev) =>
+          prev.map((vax, index) =>
+            index === prev.length - 1
+              ? {
+                  id: newRecord.id,
+                  vax_id: newRecord.vax_id,
+                  type: newRecord.vax_type,
+                  doses: newRecord.imm_rec_quantity,
+                  date: formatDateToMMDDYYYY(newRecord.imm_rec_date),
+                }
+              : vax
+          )
+        );
+      } catch (error) {
+        console.error("Error adding vaccination record:", error);
       }
-
-
-      setVaccinations([...vaccinations, newVaccination])
-
-
-      // Clear the form
-      setVaccineType("")
-      setDoses("")
-      setDate("")
-
-      setErrors({
-        vaccineType: "",
-        doses: "",
-        date: ""
-      })
-
-
-
-      // Then send to API
-      const response = await fetch(`http://localhost:5000/pets/${pet_id}/vaccines`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          vax_type: vaccineType,
-          imm_rec_quantity: Number(doses),
-          imm_rec_date: formattedDate,
-        }),
-      })
-
-      if (response.status === 401) {
-        console.warn("Session expired (401 Unauthorized) during password change. Logging out...");
-        await logout(); // Call logout function
-        return; // Stop further processing in this function
-      }
-
-      if (!response.ok) {
-        throw new Error("Failed to add vaccination record")
-      }
-
-
-      const newRecord = await response.json()
-      console.log("Added vaccination record:", newRecord)
-
-
-      // Update the vaccinations state with the correct ID from the server
-      setVaccinations((prev) =>
-        prev.map((vax, index) =>
-          index === prev.length - 1
-            ? {
-                id: newRecord.id,
-                vax_id: newRecord.vax_id,
-                type: newRecord.vax_type,
-                doses: newRecord.imm_rec_quantity,
-                date: formatDateToMMDDYYYY(newRecord.imm_rec_date),
-              }
-            : vax,
-        ),
-      )
-    } catch (error) {
-      console.error("Error adding vaccination record:", error)
-      // You could show an error message to the user here
-    }
-  }
-
+    });
+  };
 
   if (isLoading) {
     return <div>Loading vaccination records...</div>
   }
 
-
   if (error) {
     return <div>Error: {error}</div>
   }
 
-
   return (
     <div className="vaccination-record">
       <h2>Vaccination Record</h2>
-
 
       {hasPermission("canAddVaccination") && (
         <div className="vaccination-form">
@@ -439,8 +382,8 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
             {errors.doses && <span className="error-message-profile">{errors.doses}</span>}
           </div>
           <div className="form-group">
-          <label>Date<span className="required">*</span></label>
-          <div className="date-input">
+            <label>Date<span className="required">*</span></label>
+            <div className="date-input">
               <input
                 type="date"
                 placeholder="Select date"
@@ -458,7 +401,6 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
           </button>
         </div>
       )}
-
 
       <div className="vaccination-table">
         <table>
