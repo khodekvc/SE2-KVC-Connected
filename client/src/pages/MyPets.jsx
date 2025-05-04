@@ -9,6 +9,8 @@ export default function MyPets() {
   const navigate = useNavigate();
   const [originalPets, setOriginalPets] = useState([]);
   const [pets, setPets] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // Current page number
+  const recordsPerPage = 9; // Number of records per page
 
   const logout = useCallback(async () => {
     console.log("Attempting logout due to session issue...");
@@ -82,11 +84,31 @@ export default function MyPets() {
 
     fetchMyPets();
   }, [logout]);
+  
+  // Pagination logic
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = pets.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  const totalPages = Math.ceil(pets.length / recordsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
 
   const handleViewProfile = (petId) => {
     console.log("Navigating to PetProfile with petId:", petId);
     navigate(`/PetProfile/${petId}`);
   };
+
 
   return (
     <div className="patient-directory">
@@ -104,6 +126,7 @@ export default function MyPets() {
                 pet.pet_name.toLowerCase().includes(searchTerm) || pet.species.toLowerCase().includes(searchTerm)
               );
               setPets(filteredPets);
+              setCurrentPage(1);
             }}
           />
         </div>
@@ -121,8 +144,11 @@ export default function MyPets() {
               </tr>
             </thead>
             <tbody>
-              {pets.map((pet, index) => (
-                <tr key={pet.pet_id} className={index % 2 === 0 ? "row-even" : "row-odd"}>
+              {currentRecords.map((pet, index) => (
+                <tr
+                  key={pet.pet_id}
+                  className={index % 2 === 0 ? "row-even" : "row-odd"}
+                >
                   <td>{pet.pet_id}</td>
                   <td>{pet.pet_name}</td>
                   <td>{pet.species}</td>
@@ -139,6 +165,27 @@ export default function MyPets() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="pagination-controls">
+        <button
+          className="pagination-button"
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span className="pagination-info">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          className="pagination-button"
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
