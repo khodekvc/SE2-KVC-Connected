@@ -144,7 +144,7 @@ export default function PetProfile() {
 
 
 
-  const handleEdit = () => {
+  const handleEdit = async() => {
     if (!hasPermission("canEditPetProfile")) return
  
     let formattedBirthday = petData.birthday
@@ -606,7 +606,11 @@ export default function PetProfile() {
 
 
             <div className="separator"></div>
-            <VaccinationRecord pet_id={pet_id} hasPermission={hasPermission} />
+            <VaccinationRecord 
+              pet_id={pet_id} 
+              hasPermission={hasPermission} 
+              currentSpecies={isEditing ? editedPetData.species : petData.species} 
+            />
           </div>
         ) : (
           <div className="history-content">
