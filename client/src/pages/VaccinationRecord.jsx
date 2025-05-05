@@ -4,8 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useConfirmDialog } from "../contexts/ConfirmDialogContext";
+import PetProfile from "./PetProfile";
 
-export default function VaccinationRecord({ pet_id, hasPermission }) {
+export default function VaccinationRecord({
+  pet_id,
+  hasPermission,
+  currentSpecies,
+}) {
   const [vaccinations, setVaccinations] = useState([]);
   const [vaccineType, setVaccineType] = useState("");
   const [doses, setDoses] = useState("");
@@ -18,16 +23,27 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
     date: "",
   });
 
-  const { showConfirmDialog } = useConfirmDialog(); // added this
+  const { showConfirmDialog } = useConfirmDialog();
 
-  const vaccineTypes = [
-    "3 in 1 (for Cats' 1st Vaccine)",
-    "4 in 1 (for Cats' 2nd and succeeding shots)",
-    "Kennel cough (for Dogs)",
-    "2 in 1 (for Dogs' 1st Vaccine, usually for puppies)",
-    "5 in 1 (for Dogs' 2nd and succeeding shots)",
-    "Anti-rabies (3 months start or succeeding ages)",
-  ];
+  const getVaccineTypesBySpecies = (species) => {
+    if (species.includes("Cat")) {
+      return [
+        "3 in 1 (for Cats' 1st Vaccine)",
+        "4 in 1 (for Cats' 2nd and succeeding shots)",
+        "Anti-rabies (3 months start or succeeding ages)",
+      ];
+    } else if (species.includes("Dog")) {
+      return [
+        "Kennel cough (for Dogs)",
+        "2 in 1 (for Dogs' 1st Vaccine, usually for puppies)",
+        "5 in 1 (for Dogs' 2nd and succeeding shots)",
+        "Anti-rabies (3 months start or succeeding ages)",
+      ];
+    }
+    return ["Anti-rabies (3 months start or succeeding ages)"];
+  };
+
+  const vaccineTypes = getVaccineTypesBySpecies(currentSpecies);
 
   const navigate = useNavigate();
 
@@ -52,26 +68,25 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
 
       setIsLoading(true);
       try {
-        const response = await fetch(
+        // Fetch vaccination records
+        const vaccineResponse = await fetch(
           `http://localhost:5000/pets/${pet_id}/vaccines`,
           {
             credentials: "include",
           }
         );
 
-        if (response.status === 401) {
-          console.warn(
-            "Session expired (401 Unauthorized) during password change. Logging out..."
-          );
+        if (vaccineResponse.status === 401) {
+          console.warn("Session expired (401 Unauthorized). Logging out...");
           await logout();
           return;
         }
 
-        if (!response.ok) {
+        if (!vaccineResponse.ok) {
           throw new Error("Failed to fetch vaccination records");
         }
 
-        const data = await response.json();
+        const data = await vaccineResponse.json();
 
         const formattedData = data.map((record) => ({
           id: record.id,
@@ -84,13 +99,12 @@ export default function VaccinationRecord({ pet_id, hasPermission }) {
         setVaccinations(formattedData);
         setError(null);
       } catch (error) {
-        console.error("Error fetching vaccination records:", error);
-        setError("Failed to load vaccination records");
+        console.error("Error fetching data:", error);
+        setError("Failed to load data");
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchVaccinations();
   }, [pet_id, logout]);
 
