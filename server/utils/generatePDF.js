@@ -1,17 +1,13 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const db = require('../config/db'); // Assuming your db config is here
+const db = require('../config/db'); 
 
 async function generatePdf(petId, recordId) {
     let pdfPath = null;
     let stream = null;
 
-    try {
-        console.log(`Generating PDF for Pet ID: ${petId}, Record ID: ${recordId}`);
-
-        // --- Fetching initial data for filename ---
-        // (No changes needed here)
+    try { 
         const dateQuery = `
             SELECT p.pet_name, r.record_date
             FROM pet_info p
@@ -26,8 +22,7 @@ async function generatePdf(petId, recordId) {
             throw new Error("Pet or Record not found for filename generation.");
         }
 
-        // --- Filename and Path setup ---
-        // (No changes needed here)
+        // Filename and Path setup 
         const recordDate = pDataForFilename.record_date ? new Date(pDataForFilename.record_date) : new Date();
         const year = recordDate.getFullYear();
         const month = String(recordDate.getMonth() + 1).padStart(2, '0');
@@ -46,12 +41,10 @@ async function generatePdf(petId, recordId) {
             counter++;
             finalFilename = `${sanitizedFilename}(${counter}).pdf`;
             pdfPath = path.join(baseDir, finalFilename);
-        }
-        console.log("Saving PDF to:", pdfPath);
+        } 
 
 
-        // --- Create PDF Document ---
-        // (No changes needed here)
+        // Create PDF Document 
         const doc = new PDFDocument({
             margin: 50,
             size: 'legal',
@@ -62,9 +55,7 @@ async function generatePdf(petId, recordId) {
         stream = fs.createWriteStream(pdfPath);
         doc.pipe(stream);
 
-        // --- Fetch Full Pet and Record Data ---
-        // (No changes needed here)
-        console.log("Fetching full details for pet_id:", petId, "record_id:", recordId);
+        // Fetch Full Pet and Record Data  
         const petQuery = `
             SELECT p.pet_id, p.pet_name, p.pet_breed, p.pet_birthday, p.pet_age_year, p.pet_age_month,
                 p.pet_gender, p.pet_color, p.pet_vitality, p.pet_status,
@@ -97,32 +88,25 @@ async function generatePdf(petId, recordId) {
         if (rows.length === 0) {
             throw new Error("Pet record details not found after query.");
         }
-        const petData = rows[0];
-        console.log("Pet data retrieved successfully.");
-
-        // Aggregate unique vaccines
-        // (No changes needed here)
+        const petData = rows[0];  
         const uniqueVaccines = new Map();
         rows.forEach(row => {
             if (row.vaccine_type && row.vaccine_date) {
-                 const key = `${row.vaccine_type}-${new Date(row.vaccine_date).toISOString()}`;
-                 if (!uniqueVaccines.has(key)) {
+                const key = `${row.vaccine_type}-${new Date(row.vaccine_date).toISOString()}`;
+                if (!uniqueVaccines.has(key)) {
                     uniqueVaccines.set(key, {
                         vaccine_type: row.vaccine_type,
                         vaccine_date: new Date(row.vaccine_date).toLocaleDateString(),
                         vaccine_doses: row.vaccine_doses || 'N/A'
                     });
-                 }
+                }
             }
         });
         const vaccineRecords = Array.from(uniqueVaccines.values());
-        vaccineRecords.sort((a, b) => new Date(a.vaccine_date) - new Date(b.vaccine_date));
+        vaccineRecords.sort((a, b) => new Date(b.vaccine_date) - new Date(a.vaccine_date));
 
 
-        // --- Helper Functions ---
-
-        // Add Header Function
-        // (No changes needed here)
+        // Helper Functions 
         function addHeader(docInstance) {
             const logoPath = path.join(__dirname, '../assets/clinic_logo.png');
             try {
@@ -133,22 +117,37 @@ async function generatePdf(petId, recordId) {
 
             const headerTextX = (docInstance.page.margins.left || 50) + 60;
             docInstance.fillColor('black')
-                       .font('Helvetica-Bold').fontSize(16).text('Kho Veterinary Clinic', headerTextX, 50)
-                       .font('Helvetica').fontSize(10).text('715 Earnshaw St., Sampaloc, Manila, 1008 Metro Manila', headerTextX, 70);
-            docInstance.fillColor('black');
+                    .font('Helvetica-Bold').fontSize(16).text('Kho Veterinary Clinic', headerTextX, 50)
+                    .font('Helvetica').fontSize(10).text('715 Earnshaw St., Sampaloc, Manila, 1008 Metro Manila', headerTextX, 70);
+            
+            // Add generation timestamp in top right corner
+    const currentTime = new Date();
+    const formattedTime = `${currentTime.toLocaleDateString()} ${currentTime.toLocaleTimeString()}`;
+    const rightMargin = docInstance.page.margins.right || 50;
+    const timestampX = docInstance.page.width - rightMargin - 150; // Position from right edge
+    
+    // Save the current graphics state
+    docInstance.save();
+    
+    // Set gray color only for the timestamp
+    docInstance.fillColor('gray')
+              .font('Helvetica-Oblique').fontSize(9)
+              .text(`Generated: ${formattedTime}`, timestampX, 50, { 
+                 width: 150,
+                 align: 'right'
+              });
+    
+    // Restore the previous graphics state (including black fill color)
+    docInstance.restore();
         }
-
-        // Add Footer Function
-        // (No changes needed here)
+ 
         function addFooter(docInstance) {
-            const pageIndex = docInstance.bufferedPageRange().start;
-            // console.log(`   Adding Footer to page ${pageIndex}`);
+            const pageIndex = docInstance.bufferedPageRange().start; 
             const pageHeight = docInstance.page.height;
             const bottomMargin = docInstance.page.margins.bottom || 50;
             const footerY = pageHeight - bottomMargin - 30;
             const footerText = "This record is not valid for other medical use and cannot be used by any other establishment, not unless it is approved by a veterinarian of Kho Veterinary Clinic.";
-
-            // console.log(`      Footer Y: ${footerY} (PageH: ${pageHeight}, MarginB: ${bottomMargin})`);
+ 
             if (footerY <= (docInstance.page.margins.top || 50)) {
                 console.error(`      Error: Calculated footer Y (${footerY}) is too low or negative.`);
                 return;
@@ -156,24 +155,21 @@ async function generatePdf(petId, recordId) {
 
             docInstance.save();
             docInstance.font('Helvetica-BoldOblique')
-                       .fontSize(8)
-                       .fillColor('black')
-                       .text(footerText,
-                           docInstance.page.margins.left || 50,
-                           footerY,
-                           {
-                               width: docInstance.page.width - (docInstance.page.margins.left || 50) - (docInstance.page.margins.right || 50),
-                               align: 'center'
-                           }
-                       );
+                        .fontSize(8)
+                        .fillColor('black')
+                        .text(footerText,
+                            docInstance.page.margins.left || 50,
+                            footerY,
+                            {
+                                width: docInstance.page.width - (docInstance.page.margins.left || 50) - (docInstance.page.margins.right || 50),
+                                align: 'center'
+                            }
+                        );
             docInstance.restore();
         }
 
-        // Add Signature Area Function
-        // (No changes needed here)
         function addSignatureArea(docInstance) {
-            const pageIndex = docInstance.bufferedPageRange().start;
-            // console.log(`   Adding Signature Area to page ${pageIndex}`);
+            const pageIndex = docInstance.bufferedPageRange().start; 
             const pageHeight = docInstance.page.height;
             const bottomMargin = docInstance.page.margins.bottom || 50;
             const rightMargin = docInstance.page.margins.right || 50;
@@ -184,74 +180,98 @@ async function generatePdf(petId, recordId) {
 
             let sigStartY = pageHeight - bottomMargin - footerBuffer - spaceAboveFooter - sigHeightEstimate;
             const sigX = docInstance.page.width - rightMargin - sigWidth;
-
-            // console.log(`      Signature X: ${sigX}, Signature Start Y: ${sigStartY}`);
+ 
             if (sigStartY <= (docInstance.page.margins.top || 50)) {
-                 console.error(`      Error: Calculated signature Y (${sigStartY}) is too low or negative.`);
-                 return;
+                    console.error(`      Error: Calculated signature Y (${sigStartY}) is too low or negative.`);
+                    return;
             }
 
             docInstance.save();
             const topLabel = "*This medical record is approved by:";
             docInstance.font('Helvetica')
-                       .fontSize(9)
-                       .fillColor('black')
-                       .text(topLabel, sigX, sigStartY, { width: sigWidth, align: 'left' });
-            let lineY = sigStartY + docInstance.heightOfString(topLabel, { fontSize: 9, width: sigWidth }) + 20;
+                        .fontSize(9)
+                        .fillColor('black')
+                        .text(topLabel, sigX, sigStartY, { width: sigWidth, align: 'left' });
+            let lineY = sigStartY + docInstance.heightOfString(topLabel, { fontSize: 9, width: sigWidth }) + 30;
             docInstance.moveTo(sigX, lineY)
-                       .lineTo(sigX + sigWidth, lineY)
-                       .lineWidth(0.5)
-                       .strokeColor('black')
-                       .stroke();
+                        .lineTo(sigX + sigWidth, lineY)
+                        .lineWidth(0.5)
+                        .strokeColor('black')
+                        .stroke();
             let bottomLabelY = lineY + 5;
             const bottomLabel = "Signature over printed name";
             docInstance.font('Helvetica')
-                       .fontSize(9)
-                       .fillColor('black')
-                       .text(bottomLabel, sigX, bottomLabelY, { width: sigWidth, align: 'center' });
+                        .fontSize(9)
+                        .fillColor('black')
+                        .text(bottomLabel, sigX, bottomLabelY, { width: sigWidth, align: 'center' });
             docInstance.restore();
         }
 
-        // Add Labeled Text Function (Ensures wrapping within the specified columnWidth)
-        // (No changes needed, already handles width)
+        // Add this function to your helper functions section
+function addPageNumbers(docInstance) {
+    const pageCount = docInstance.bufferedPageRange().count;
+    
+    for (let i = 0; i < pageCount; i++) {
+        docInstance.switchToPage(i);
+        
+        // Calculate position for page number (bottom right)
+        const pageHeight = docInstance.page.height;
+        const pageWidth = docInstance.page.width;
+        const bottomMargin = docInstance.page.margins.bottom || 50;
+        const rightMargin = docInstance.page.margins.right || 50;
+        
+        // Position the page number above the footer
+        const footerHeight = 30; // Adjust based on your footer height
+        const pageNumY = pageHeight - bottomMargin - footerHeight + 15;
+        const pageNumX = pageWidth - rightMargin;
+        
+        // Add page number text
+        docInstance.save();
+        docInstance.font('Helvetica-Oblique').fontSize(9)
+            .fillColor('gray')
+            .text(`Page ${i + 1} of ${pageCount}`,
+                pageNumX - 70, // Position 70 points left of right margin
+                pageNumY,
+                {
+                    width: 70,
+                    align: 'right'
+                }
+            );
+        docInstance.restore();
+    }
+}
+
         const addLabeledText = (docInstance, label, value, x, y, options = {}) => {
-              const startY = y;
-              const defaultOptions = { fontSize: 10, baseline: 'top' };
-              const mergedOptions = { ...defaultOptions, ...options };
-              // Ensure columnWidth is passed or calculate a default
-              const effectiveColumnWidth = options.columnWidth || (docInstance.page.width / 2) - x - 10;
-              const labelText = `${label}:`;
+                const startY = y;
+                const defaultOptions = { fontSize: 10, baseline: 'top' };
+                const mergedOptions = { ...defaultOptions, ...options };
+                const effectiveColumnWidth = options.columnWidth || (docInstance.page.width / 2) - x - 10;
+                const labelText = `${label}:`;
 
-              // Use measureString if available (PDFKit >= 0.11.0) for more accuracy, else use widthOfString
-              let labelWidth;
-              if (typeof docInstance.measureString === 'function') {
-                  labelWidth = docInstance.font('Helvetica-Bold').fontSize(mergedOptions.fontSize).measureString(labelText).width;
-              } else {
-                  labelWidth = docInstance.font('Helvetica-Bold').fontSize(mergedOptions.fontSize).widthOfString(labelText);
-              }
+                let labelWidth;
+                if (typeof docInstance.measureString === 'function') {
+                    labelWidth = docInstance.font('Helvetica-Bold').fontSize(mergedOptions.fontSize).measureString(labelText).width;
+                } else {
+                    labelWidth = docInstance.font('Helvetica-Bold').fontSize(mergedOptions.fontSize).widthOfString(labelText);
+                }
 
-              docInstance.font('Helvetica-Bold').fontSize(mergedOptions.fontSize)
-                 .text(labelText, x, startY, { ...mergedOptions, continued: true });
+                docInstance.font('Helvetica-Bold').fontSize(mergedOptions.fontSize)
+                    .text(labelText, x, startY, { ...mergedOptions, continued: true });
+ 
+                const valueWidth = Math.max(1, effectiveColumnWidth - labelWidth - 2);  
 
-              // Calculate width available for the value, ensuring it's not negative
-              const valueWidth = Math.max(1, effectiveColumnWidth - labelWidth - 2); // Subtract 2 for spacing
-
-              docInstance.font('Helvetica').fontSize(mergedOptions.fontSize)
-                  .text(` ${value || 'N/A'}`, { // Add space before value
-                       ...mergedOptions,
-                       width: valueWidth, // Apply calculated width for wrapping
-                       continued: false // Ensure it doesn't continue unintentionally
-                   });
-              // Return Y position below the (potentially wrapped) text + small gap
-              return docInstance.y + 2; // Use doc.y as it reflects position after wrapping
-          };
-
-        // Add Section Header Function
-        // (No changes needed here)
+                docInstance.font('Helvetica').fontSize(mergedOptions.fontSize)
+                    .text(` ${value || 'N/A'}`, {  
+                        ...mergedOptions,
+                        width: valueWidth,  
+                        continued: false 
+                    }); 
+            return docInstance.y + 2; 
+            };
+ 
         const addSectionHeader = (docInstance, text) => {
              const headerHeightEstimate = 40;
-             if (docInstance.y + headerHeightEstimate > docInstance.page.height - (docInstance.page.margins.bottom || 50)) {
-                 console.log("--- Adding page before section header:", text);
+             if (docInstance.y + headerHeightEstimate > docInstance.page.height - (docInstance.page.margins.bottom || 50)) { 
                  docInstance.addPage();
              }
              docInstance.moveDown(0.5);
@@ -265,26 +285,22 @@ async function generatePdf(petId, recordId) {
          };
 
 
-        // --- Page Generation Logic ---
-
+        // Page Generation Logic 
         doc.on('pageAdded', () => {
             addHeader(doc);
-            doc.y = 100; // Reset Y position below header area
-            doc.x = doc.page.margins.left || 50;
-            console.log(`--- Page Added. Current Y set to ${doc.y}`);
+            doc.y = 100; 
+            doc.x = doc.page.margins.left || 50; 
         });
 
-        doc.addPage(); // Initial page
-        // Header added by 'pageAdded' event
-        // Footer/Signature handled later
+        doc.addPage(); 
 
-        // --- PDF Content Generation ---
+        // PDF Content Generation 
         const leftMargin = doc.page.margins.left || 50;
         const rightMargin = doc.page.margins.right || 50;
         const contentWidth = doc.page.width - leftMargin - rightMargin;
         const leftColumnX = leftMargin;
-        const rightColumnX = leftColumnX + contentWidth / 2 + 10; // Start right col slightly offset
-        const columnWidth = contentWidth / 2 - 15; // Available width for each column's content
+        const rightColumnX = leftColumnX + contentWidth / 2 + 10; 
+        const columnWidth = contentWidth / 2 - 15; 
 
         // Title Section
         doc.font('Helvetica-Bold').fontSize(16)
@@ -294,18 +310,18 @@ async function generatePdf(petId, recordId) {
            .text(`Date of Record: ${petData.record_date ? new Date(petData.record_date).toLocaleDateString() : 'N/A'}`, leftMargin, doc.y, { width: contentWidth, align: 'center' })
            .moveDown(1.5);
 
-        // Pet Profile Section - Uses addLabeledText which handles wrapping
+        // Pet Profile Section 
         addSectionHeader(doc, 'Pet Profile');
         let profileLeftY = doc.y; let profileRightY = doc.y;
         profileLeftY = addLabeledText(doc, 'ID', petData.pet_id, leftColumnX, profileLeftY, { columnWidth: columnWidth });
         profileLeftY = addLabeledText(doc, 'Name', petData.pet_name, leftColumnX, profileLeftY, { columnWidth: columnWidth });
         profileLeftY = addLabeledText(doc, 'Species', petData.species, leftColumnX, profileLeftY, { columnWidth: columnWidth });
-        profileLeftY = addLabeledText(doc, 'Breed', petData.pet_breed, leftColumnX, profileLeftY, { columnWidth: columnWidth }); // Will wrap if long
+        profileLeftY = addLabeledText(doc, 'Breed', petData.pet_breed, leftColumnX, profileLeftY, { columnWidth: columnWidth }); 
         profileLeftY = addLabeledText(doc, 'Gender', petData.pet_gender, leftColumnX, profileLeftY, { columnWidth: columnWidth });
 
         profileRightY = addLabeledText(doc, 'Birthday', petData.pet_birthday ? new Date(petData.pet_birthday).toLocaleDateString() : 'N/A', rightColumnX, profileRightY, { columnWidth: columnWidth });
         profileRightY = addLabeledText(doc, 'Age', `${petData.pet_age_year || '0'} years, ${petData.pet_age_month || '0'} months`, rightColumnX, profileRightY, { columnWidth: columnWidth });
-        profileRightY = addLabeledText(doc, 'Color', petData.pet_color, rightColumnX, profileRightY, { columnWidth: columnWidth }); // Will wrap if long
+        profileRightY = addLabeledText(doc, 'Color', petData.pet_color, rightColumnX, profileRightY, { columnWidth: columnWidth }); 
         profileRightY = addLabeledText(doc, 'Status', petData.pet_status || 'N/A', rightColumnX, profileRightY, { columnWidth: columnWidth });
         doc.y = Math.max(profileLeftY, profileRightY);
         doc.moveDown(1.0);
@@ -314,42 +330,41 @@ async function generatePdf(petId, recordId) {
         addSectionHeader(doc, 'Contact Details');
         let contactLeftY = doc.y; let contactRightY = doc.y;
         contactLeftY = addLabeledText(doc, 'Owner', `${petData.user_firstname} ${petData.user_lastname}`, leftColumnX, contactLeftY, { columnWidth: columnWidth });
-        contactLeftY = addLabeledText(doc, 'Email', petData.user_email, leftColumnX, contactLeftY, { columnWidth: columnWidth }); // Will wrap if long
+        contactLeftY = addLabeledText(doc, 'Email', petData.user_email, leftColumnX, contactLeftY, { columnWidth: columnWidth }); 
         contactLeftY = addLabeledText(doc, 'Emergency 1', `${petData.owner_alt_person1 || 'N/A'} - ${petData.owner_alt_contact1 || 'N/A'}`, leftColumnX, contactLeftY, { columnWidth: columnWidth }); // Will wrap if long
         contactLeftY = addLabeledText(doc, 'Emergency 2', `${petData.owner_alt_person2 || 'N/A'} - ${petData.owner_alt_contact2 || 'N/A'}`, leftColumnX, contactLeftY, { columnWidth: columnWidth }); // Will wrap if long
 
         contactRightY = addLabeledText(doc, 'Contact', petData.user_contact, rightColumnX, contactRightY, { columnWidth: columnWidth });
-        // Address - Needs manual handling for wrapping
+        
+        // Address Section
         const addressStartY = contactRightY;
         const addressLabel = 'Address:';
         const addressValue = ` ${petData.owner_address || 'N/A'}`;
         doc.font('Helvetica-Bold').fontSize(10).text(addressLabel, rightColumnX, addressStartY, { continued: true, baseline: 'top' });
         let addressLabelWidth;
-         if (typeof doc.measureString === 'function') {
-             addressLabelWidth = doc.font('Helvetica-Bold').fontSize(10).measureString(addressLabel).width;
-         } else {
-             addressLabelWidth = doc.font('Helvetica-Bold').fontSize(10).widthOfString(addressLabel);
-         }
-        const addressValueWidth = Math.max(1, columnWidth - addressLabelWidth - 2); // Calculate remaining width in the column
-        doc.font('Helvetica').fontSize(10).text(addressValue, { // Text starts right after the label
-            width: addressValueWidth, // Apply calculated width for wrapping
+            if (typeof doc.measureString === 'function') {
+                addressLabelWidth = doc.font('Helvetica-Bold').fontSize(10).measureString(addressLabel).width;
+            } else {
+                addressLabelWidth = doc.font('Helvetica-Bold').fontSize(10).widthOfString(addressLabel);
+            }
+        const addressValueWidth = Math.max(1, columnWidth - addressLabelWidth - 2); 
+        doc.font('Helvetica').fontSize(10).text(addressValue, {  
+            width: addressValueWidth, 
             baseline: 'top'
         });
-        contactRightY = doc.y + 2; // Update Y based on where the wrapped address finished
+        contactRightY = doc.y + 2; 
         doc.y = Math.max(contactLeftY, contactRightY);
         doc.moveDown(1.0);
 
-        // Vaccination Record Section (Table)
-        // (No changes needed here for text wrapping, cells are usually short)
+        // Vaccination Record Section (Table) 
         addSectionHeader(doc, 'Vaccination Record');
         const tableStartY = doc.y;
         const tableWidth = contentWidth;
         const colWidths = [tableWidth * 0.50, tableWidth * 0.25, tableWidth * 0.25];
-        const rowHeight = 25; // Adjust if wrapped text in header/cells becomes common and needs more space
+        const rowHeight = 25;  
         let tableCurrentY = tableStartY;
-
-        // --- Table Helper Functions ---
-        const drawTableRow = (instance, y, height) => { /* ... unchanged ... */
+ 
+        const drawTableRow = (instance, y, height) => { 
              const tableLeftX = instance.page.margins.left || 50;
              instance.rect(tableLeftX, y, tableWidth, height).lineWidth(0.5).strokeColor('black').stroke();
              let currentX = tableLeftX;
@@ -358,38 +373,29 @@ async function generatePdf(petId, recordId) {
                  instance.moveTo(currentX, y).lineTo(currentX, y + height).stroke();
              }
         };
-        const addCellText = (instance, text, colIndex, y, height, align = 'left') => { /* ... unchanged ... */
+        const addCellText = (instance, text, colIndex, y, height, align = 'left') => {  
             let cellX = instance.page.margins.left || 50;
-            cellX += 5; // Padding
+            cellX += 5; 
              for(let i=0; i < colIndex; i++) { cellX += colWidths[i]; }
              const cellWidth = colWidths[colIndex] - 10;
-             const textY = y + 7; // Simple vertical center align
+             const textY = y + 7; 
 
-             instance.font('Helvetica').fontSize(10).fillColor('black')
-                // Add width option here if cell content could wrap, though unlikely for these fields
+             instance.font('Helvetica').fontSize(10).fillColor('black') 
                 .text(text || 'N/A', cellX, textY, { width: cellWidth, align: align, baseline: 'top' });
-        };
-        // --- End Table Helper Functions ---
-
-        // Draw Table Header
+        }; 
         drawTableRow(doc, tableCurrentY, rowHeight);
         doc.font('Helvetica-Bold').fontSize(10);
         addCellText(doc, 'Type of Vaccine', 0, tableCurrentY, rowHeight, 'center');
         addCellText(doc, 'Number of Doses', 1, tableCurrentY, rowHeight, 'center');
         addCellText(doc, 'Date', 2, tableCurrentY, rowHeight, 'center');
         tableCurrentY += rowHeight;
-
-        // Draw Table Rows
+ 
         if (vaccineRecords.length > 0) {
             vaccineRecords.forEach((vaccine, index) => {
                  if (tableCurrentY + rowHeight > doc.page.height - (doc.page.margins.bottom || 50)) {
                      console.log(`    Adding page break before vaccine row ${index + 1}`);
                      doc.addPage();
-                     tableCurrentY = doc.y;
-                     // Optional: Redraw header on new page
-                     // drawTableRow(doc, tableCurrentY, rowHeight);
-                     // addCellText(...); addCellText(...); addCellText(...);
-                     // tableCurrentY += rowHeight;
+                     tableCurrentY = doc.y; 
                  }
                  drawTableRow(doc, tableCurrentY, rowHeight);
                  addCellText(doc, vaccine.vaccine_type, 0, tableCurrentY, rowHeight, 'left');
@@ -405,24 +411,22 @@ async function generatePdf(petId, recordId) {
              addCellText(doc, 'No vaccination records found.', 0, tableCurrentY, rowHeight, 'center');
              tableCurrentY += rowHeight;
         }
-        doc.y = tableCurrentY; // Update doc.y AFTER table drawing
+        doc.y = tableCurrentY; 
         doc.moveDown(1.0);
 
 
-        // Medical Information Section - REVISED for robust wrapping
+        // Medical Information Section 
         addSectionHeader(doc, 'Medical Information');
-        const medSectionStartY = doc.y; // Start Y for this section
+        const medSectionStartY = doc.y; 
         let medLeftY = medSectionStartY;
-        let medRightY = medSectionStartY; // Right column starts at the same initial Y
-
-        // --- Draw Left Column Content ---
+        let medRightY = medSectionStartY; 
+ 
         medLeftY = addLabeledText(doc, 'Weight', petData.record_weight ? `${petData.record_weight} kg` : 'N/A', leftColumnX, medLeftY, { columnWidth: columnWidth });
         medLeftY = addLabeledText(doc, 'Temperature', petData.record_temp ? `${petData.record_temp} °C` : 'N/A', leftColumnX, medLeftY, { columnWidth: columnWidth });
-
-        // Condition - Manual label + wrapped value
+ 
         const conditionStartY = medLeftY;
         const conditionLabel = 'Condition:';
-        const conditionValue = ` ${petData.record_condition || 'N/A'}`; // Ensure space after label
+        const conditionValue = ` ${petData.record_condition || 'N/A'}`;  
         doc.font('Helvetica-Bold').fontSize(10).text(conditionLabel, leftColumnX, conditionStartY, { continued: true, baseline: 'top' });
         let conditionLabelWidth;
          if (typeof doc.measureString === 'function') {
@@ -431,16 +435,15 @@ async function generatePdf(petId, recordId) {
              conditionLabelWidth = doc.font('Helvetica-Bold').fontSize(10).widthOfString(conditionLabel);
          }
         const conditionValueWidth = Math.max(1, columnWidth - conditionLabelWidth - 2);
-        doc.font('Helvetica').fontSize(10).text(conditionValue, { // Text starts right after label
-            width: conditionValueWidth, // Apply wrapping width
+        doc.font('Helvetica').fontSize(10).text(conditionValue, { 
+            width: conditionValueWidth,
             baseline: 'top'
         });
-        medLeftY = doc.y + 2; // Update Y based on potentially wrapped content
-
-        // Symptoms - Manual label + wrapped value
+        medLeftY = doc.y + 2; 
+        
         const symptomsStartY = medLeftY;
         const symptomsLabel = 'Symptoms:';
-        const symptomsValue = ` ${petData.record_symptom || 'N/A'}`; // Ensure space after label
+        const symptomsValue = ` ${petData.record_symptom || 'N/A'}`;    
         doc.font('Helvetica-Bold').fontSize(10).text(symptomsLabel, leftColumnX, symptomsStartY, { continued: true, baseline: 'top' });
         let symptomsLabelWidth;
          if (typeof doc.measureString === 'function') {
@@ -449,72 +452,58 @@ async function generatePdf(petId, recordId) {
              symptomsLabelWidth = doc.font('Helvetica-Bold').fontSize(10).widthOfString(symptomsLabel);
          }
         const symptomsValueWidth = Math.max(1, columnWidth - symptomsLabelWidth - 2);
-        doc.font('Helvetica').fontSize(10).text(symptomsValue, { // Text starts right after label
-            width: symptomsValueWidth, // Apply wrapping width
+        doc.font('Helvetica').fontSize(10).text(symptomsValue, {    
+            width: symptomsValueWidth,  
             baseline: 'top'
         });
-        medLeftY = doc.y + 2; // Update Y based on potentially wrapped content
+        medLeftY = doc.y + 2;   
 
-        medLeftY = addLabeledText(doc, 'Laboratories', petData.lab_description || 'N/A', leftColumnX, medLeftY, { columnWidth: columnWidth }); // Will wrap if long
+        medLeftY = addLabeledText(doc, 'Laboratories', petData.lab_description || 'N/A', leftColumnX, medLeftY, { columnWidth: columnWidth });
 
-        // --- Draw Right Column Content (Starts from medSectionStartY) ---
         medLeftY = addLabeledText(doc, 'Surgery History', petData.surgery_id ? 'Yes' : 'No', leftColumnX, medLeftY, { columnWidth: columnWidth });
          if (petData.surgery_id) {
             medLeftY = addLabeledText(doc, 'Surgery Date', petData.surgery_date ? new Date(petData.surgery_date).toLocaleDateString() : 'N/A', leftColumnX, medLeftY, { columnWidth: columnWidth });
-            medLeftY = addLabeledText(doc, 'Surgery Type', petData.surgery_type || 'N/A', leftColumnX, medLeftY, { columnWidth: columnWidth }); // Will wrap if long
+            medLeftY = addLabeledText(doc, 'Surgery Type', petData.surgery_type || 'N/A', leftColumnX, medLeftY, { columnWidth: columnWidth });
          }
 
-        // --- Set Final Y Position for the Section ---
         doc.y = Math.max(medLeftY, medRightY);
         doc.moveDown(1.0);
 
 
-        // Latest Diagnosis Section - Ensure wrapping across full width
+        // Latest Diagnosis Section
         addSectionHeader(doc, 'Latest Diagnosis');
         doc.font('Helvetica').fontSize(10).fillColor('black')
-           .text(petData.diagnosis_text || 'No diagnosis recorded.', leftMargin, doc.y, { // Start at left margin
-               width: contentWidth, // Use full content width for wrapping
+           .text(petData.diagnosis_text || 'No diagnosis recorded.', leftMargin, doc.y, {
+               width: contentWidth, 
                align: 'left'
            });
-        // doc.y is automatically updated after .text()
         doc.moveDown(1.0);
 
-
-        // Visit Details Section - Use addLabeledText with full contentWidth
         addSectionHeader(doc, 'Visit Details');
         let visitY = doc.y;
-        // For these, the label is short, and the value can span the rest of the line.
-        // Passing contentWidth to addLabeledText achieves this wrapping for the value part.
-        visitY = addLabeledText(doc, 'Last Visit', petData.record_recent_visit ? new Date(petData.record_recent_visit).toLocaleDateString() : 'N/A', leftColumnX, visitY, { columnWidth: contentWidth }); // Value wraps full width
-        visitY = addLabeledText(doc, 'Purpose', petData.record_purpose || 'N/A', leftColumnX, visitY, { columnWidth: contentWidth }); // Value wraps full width
-        visitY = addLabeledText(doc, 'Recent Purchase', petData.record_purchase || 'N/A', leftColumnX, visitY, { columnWidth: contentWidth }); // Value wraps full width
+        visitY = addLabeledText(doc, 'Last Visit', petData.record_recent_visit ? new Date(petData.record_recent_visit).toLocaleDateString() : 'N/A', leftColumnX, visitY, { columnWidth: contentWidth });
+        visitY = addLabeledText(doc, 'Purpose', petData.record_purpose || 'N/A', leftColumnX, visitY, { columnWidth: contentWidth }); 
+        visitY = addLabeledText(doc, 'Recent Purchase', petData.record_purchase || 'N/A', leftColumnX, visitY, { columnWidth: contentWidth });
         doc.y = visitY;
         doc.moveDown(1.0);
 
-
-        // Attached Lab File Section
-        // (No changes needed for text wrapping itself, logic handles image/message)
-        
         if (petData.record_lab_file) {
             const imageFilename = petData.record_lab_file.toString().trim();
             const imagePath = path.join(__dirname, "../uploads", imageFilename);
             console.log("Attempting to attach image from path:", imagePath);
 
             if (fs.existsSync(imagePath)) {
-                const imageSpaceEstimate = 250 + 50; // Image height + spacing
+                const imageSpaceEstimate = 250 + 50;
                 if (doc.y + imageSpaceEstimate > doc.page.height - (doc.page.margins.bottom || 50)) {
                     console.log("--- Adding page before image");
                     doc.addPage();
-                    // Re-add section header if needed after page break
                     addSectionHeader(doc, 'Attached Lab File');
                 }
                 try {
-                   // Center the image within the content width
                    const imgOptions = { fit: [contentWidth * 0.8, 250], align: 'center' };
-                   const imgWidth = imgOptions.fit[0]; // Use the constrained width
+                   const imgWidth = imgOptions.fit[0];
                    const imgX = leftMargin + (contentWidth - imgWidth) / 2;
                    doc.image(imagePath, imgX, doc.y, imgOptions);
-                   // doc.y is updated by .image()
                    doc.moveDown(1.0);
                 } catch (imgError) {
                     console.error("Error embedding image:", imgError);
@@ -527,10 +516,7 @@ async function generatePdf(petId, recordId) {
         } else {
             console.log("No lab file attached to this record.");
         }
-
-
-        // --- Final Elements Addition using Page Buffering ---
-        // (No changes needed here)
+ 
         console.log("--- Starting Final Elements Addition ---");
         const pageCount = doc.bufferedPageRange().count;
         console.log(`   Document has ${pageCount} pages.`);
@@ -538,53 +524,45 @@ async function generatePdf(petId, recordId) {
         for (let i = 0; i < pageCount; i++) {
             doc.switchToPage(i);
             console.log(`   Switched to page ${i}`);
-            addFooter(doc); // Add footer to ALL pages
-            if (i === pageCount - 1) { // ONLY on the last page
-                // Add a check here to prevent signature overlapping content if last page is full
-                const estimatedSigHeight = 70; // Estimate space needed for signature + footer buffer
-                if (doc.y + estimatedSigHeight > doc.page.height - (doc.page.margins.bottom || 50) - 30 ) { // Check against footer position
+            addFooter(doc); 
+            if (i === pageCount - 1) { 
+                const estimatedSigHeight = 70; 
+                if (doc.y + estimatedSigHeight > doc.page.height - (doc.page.margins.bottom || 50) - 30 ) { 
                     console.warn(`   Signature might overlap on page ${i}. Consider adding space or manual page break earlier.`);
-                    // You might want to add a new page *just* for the signature in extreme cases,
-                    // but usually ensuring enough moveDown(1.0) after last content is sufficient.
                 }
-                addSignatureArea(doc); // Add signature area ONLY to the LAST page
+                addSignatureArea(doc);
             }
         }
-        console.log("--- Finished Final Elements Addition ---");
+        addPageNumbers(doc); 
 
 
-        // --- Finalize PDF ---
-        console.log("Finalizing PDF document...");
+        // Finalize PDF 
         doc.end();
 
         await new Promise((resolve, reject) => {
-            stream.on('finish', () => {
-                console.log("PDF generation finished successfully:", pdfPath);
+            stream.on('finish', () => { 
                 resolve();
             });
             stream.on('error', (err) => {
-                 console.error("PDF stream writing error:", err);
-                 reject(err);
-             });
+                console.error("PDF stream writing error:", err);
+                reject(err);
+            });
         });
 
         return pdfPath;
 
     } catch (error) {
         console.error("Error in generatePdf function:", error);
-        // Cleanup logic
-        // (No changes needed here)
         if (stream && !stream.closed) {
-            stream.end(() => {
-                 console.log("Stream ended due to error.");
-                 if (pdfPath && fs.existsSync(pdfPath)) {
-                     try { fs.unlinkSync(pdfPath); console.log("Partial PDF file deleted."); }
-                     catch (e) { console.error("Error deleting partial PDF file:", e); }
-                 }
+            stream.end(() => { 
+                if (pdfPath && fs.existsSync(pdfPath)) {
+                    try { fs.unlinkSync(pdfPath); console.log("Partial PDF file deleted."); }
+                    catch (e) { console.error("Error deleting partial PDF file:", e); }
+                }
             });
         } else if (pdfPath && fs.existsSync(pdfPath)) {
-             try { fs.unlinkSync(pdfPath); console.log("Partial PDF file deleted."); }
-             catch (e) { console.error("Error deleting partial PDF file:", e); }
+                try { fs.unlinkSync(pdfPath); console.log("Partial PDF file deleted."); }
+                catch (e) { console.error("Error deleting partial PDF file:", e); }
         }
         throw error;
     }
