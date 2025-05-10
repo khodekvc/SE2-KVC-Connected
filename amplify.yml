@@ -1,36 +1,32 @@
 version: 1
-applications:
-  - frontend:
-      phases:
-        preBuild:
-          commands:
-            - cd client
-            - npm ci
-        build:
-          commands:
-            - npm run build
-      artifacts:
-        baseDirectory: client/dist
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-    appRoot: client
-  - backend:
-      phases:
-        preBuild:
-          commands:
-            - cd server
-            - npm ci
-        build:
-          commands:
-            - npm run build
-      artifacts:
-        baseDirectory: server
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-    appRoot: server
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing dependencies..."
+        # Install dependencies for the client
+        - cd client
+        - npm install --legacy-peer-deps
+        # Install dependencies for the server
+        - cd ../server
+        - npm install --legacy-peer-deps
+        # Go back to root directory, after installations
+        - cd ../
+    build:
+      commands:
+        - echo "Building..."
+        # Build the client
+        - cd client
+        - npm run build
+        # Build the server (if applicable - often not needed for Node.js backends)
+        - cd ../server
+        - npm run build  # Or any other build command, e.g., tsc, webpack
+        - cd ../
+  artifacts:
+    baseDirectory: client/dist  # Specify the client build output directory
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - client/node_modules/**/*
+      - server/node_modules/**/*
