@@ -4,8 +4,10 @@ applications:
       phases:
         preBuild:
           commands:
+            - echo "Debugging repository structure..."
+            - ls -la
+            - echo "Current directory: $(pwd)"
             - echo "Installing dependencies..."
-            - cd client
             - npm install --legacy-peer-deps
         build:
           commands:
@@ -18,12 +20,14 @@ applications:
       cache:
         paths:
           - node_modules/**/*
-    appRoot: client
+    appRoot: .
   - backend:
       phases:
         preBuild:
           commands:
-            - cd server
+            - echo "Debugging server directory..."
+            - ls -la
+            - echo "Current directory: $(pwd)"
             - npm install
         build:
           commands:
@@ -37,4 +41,4 @@ applications:
       cache:
         paths:
           - node_modules/**/*
-    appRoot: server
+    appRoot: .
