@@ -1,0 +1,159 @@
+0
+
+2025-05-10T16:04:16.953Z [INFO]: # Cloning repository: git@github.com:alt-tags/SE2-KVC-Connected.git
+
+1
+
+2025-05-10T16:04:18.177Z [INFO]: 
+
+2
+
+2025-05-10T16:04:18.177Z [INFO]: Cloning into 'SE2-KVC-Connected'...
+
+3
+
+2025-05-10T16:04:18.178Z [INFO]: # Switching to commit: a65258bced99d0b61411d225b74429273f2c83f3
+
+4
+
+2025-05-10T16:04:18.200Z [INFO]: Note: switching to 'a65258bced99d0b61411d225b74429273f2c83f3'.
+
+5
+
+                                 You are in 'detached HEAD' state. You can look around, make experimental
+
+6
+
+                                 changes and commit them, and you can discard any commits you make in this
+
+7
+
+                                 state without impacting any branches by switching back to a branch.
+
+8
+
+                                 If you want to create a new branch to retain commits you create, you may
+
+9
+
+                                 do so (now or later) by using -c with the switch command. Example:
+
+10
+
+                                 git switch -c <new-branch-name>
+
+11
+
+                                 Or undo this operation with:
+
+12
+
+                                 git switch -
+
+13
+
+                                 Turn off this advice by setting config variable advice.detachedHead to false
+
+14
+
+                                 HEAD is now at a65258b dp 3 fix
+
+15
+
+2025-05-10T16:04:18.258Z [INFO]: Successfully cleaned up Git credentials
+
+16
+
+2025-05-10T16:04:18.258Z [INFO]: # Checking for Git submodules at: /codebuild/output/src2372061352/src/SE2-KVC-Connected/.gitmodules
+
+17
+
+2025-05-10T16:04:18.264Z [INFO]: # Retrieving environment cache...
+
+18
+
+2025-05-10T16:04:18.299Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+
+19
+
+2025-05-10T16:04:18.299Z [INFO]: ---- Setting Up SSM Secrets ----
+
+20
+
+2025-05-10T16:04:18.299Z [INFO]: SSM params {"Path":"/amplify/d3kbn1t5vkdz8m/dp/","WithDecryption":true}
+
+21
+
+2025-05-10T16:04:18.344Z [WARNING]: !Failed to set up process.env.secrets
+
+22
+
+2025-05-10T16:04:19.062Z [INFO]: # No package override configuration found.
+
+23
+
+2025-05-10T16:04:19.067Z [INFO]: # Retrieving cache...
+
+24
+
+2025-05-10T16:04:19.102Z [INFO]: # Retrieved cache
+
+25
+
+2025-05-10T16:04:23.376Z [INFO]: ## Starting Backend Build
+
+26
+
+                                 ## Checking for associated backend environment...
+
+27
+
+                                 ## No backend environment association found, continuing...
+
+28
+
+                                 ## Completed Backend Build
+
+29
+
+2025-05-10T16:04:23.381Z [INFO]: {"backendDuration": 0}
+
+30
+
+                                 ## Starting Frontend Build
+
+31
+
+                                 # Starting phase: preBuild
+
+32
+
+                                 # Executing command: echo "Installing dependencies..."
+
+33
+
+                                 Installing dependencies...
+
+34
+
+                                 # Executing command: cd client
+
+35
+
+2025-05-10T16:04:23.382Z [WARNING]: /root/.rvm/scripts/extras/bash_zsh_support/chpwd/function.sh: line 5: cd: client: No such file or directory
+
+36
+
+2025-05-10T16:04:23.458Z [ERROR]: !!! Build failed
+
+37
+
+2025-05-10T16:04:23.459Z [ERROR]: !!! Error: Command failed with exit code 1
+
+38
+
+2025-05-10T16:04:23.459Z [INFO]: # Starting environment caching...
+
+39
+
+2025-05-10T16:04:23.459Z [INFO]: # Environment caching completed
